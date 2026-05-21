@@ -10,7 +10,9 @@ _client = None
 def _client_get():
     global _client
     if _client is None:
-        _client = docker.from_env()
+        # timeout=10 evita que uma chamada travada ao Docker daemon bloqueie o
+        # loop de métricas por 60s (padrão do SDK), o que causaria timeout no XHR.
+        _client = docker.from_env(timeout=10)
     return _client
 
 

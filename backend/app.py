@@ -58,16 +58,24 @@ def _build_feeds():
 
 @app.route("/api/metrics")
 def metrics():
+    # Lê o cache sem bloquear a coleta: verifica se está fresco sob o lock,
+    # coleta FORA do lock (operação lenta), e só então atualiza sob o lock.
+    # Isso evita que uma coleta lenta (Docker socket, psutil) bloqueie todas
+    # as requisições subsequentes pelo tempo do timeout do SDK (60 s padrão).
     with _cache_lock:
         now = time.time()
-        fresh = (
-            _cache["data"] is not None
-            and (now - _cache["time"]) < config.CACHE_TTL
-        )
-        if not fresh:
-            _cache["data"] = _build_metrics()
-            _cache["time"] = now
-        response = jsonify(_cache["data"])
+        if _cache["data"] is not None and (now - _cache["time"]) < config.CACHE_TTL:
+            response = jsonify(_cache["data"])
+            response.headers["Cache-Control"] = "no-store"
+            return response
+
+    data = _build_metrics()
+
+    with _cache_lock:
+        _cache["data"] = data
+        _cache["time"] = time.time()
+
+    response = jsonify(data)
     response.headers["Cache-Control"] = "no-store"
     return response
 

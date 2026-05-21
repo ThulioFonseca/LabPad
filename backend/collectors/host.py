@@ -9,6 +9,11 @@ import config
 # Estado para calcular a taxa de rede entre duas coletas consecutivas.
 _net_prev = {"time": None, "recv": 0, "sent": 0}
 
+# Inicializa o contador de CPU; a primeira leitura com interval=None retorna 0.0
+# (sem referência anterior) — descartamos esse valor aqui para que a primeira
+# coleta real já retorne um percentual significativo.
+psutil.cpu_percent(interval=None)
+
 
 def _read_os_name():
     """Nome amigavel do SO, lido de /etc/os-release (montado do host)."""
@@ -69,7 +74,7 @@ def _net_rates():
 
 
 def collect():
-    cpu = psutil.cpu_percent(interval=0.5)
+    cpu = psutil.cpu_percent(interval=None)
     mem = psutil.virtual_memory()
     recv_rate, sent_rate = _net_rates()
 
