@@ -1,0 +1,113 @@
+/* =============================================================================
+ * theme.css  —  TODA A PALETA VIVE AQUI.  Edite este arquivo para re-tematizar.
+ *
+ * Tema: "Dark minimal elegante" (grafite + um acento azul sutil).
+ * Nao usa variaveis CSS de proposito (Safari 9 / iPad 2 nao e confiavel com elas).
+ *
+ * Paleta de referencia:
+ *   fundo        #16181d      superficie    #1e2128
+ *   borda        #2a2e37      borda suave   #23262e
+ *   texto        #e6e8ec      texto suave   #8b909c    texto fraco  #6a7080
+ *   acento azul  #4f8cff      ok  #3fb950   alerta #d29922   critico #f85149
+ * ===========================================================================*/
+
+body {
+  background-color: #16181d;
+  color: #e6e8ec;
+}
+
+/* --- Topo ------------------------------------------------------------------*/
+.topbar      { border-bottom: 1px solid #23262e; }
+.brand-name  { color: #e6e8ec; }
+.brand-sub   { color: #8b909c; }
+.status      { color: #8b909c; }
+.clock       { color: #c8ccd4; }
+
+.status-dot      { background-color: #8b909c; }
+.status-dot--on  {
+  background-color: #3fb950;
+  -webkit-box-shadow: 0 0 7px rgba(63, 185, 80, 0.7);
+  box-shadow: 0 0 7px rgba(63, 185, 80, 0.7);
+}
+.status-dot--off { background-color: #f85149; }
+
+/* --- Titulos de painel -----------------------------------------------------*/
+.panel-title { color: #6a7080; }
+.panel-count { color: #8b909c; }
+
+/* --- Cards (gauge / rate) --------------------------------------------------*/
+.card {
+  background-color: #1e2128;
+  border: 1px solid #2a2e37;
+}
+.card-title       { color: #8b909c; }
+.card-value .num  { color: #e6e8ec; }
+.card-value .unit { color: #8b909c; }
+.card-sub         { color: #6a7080; }
+
+/* barra de progresso e cores por nivel */
+.bar              { background-color: #2a2e37; }
+.bar-fill         { background-color: #4f8cff; }
+.card--warn .bar-fill { background-color: #d29922; }
+.card--crit .bar-fill { background-color: #f85149; }
+.card--warn .card-value .num { color: #e3b341; }
+.card--crit .card-value .num { color: #ff7b72; }
+
+/* card de taxa (rede) */
+.rate-val               { color: #e6e8ec; }
+.rate--down .rate-arrow { color: #4f8cff; }
+.rate--up   .rate-arrow { color: #3fb950; }
+
+/* --- Painel Sistema --------------------------------------------------------*/
+.info-item {
+  background-color: #1e2128;
+  border: 1px solid #2a2e37;
+}
+.info-label { color: #6a7080; }
+.info-value { color: #e6e8ec; }
+
+/* --- Containers ------------------------------------------------------------*/
+.crow {
+  background-color: #1e2128;
+  border: 1px solid #2a2e37;
+}
+.crow--down { opacity: 0.55; }
+
+.crow--up   .cdot { background-color: #3fb950; }
+.crow--down .cdot { background-color: #f85149; }
+
+.cname        { color: #e6e8ec; }
+.cimage       { color: #6a7080; }
+.cstat-label  { color: #6a7080; }
+.cstat-val    { color: #c8ccd4; }
+.cmini        { background-color: #2a2e37; }
+.cmini-fill   { background-color: #4f8cff; }
+
+.crow--up   .cstatus { color: #3fb950; }
+.crow--down .cstatus { color: #f85149; }
+
+.empty { color: #6a7080; }
+
+/* --- Feeds: Agenda e Noticias ---------------------------------------------*/
+.feed-day { color: #4f8cff; }
+
+.cal-event {
+  background-color: #1e2128;
+  border: 1px solid #2a2e37;
+}
+.cal-time  { color: #8b909c; }
+.cal-title { color: #e6e8ec; }
+.cal-loc   { color: #6a7080; }
+
+.news-item {
+  background-color: #1e2128;
+  border: 1px solid #2a2e37;
+}
+.news-title { color: #e6e8ec; }
+.news-age   { color: #6a7080; }
+
+/* --- Rodape ----------------------------------------------------------------*/
+.footer {
+  color: #6a7080;
+  border-top: 1px solid #23262e;
+}

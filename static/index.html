@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Homelab">
+  <title>Homelab Monitor</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-name">Homelab</span>
+      <span class="brand-sub" id="hostname">&mdash;</span>
+    </div>
+    <div class="status">
+      <span class="status-dot" id="status-dot"></span>
+      <span id="status-text">conectando&hellip;</span>
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2 class="panel-title">Host</h2>
+      <div class="card-grid" id="section-host"></div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Sistema</h2>
+      <div class="info-row" id="section-system"></div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">
+        Containers <span class="panel-count" id="container-count"></span>
+      </h2>
+      <div class="container-list" id="section-containers"></div>
+    </section>
+
+    <div class="feeds-row">
+      <section class="panel panel--feed">
+        <h2 class="panel-title">Agenda</h2>
+        <div class="feed-list" id="section-calendar"></div>
+      </section>
+      <section class="panel panel--feed">
+        <h2 class="panel-title">Noticias</h2>
+        <div class="feed-list" id="section-news"></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <span id="footer-text">Homelab Monitor</span>
+    <span id="last-update"></span>
+  </footer>
+
+  <!-- Ordem importa: config -> utilitarios -> componentes -> orquestrador. -->
+  <script src="config.js"></script>
+  <script src="js/xhr.js"></script>
+  <script src="js/sparkline.js"></script>
+  <script src="js/widgets.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

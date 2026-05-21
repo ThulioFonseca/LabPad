@@ -1,0 +1,393 @@
+/* =============================================================================
+ * base.css  —  ESTRUTURA E LAYOUT (sem cores).
+ *
+ * Compativel com Safari 9 / iOS 9.3.5:
+ *   - sem CSS Grid  -> layout so com Flexbox (prefixos -webkit-)
+ *   - sem variaveis CSS
+ * As cores vivem todas em theme.css.
+ * ===========================================================================*/
+
+* {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* fonte monoespacada reaproveitada por varios elementos */
+.mono,
+.clock,
+.card-value,
+.card-sub,
+.info-value,
+.rate,
+.cimage,
+.cstat-val,
+.cstatus {
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+
+/* --- Topo ------------------------------------------------------------------*/
+.topbar {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  padding: 16px 24px;
+}
+
+.brand {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: baseline;
+  align-items: baseline;
+}
+.brand-name {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.brand-sub {
+  margin-left: 10px;
+  font-size: 13px;
+}
+
+.status {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  font-size: 13px;
+}
+.status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 8px;
+  display: inline-block;
+}
+.clock {
+  margin-left: 16px;
+  font-size: 14px;
+}
+
+/* --- Conteudo --------------------------------------------------------------*/
+main {
+  padding: 8px 24px 24px;
+}
+
+.panel {
+  margin-bottom: 26px;
+}
+.panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 12px 2px;
+}
+.panel-count {
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+/* --- Grade de cards --------------------------------------------------------*/
+/* margens negativas dao espacamento uniforme sem depender de flex `gap`. */
+.card-grid,
+.info-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: -7px;
+}
+
+.card {
+  -webkit-flex: 1 1 220px;
+  flex: 1 1 220px;
+  min-width: 200px;
+  margin: 7px;
+  padding: 16px 18px;
+  border-radius: 10px;
+}
+
+.card-head {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  -webkit-align-items: baseline;
+  align-items: baseline;
+}
+.card-title {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+.card-value .num {
+  font-size: 26px;
+  font-weight: 600;
+}
+.card-value .unit {
+  font-size: 14px;
+  margin-left: 2px;
+}
+
+.bar {
+  height: 6px;
+  border-radius: 3px;
+  margin-top: 12px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 3px;
+  -webkit-transition: width 0.45s ease;
+  transition: width 0.45s ease;
+}
+
+.card-sub {
+  margin-top: 8px;
+  font-size: 12px;
+  min-height: 14px;
+}
+
+.spark {
+  display: block;
+  width: 100%;
+  height: 34px;
+  margin-top: 10px;
+}
+
+/* card de taxa (rede) */
+.rate-row {
+  display: -webkit-flex;
+  display: flex;
+  margin-top: 12px;
+}
+.rate {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  font-size: 15px;
+}
+.rate--up {
+  margin-left: 22px;
+}
+.rate-arrow {
+  margin-right: 5px;
+  font-size: 13px;
+}
+
+/* --- Painel Sistema (cards de texto) --------------------------------------*/
+.info-item {
+  -webkit-flex: 1 1 200px;
+  flex: 1 1 200px;
+  min-width: 180px;
+  margin: 7px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+.info-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.info-value {
+  margin-top: 6px;
+  font-size: 17px;
+  word-break: break-word;
+}
+
+/* --- Lista de containers ---------------------------------------------------*/
+.container-list {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+.crow {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  padding: 12px 16px;
+  border-radius: 9px;
+  margin-bottom: 8px;
+}
+.cdot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 14px;
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+}
+.cmain {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.cname {
+  font-size: 15px;
+  font-weight: 600;
+}
+.cimage {
+  font-size: 12px;
+  margin-top: 2px;
+}
+.cstat {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  margin-left: 22px;
+  text-align: right;
+}
+.cstat-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.cstat-val {
+  font-size: 15px;
+}
+.cmini {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  width: 84px;
+  height: 6px;
+  border-radius: 3px;
+  margin-left: 22px;
+  overflow: hidden;
+}
+.cmini-fill {
+  height: 100%;
+  width: 0;
+  -webkit-transition: width 0.45s ease;
+  transition: width 0.45s ease;
+}
+.cstatus {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  margin-left: 22px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.empty {
+  padding: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* --- Rodape ----------------------------------------------------------------*/
+.footer {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  padding: 14px 24px 22px;
+  font-size: 12px;
+}
+
+/* --- Feeds: Agenda e Noticias ---------------------------------------------*/
+.feeds-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: 0 -11px;
+}
+.panel--feed {
+  -webkit-flex: 1 1 380px;
+  flex: 1 1 380px;
+  min-width: 300px;
+  margin: 0 11px;
+}
+
+.feed-day {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 16px 2px 7px;
+}
+.feed-list > .feed-day:first-child {
+  margin-top: 0;
+}
+
+.cal-event {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: baseline;
+  align-items: baseline;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+.cal-time {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  width: 98px;
+  font-size: 13px;
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+.cal-body {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.cal-title {
+  font-size: 14px;
+}
+.cal-loc {
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.news-item {
+  padding: 11px 14px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+.news-title {
+  font-size: 14px;
+  line-height: 1.4;
+}
+.news-age {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+/* Telas estreitas (iPad em retrato): esconde o mini-grafico de mem por linha. */
+@media (max-width: 560px) {
+  .cmini { display: none; }
+  .topbar, main, .footer { padding-left: 14px; padding-right: 14px; }
+}
