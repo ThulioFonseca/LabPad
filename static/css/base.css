@@ -750,3 +750,53 @@ main {
   -webkit-overflow-scrolling: touch;   /* rolagem com inercia no iOS */
   padding: 14px 18px 18px;
 }
+
+/* --- Botao "(i)" inline no titulo do painel ----------------------------- */
+.panel-info-btn {
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 2px;
+  margin-left: 6px;
+  cursor: pointer;
+  line-height: 0;
+  vertical-align: middle;
+  opacity: 0.55;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.panel-info-btn:active { opacity: 1; }
+.panel-info-btn svg { display: block; }
+
+/* --- Layout do conteudo do modal "Sistema" ------------------------------ */
+.sys-group { margin-bottom: 16px; }
+.sys-group:last-child { margin-bottom: 0; }
+.sys-group-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin: 0 0 6px;
+}
+.sys-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: baseline;
+  align-items: baseline;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.sys-key {
+  -webkit-flex: 0 0 130px;
+  flex: 0 0 130px;
+  opacity: 0.6;
+}
+.sys-val {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-width: 0;
+  word-break: break-word;
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 12.5px;
+}

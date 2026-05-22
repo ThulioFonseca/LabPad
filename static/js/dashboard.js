@@ -102,7 +102,7 @@
     var i, widget;
     var hostData = data.host || {};
 
-    Widgets.renderMeta(byId('section-meta'), hostData);
+    Widgets.renderSystemInfo(byId('system-modal-body'), hostData, data.containers);
 
     for (i = 0; i < CONFIG.widgets.length; i++) {
       widget = CONFIG.widgets[i];
@@ -162,6 +162,31 @@
 
     var closeBtn = byId('containers-modal-close');
     if (closeBtn) { closeBtn.onclick = closeContainersModal; }
+  }
+
+  /* --- Modal "Sistema" (botao (i) no titulo do painel Host) --------------*/
+  function openSystemModal() {
+    var m = byId('system-modal');
+    if (m) { m.className = 'modal-backdrop modal-backdrop--open'; }
+  }
+
+  function closeSystemModal() {
+    var m = byId('system-modal');
+    if (m) { m.className = 'modal-backdrop'; }
+  }
+
+  function wireSystemModal() {
+    var btn = byId('host-info-btn');
+    if (btn) {
+      btn.innerHTML = ICONS.info;
+      btn.onclick = openSystemModal;
+    }
+    var backdrop = byId('system-modal');
+    if (backdrop) { backdrop.onclick = closeSystemModal; }
+    var box = byId('system-modal-box');
+    if (box) { box.onclick = function (e) { e.stopPropagation(); }; }
+    var closeBtn = byId('system-modal-close');
+    if (closeBtn) { closeBtn.onclick = closeSystemModal; }
   }
 
   /* --- Rotacao do widget de clima (painel unico) -------------------------*/
@@ -271,6 +296,7 @@
   /* --- Inicializacao ------------------------------------------------------*/
   buildWidgets();
   wireContainersModal();
+  wireSystemModal();
   window.onresize = resizeAllCanvases;
   showFeedMessage('Carregando...');
   tickClock();

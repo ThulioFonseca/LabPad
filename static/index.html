@@ -41,8 +41,11 @@
 
   <main>
     <section class="panel">
-      <h2 class="panel-title">Host</h2>
-      <div class="panel-meta" id="section-meta"></div>
+      <h2 class="panel-title">
+        Host
+        <button class="panel-info-btn" id="host-info-btn" type="button"
+                aria-label="Informacoes do sistema"></button>
+      </h2>
       <div class="card-grid" id="section-host"></div>
       <div class="double-row" id="section-wide">
         <div class="card" id="section-network"></div>
@@ -80,6 +83,17 @@
       <div class="modal-body">
         <div class="container-list" id="section-containers"></div>
       </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="system-modal">
+    <div class="modal" id="system-modal-box">
+      <div class="modal-head">
+        <h2 class="modal-title">Sistema</h2>
+        <button class="modal-close" id="system-modal-close" type="button"
+                aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body" id="system-modal-body"></div>
     </div>
   </div>
 

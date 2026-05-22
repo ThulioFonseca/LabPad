@@ -267,22 +267,87 @@ Widgets._calEvent = function (ev) {
 };
 
 
-/* --- Meta-line: OS, uptime, load, nucleos -------------------------------- */
+/* --- Modal "Sistema": info de hardware/software por grupos --------------- */
 
-Widgets.renderMeta = function (node, hostData) {
+Widgets.renderSystemInfo = function (node, hostData, containersData) {
   if (!node) { return; }
-  var parts = [];
-  if (hostData.os) { parts.push(hostData.os); }
-  if (typeof hostData.uptime === 'number') {
-    parts.push('up ' + fmtDuration(hostData.uptime));
+  node.innerHTML = '';
+  hostData = hostData || {};
+  var info = hostData.info || {};
+  var runtime = (containersData && containersData.runtime) || {};
+
+  function group(title, rows) {
+    var g = el('div', 'sys-group');
+    g.appendChild(el('div', 'sys-group-title', title));
+    for (var i = 0; i < rows.length; i++) {
+      var row = el('div', 'sys-row');
+      row.appendChild(el('div', 'sys-key', rows[i][0]));
+      var v = rows[i][1];
+      var txt = (v === undefined || v === null || v === '') ? DASH : String(v);
+      row.appendChild(el('div', 'sys-val', txt));
+      g.appendChild(row);
+    }
+    return g;
   }
-  if (hostData.load && hostData.load.length && hostData.load[0] !== null) {
-    parts.push('load ' + hostData.load[0]);
+
+  /* Sistema */
+  node.appendChild(group('Sistema', [
+    ['Hostname',     hostData.hostname],
+    ['SO',           hostData.os],
+    ['Kernel',       info.kernel],
+    ['Arquitetura',  info.arch]
+  ]));
+
+  /* CPU */
+  var loadStr = (hostData.load && hostData.load.length
+                 && hostData.load[0] !== null)
+    ? hostData.load.join('  \xb7  ') : DASH;
+  node.appendChild(group('CPU', [
+    ['Modelo',          info.cpu_model],
+    ['Nucleos fisicos', info.cpu_count_physical],
+    ['Nucleos logicos', hostData.cpu_count],
+    ['Load (1\xb75\xb715m)', loadStr]
+  ]));
+
+  /* Memoria */
+  node.appendChild(group('Memoria', [
+    ['Total', fmtBytes(hostData.mem_total)]
+  ]));
+
+  /* Disco */
+  var diskRows = [];
+  var disks = hostData.disk || [];
+  for (var d = 0; d < disks.length; d++) {
+    var dk = disks[d];
+    var pct = (dk.percent !== null && dk.percent !== undefined)
+      ? dk.percent + '% usado' : DASH;
+    diskRows.push([dk.label, fmtBytes(dk.total) + '  \xb7  ' + pct]);
   }
-  if (hostData.cpu_count) {
-    parts.push(hostData.cpu_count + (hostData.cpu_count === 1 ? ' nucleo' : ' nucleos'));
+  if (!diskRows.length) { diskRows.push(['(nenhum)', '']); }
+  node.appendChild(group('Disco', diskRows));
+
+  /* Rede */
+  var netRows = [];
+  var ifaces = info.interfaces || [];
+  for (var k = 0; k < ifaces.length; k++) {
+    var nif = ifaces[k];
+    var detail = [];
+    if (nif.ipv4) { detail.push(nif.ipv4); }
+    if (nif.mac)  { detail.push(nif.mac); }
+    if (nif.speed_mbps) { detail.push(nif.speed_mbps + ' Mbps'); }
+    if (nif.mtu) { detail.push('MTU ' + nif.mtu); }
+    var label = nif.name + (nif.is_up === false ? ' (down)' : '');
+    netRows.push([label, detail.join('  \xb7  ') || DASH]);
   }
-  setText(node, parts.join('  \xb7  '));
+  if (!netRows.length) { netRows.push(['(sem interfaces)', '']); }
+  node.appendChild(group('Rede', netRows));
+
+  /* Runtime */
+  node.appendChild(group('Runtime', [
+    ['Docker',  runtime.docker_version],
+    ['Python',  info.python_version],
+    ['Uptime',  fmtDuration(hostData.uptime)]
+  ]));
 };
 
 

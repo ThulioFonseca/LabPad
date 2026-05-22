@@ -5,6 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import docker
 
 _client = None
+_runtime_cache = {}
 
 
 def _client_get():
@@ -14,6 +15,17 @@ def _client_get():
         # loop de métricas por 60s (padrão do SDK), o que causaria timeout no XHR.
         _client = docker.from_env(timeout=10)
     return _client
+
+
+def _runtime():
+    """Versao do Docker daemon — memoizada (nao muda em runtime)."""
+    if not _runtime_cache:
+        try:
+            v = _client_get().version() or {}
+            _runtime_cache["docker_version"] = v.get("Version", "?")
+        except Exception:
+            _runtime_cache["docker_version"] = "?"
+    return _runtime_cache
 
 
 def _cpu_percent(stats):
@@ -99,7 +111,7 @@ def collect():
     client = _client_get()
     containers = client.containers.list(all=True)
     if not containers:
-        return {"list": []}
+        return {"list": [], "runtime": _runtime()}
 
     # `stats(stream=False)` leva ~1s por container; paraleliza para caber no ciclo.
     workers = min(8, len(containers))
@@ -108,4 +120,4 @@ def collect():
 
     # Ativos primeiro, depois ordem alfabetica.
     items.sort(key=lambda c: (c["status"] != "running", c["name"].lower()))
-    return {"list": items}
+    return {"list": items, "runtime": _runtime()}

@@ -1,6 +1,8 @@
 """Coletor de metricas do host: CPU, memoria, disco, rede, load, uptime, SO."""
 import os
+import platform
 import socket
+import sys
 import time
 
 import psutil
@@ -54,15 +56,65 @@ def _read_hostname():
     return socket.gethostname()
 
 
-# SO, hostname e contagem de nucleos nao mudam em runtime — lidos so uma vez.
+def _cpu_model():
+    """Modelo da CPU (primeira linha 'model name' de /proc/cpuinfo)."""
+    try:
+        with open("/proc/cpuinfo", "r") as fh:
+            for line in fh:
+                if line.startswith("model name"):
+                    return line.split(":", 1)[1].strip()
+    except OSError:
+        pass
+    return platform.processor() or "?"
+
+
+def _interfaces():
+    """Lista das interfaces de rede do host (network_mode: host)."""
+    out = []
+    try:
+        addrs = psutil.net_if_addrs()
+        stats = psutil.net_if_stats()
+    except Exception:
+        return out
+    for name in sorted(addrs.keys()):
+        if name == "lo":
+            continue
+        ipv4 = mac = None
+        for entry in addrs[name]:
+            family = getattr(entry, "family", None)
+            if family == socket.AF_INET and ipv4 is None:
+                ipv4 = entry.address
+            elif family == psutil.AF_LINK and mac is None:
+                mac = entry.address
+        st = stats.get(name)
+        out.append({
+            "name": name,
+            "ipv4": ipv4,
+            "mac": mac,
+            "mtu": getattr(st, "mtu", None) if st else None,
+            "speed_mbps": getattr(st, "speed", None) if st else None,
+            "is_up": getattr(st, "isup", None) if st else None,
+        })
+    return out
+
+
+# SO, hostname, contagem de nucleos, modelo de CPU, kernel: nao mudam em
+# runtime — lidos so uma vez.
 _static_cache = {}
 
 
 def _static():
     if not _static_cache:
+        uname = os.uname()
         _static_cache["os"] = _read_os_name()
         _static_cache["hostname"] = _read_hostname()
         _static_cache["cpu_count"] = psutil.cpu_count() or 1
+        _static_cache["cpu_count_physical"] = (
+            psutil.cpu_count(logical=False) or _static_cache["cpu_count"])
+        _static_cache["cpu_model"] = _cpu_model()
+        _static_cache["kernel"] = uname.release
+        _static_cache["arch"] = uname.machine
+        _static_cache["python_version"] = sys.version.split()[0]
     return _static_cache
 
 
@@ -160,6 +212,14 @@ def collect():
     agg_percent = round(agg_used / agg_total * 100.0, 1) if agg_total else None
 
     static = _static()
+    info = {
+        "kernel": static["kernel"],
+        "arch": static["arch"],
+        "cpu_model": static["cpu_model"],
+        "cpu_count_physical": static["cpu_count_physical"],
+        "python_version": static["python_version"],
+        "interfaces": _interfaces(),
+    }
     return {
         "hostname": static["hostname"],
         "os": static["os"],
@@ -176,4 +236,5 @@ def collect():
         "net_tx": sent_rate,
         "load": load,
         "uptime": max(time.time() - psutil.boot_time(), 0),
+        "info": info,
     }
