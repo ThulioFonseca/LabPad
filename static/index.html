@@ -7,8 +7,20 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Homelab">
   <title>Homelab Monitor</title>
+  <script>
+    /* Aplica o tema salvo antes da pintura (evita flash do tema anterior). */
+    (function () {
+      var t = 'minimal', m = 'dark';
+      try {
+        t = localStorage.getItem('homelab.theme') || 'minimal';
+        m = localStorage.getItem('homelab.mode') || 'dark';
+      } catch (e) { /* localStorage indisponivel */ }
+      document.documentElement.className = 'theme-' + t + ' mode-' + m;
+    })();
+  </script>
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/themes.css">
 </head>
 <body>
 
@@ -23,6 +35,7 @@
       <span class="status-dot" id="status-dot"></span>
       <span id="status-text">conectando&hellip;</span>
       <span class="clock" id="clock">--:--:--</span>
+      <span class="theme-control" id="theme-control"><!-- engrenagem: theme.js --></span>
     </div>
   </header>
 
@@ -79,6 +92,7 @@
   <script src="js/icons.js"></script>
   <script src="js/sparkline.js"></script>
   <script src="js/widgets.js"></script>
+  <script src="js/theme.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>

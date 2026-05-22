@@ -596,3 +596,83 @@ main {
   border-left: 3px solid #f85149;
   padding-left: 11px;
 }
+
+/* --- Seletor de tema (engrenagem) ----------------------------------------- */
+/* Estrutura apenas; as cores vivem em themes.css (por modo). */
+.theme-control {
+  position: relative;
+  display: inline-block;
+  margin-left: 14px;
+}
+.theme-gear {
+  background: none;
+  border: none;
+  padding: 4px;
+  margin: 0;
+  cursor: pointer;
+  color: inherit;
+  line-height: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.theme-gear svg { display: block; }
+
+.theme-menu {
+  display: none;
+  position: absolute;
+  top: 150%;
+  right: 0;
+  z-index: 50;
+  width: 190px;
+  padding: 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  text-align: left;
+}
+.theme-menu--open { display: block; }
+
+.theme-menu-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin: 8px 4px 4px;
+}
+.theme-menu-label:first-child { margin-top: 2px; }
+
+.theme-opt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 7px 9px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.theme-opt--active { font-weight: 600; }
+
+.theme-mode-row {
+  display: -webkit-flex;
+  display: flex;
+  margin-top: 4px;
+}
+.theme-mode-btn {
+  -webkit-flex: 1 1 0;
+  flex: 1 1 0;
+  background: none;
+  border: 1px solid transparent;
+  color: inherit;
+  padding: 6px;
+  margin: 0 3px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.theme-mode-btn--active { font-weight: 600; }

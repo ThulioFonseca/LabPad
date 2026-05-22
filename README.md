@@ -141,8 +141,15 @@ Exemplo — mostrar contagem de processos:
 
 ### Mudar a aparência
 
-Toda a paleta de cores está em [`static/css/theme.css`](static/css/theme.css).
-Edite lá e recarregue. A estrutura/layout fica em `base.css` (normalmente intocado).
+Use o **botão de engrenagem** no canto superior direito: ele abre um menu com
+**5 temas** — Minimal, Neumorfismo, Elevado, Contorno e Vidro Fosco — cada um
+com variante **clara** e **escura**. A escolha é salva no navegador
+(`localStorage`) e reaplicada nas próximas aberturas, sem flash.
+
+Cada tema é um *estilo* (sombra, borda, forma), não só uma cor. O Minimal
+escuro vive em [`static/css/theme.css`](static/css/theme.css); os demais ficam
+em `themes.css`, aplicados por classes em `<html>` (`theme-X mode-Y`). A
+estrutura/layout fica em `base.css` (normalmente intocado).
 
 ### Tipos de widget disponíveis
 
@@ -170,12 +177,14 @@ static/
   index.html             esqueleto da pagina
   config.js          ★   widgets e intervalos — edite aqui
   css/base.css           layout (Flexbox, sem Grid)
-  css/theme.css      ★   cores — edite aqui para re-tematizar
+  css/theme.css          tema Minimal escuro (padrao)
+  css/themes.css         demais temas + variantes clara/escura
   js/xhr.js              requisicoes (XMLHttpRequest, substitui fetch)
   js/format.js           utilitarios de DOM e formatacao
   js/icons.js            icones SVG (cards, clima, lua)
   js/sparkline.js        mini-grafico em <canvas>
   js/widgets.js          componentes: cards, agenda, noticias, clima
+  js/theme.js            seletor de tema (engrenagem)
   js/dashboard.js        polling + render
 .env               ★   URLs do calendario/RSS, cidade do clima e fuso
 Dockerfile · docker-compose.yml · requirements.txt
