@@ -7,6 +7,7 @@ import logging
 import os
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 from flask import Flask, jsonify, request, send_from_directory
 
@@ -61,11 +62,22 @@ def _build_metrics():
 
 
 def _build_feeds():
-    raw = {
-        "calendar": _safe(calendar_feed.collect, {"events": [], "configured": True}),
-        "news":     _safe(news.collect, {"items": [], "configured": True}),
-        "weather":  _safe(weather.collect, {"configured": False}),
+    # Coletores rodam em paralelo: tempo total = o do mais lento (agenda),
+    # nao a soma dos tres. Permite timeout generoso na agenda sem atrasar clima.
+    jobs = {
+        "calendar": (calendar_feed.collect, {"events": [], "configured": True}),
+        "news":     (news.collect, {"items": [], "configured": True}),
+        "weather":  (weather.collect, {"configured": False}),
     }
+    raw = {}
+    with ThreadPoolExecutor(max_workers=3) as executor:
+        futures = {
+            key: executor.submit(_safe, fn, fallback)
+            for key, (fn, fallback) in jobs.items()
+        }
+        for key in jobs:
+            raw[key] = futures[key].result()
+
     result = {}
     for key, data in raw.items():
         if "error" not in data:

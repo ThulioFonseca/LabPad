@@ -190,7 +190,7 @@
   /* --- Loop dos feeds (agenda + noticias + clima) -------------------------*/
   function pollFeeds() {
     var url = (CONFIG.apiBase || '') + '/api/feeds?_=' + (new Date()).getTime();
-    /* Timeout de 30s: feeds chamam APIs externas que podem demorar ate 15s. */
+    /* Timeout de 40s: feeds chamam APIs externas; a agenda pode levar ate ~25s. */
     getJSON(url, function (data) {
       try {
         lastCalendar = data.calendar;
@@ -214,7 +214,7 @@
       if (!feedsLoaded) { showFeedMessage('Sem conexao com o servidor.'); }
       /* Falha de rede: tenta de novo em 30s em vez de esperar 10 min */
       setTimeout(pollFeeds, 30000);
-    }, 30000);
+    }, 40000);
   }
 
   function showFeedMessage(msg) {

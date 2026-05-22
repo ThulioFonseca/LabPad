@@ -11,7 +11,8 @@ import requests
 
 import config
 
-_TIMEOUT = 14
+# (connect 5s, read 25s) — calendarios Office365 corporativos sao lentos.
+_TIMEOUT = (5, 25)
 _UA = "Mozilla/5.0 (HomelabMonitor)"
 
 # Abreviacoes em pt-BR (Monday=0 .. Sunday=6).
