@@ -52,6 +52,44 @@ var ICONS = {
   docker: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="3" height="3" rx="0.5"/><rect x="5" y="6" width="3" height="3" rx="0.5"/><rect x="9" y="6" width="3" height="3" rx="0.5"/><rect x="5" y="2" width="3" height="3" rx="0.5"/><path d="M14.5 7.5c-0.5-1.5-2-1.5-2-1.5H2c0 4 3 5 6 5s5-1 6.5-3.5z"/></svg>'
 };
 
+/* Icones de clima por grupo WMO — cores fixas, independentes do tema. */
+var WEATHER_ICONS = {
+  clear:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" fill="#f5c542"/><line x1="12" y1="2" x2="12" y2="5" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="22" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="12" x2="5" y2="12" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="19" y1="12" x2="22" y2="12" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="4.22" y1="4.22" x2="6.34" y2="6.34" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="19.78" y1="4.22" x2="17.66" y2="6.34" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="6.34" y1="17.66" x2="4.22" y2="19.78" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/></svg>',
+  partly:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="10" cy="10" r="4" fill="#f5c542"/><rect x="6" y="13" width="13" height="7" rx="3.5" fill="#b0bec5"/><rect x="4" y="15" width="10" height="5" rx="2.5" fill="#cfd8dc"/></svg>',
+  cloudy:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="10" width="18" height="9" rx="4.5" fill="#90a4ae"/><rect x="6" y="7" width="11" height="7" rx="3.5" fill="#b0bec5"/></svg>',
+  fog:     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#90a4ae" stroke-width="2" stroke-linecap="round"><line x1="3" y1="8" x2="21" y2="8"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="3" y1="16" x2="21" y2="16"/></svg>',
+  drizzle: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="9" rx="4.5" fill="#90a4ae"/><line x1="8" y1="17" x2="7" y2="21" stroke="#64b5f6" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="17" x2="12" y2="21" stroke="#64b5f6" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="17" x2="17" y2="21" stroke="#64b5f6" stroke-width="2" stroke-linecap="round"/></svg>',
+  rain:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="9" rx="4.5" fill="#78909c"/><line x1="7" y1="16" x2="5" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="10" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="16" x2="15" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/></svg>',
+  snow:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="9" rx="4.5" fill="#90a4ae"/><text x="5" y="23" font-size="11" fill="#b3e5fc">* * *</text></svg>',
+  shower:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="6" r="3" fill="#f5c542"/><rect x="5" y="8" width="14" height="7" rx="3.5" fill="#78909c"/><line x1="9" y1="18" x2="8" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/><line x1="14" y1="18" x2="13" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/></svg>',
+  storm:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="10" rx="5" fill="#546e7a"/><polyline points="13,13 10,19 14,19 11,24" stroke="#fdd835" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
+};
+
+/* Icones da lua por fase (0=lua nova .. 7=minguante). */
+var MOON_ICONS = [
+  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/></svg>',
+  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 1 12 21 A5 9 0 0 0 12 3Z" fill="#f5c542"/></svg>',
+  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 1 12 21 L12 3Z" fill="#f5c542"/></svg>',
+  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f5c542" stroke="#e5b100" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 0 12 21 A3 9 0 0 1 12 3Z" fill="#37474f"/></svg>',
+  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f5c542" stroke="#e5b100" stroke-width="1.5"/></svg>',
+  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f5c542" stroke="#e5b100" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 1 12 21 A3 9 0 0 0 12 3Z" fill="#37474f"/></svg>',
+  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 0 12 21 L12 3Z" fill="#f5c542"/></svg>',
+  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 0 12 21 A5 9 0 0 1 12 3Z" fill="#f5c542"/></svg>'
+];
+
+function _wmoIcon(code) {
+  if (code === 0)  { return WEATHER_ICONS.clear; }
+  if (code <= 2)   { return WEATHER_ICONS.partly; }
+  if (code === 3)  { return WEATHER_ICONS.cloudy; }
+  if (code <= 48)  { return WEATHER_ICONS.fog; }
+  if (code <= 57)  { return WEATHER_ICONS.drizzle; }
+  if (code <= 65)  { return WEATHER_ICONS.rain; }
+  if (code <= 77)  { return WEATHER_ICONS.snow; }
+  if (code <= 82)  { return WEATHER_ICONS.shower; }
+  if (code <= 86)  { return WEATHER_ICONS.snow; }
+  return WEATHER_ICONS.storm;
+}
+
 function fmtBytes(n) {
   if (n === null || n === undefined || isNaN(n)) { return DASH; }
   var units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
@@ -362,7 +400,14 @@ Widgets.renderCalendar = function (container, payload) {
 };
 
 Widgets._calEvent = function (ev) {
-  var row = el('div', 'cal-event');
+  var now = Math.floor(Date.now() / 1000);
+  var cls = 'cal-event';
+  if (ev.start_epoch && ev.end_epoch && now >= ev.start_epoch && now < ev.end_epoch) {
+    cls += ' cal-event--active';
+  } else if (ev.start_epoch && ev.start_epoch > now && (ev.start_epoch - now) <= 900) {
+    cls += ' cal-event--soon';
+  }
+  var row = el('div', cls);
   row.appendChild(el('span', 'cal-time', ev.time_label || ''));
   var body = el('div', 'cal-body');
   body.appendChild(el('div', 'cal-title', ev.title || '(sem titulo)'));
@@ -486,6 +531,66 @@ Widgets.renderDockerSummary = function (cardEl, payload) {
     }
     cardEl.appendChild(topDiv);
   }
+};
+
+
+/* --- Widget de clima (topbar center) ------------------------------------- */
+
+Widgets.initWeather = function (containerEl) {
+  if (!containerEl) { return null; }
+  var panels = [];
+  for (var i = 0; i < 3; i++) {
+    var p = el('div', 'weather-panel weather-hidden');
+    containerEl.appendChild(p);
+    panels.push(p);
+  }
+  return { panels: panels, current: -1 };
+};
+
+Widgets.renderWeather = function (weatherRefs, payload) {
+  if (!weatherRefs || !payload || !payload.configured) { return; }
+
+  var panels = weatherRefs.panels;
+
+  /* Painel 0: temperatura atual + humidade */
+  var p0 = panels[0];
+  p0.innerHTML = '';
+  var cur = payload.current || {};
+  var iconSpan0 = el('span', 'weather-icon');
+  iconSpan0.innerHTML = _wmoIcon(cur.code || 0);
+  p0.appendChild(iconSpan0);
+  p0.appendChild(el('span', 'weather-val', (cur.temp !== undefined ? cur.temp + '\xb0C' : DASH)));
+  p0.appendChild(el('span', 'weather-sep', '\xb7'));
+  p0.appendChild(el('span', 'weather-val', (cur.humidity !== undefined ? cur.humidity + '%' : DASH)));
+
+  /* Painel 1: previsao 5 dias */
+  var p1 = panels[1];
+  p1.innerHTML = '';
+  var forecast = payload.forecast || [];
+  var days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+  for (var j = 0; j < forecast.length && j < 5; j++) {
+    var f = forecast[j];
+    var dayEl = el('span', 'weather-day');
+    var d = f.date ? new Date(f.date + 'T12:00:00') : null;
+    var dayName = d ? days[d.getDay()] : '';
+    dayEl.appendChild(el('span', 'weather-day-name', dayName));
+    var iconSpan1 = el('span', 'weather-icon');
+    iconSpan1.innerHTML = _wmoIcon(f.code || 0);
+    dayEl.appendChild(iconSpan1);
+    var tempStr = (f.high !== null && f.high !== undefined ? Math.round(f.high) : DASH)
+      + '/' + (f.low !== null && f.low !== undefined ? Math.round(f.low) : DASH);
+    dayEl.appendChild(el('span', 'weather-day-temp', tempStr));
+    p1.appendChild(dayEl);
+  }
+
+  /* Painel 2: fase da lua */
+  var p2 = panels[2];
+  p2.innerHTML = '';
+  var moon = payload.moon || {};
+  var moonIconSpan = el('span', 'weather-icon');
+  moonIconSpan.innerHTML = MOON_ICONS[moon.phase_index || 0] || '';
+  p2.appendChild(moonIconSpan);
+  p2.appendChild(el('span', 'weather-val', moon.name || DASH));
 };
 
 

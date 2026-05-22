@@ -44,16 +44,23 @@ body {
   display: flex;
   -webkit-align-items: center;
   align-items: center;
-  -webkit-justify-content: space-between;
-  justify-content: space-between;
   padding: 16px 24px;
 }
 
 .brand {
+  -webkit-flex: 1 1 0;
+  flex: 1 1 0;
   display: -webkit-flex;
   display: flex;
   -webkit-align-items: baseline;
   align-items: baseline;
+}
+
+.topbar-center {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  min-width: 0;
+  text-align: center;
 }
 .brand-name {
   font-size: 20px;
@@ -66,10 +73,14 @@ body {
 }
 
 .status {
+  -webkit-flex: 1 1 0;
+  flex: 1 1 0;
   display: -webkit-flex;
   display: flex;
   -webkit-align-items: center;
   align-items: center;
+  -webkit-justify-content: flex-end;
+  justify-content: flex-end;
   font-size: 13px;
 }
 .status-dot {
@@ -90,7 +101,7 @@ main {
 }
 
 .panel {
-  margin-bottom: 26px;
+  margin-bottom: 20px;
 }
 .panel-title {
   font-size: 12px;
@@ -121,7 +132,7 @@ main {
   flex: 1 1 220px;
   min-width: 200px;
   margin: 7px;
-  padding: 16px 18px;
+  padding: 13px 18px;
   border-radius: 10px;
 }
 
@@ -147,9 +158,9 @@ main {
 }
 
 .bar {
-  height: 6px;
+  height: 5px;
   border-radius: 3px;
-  margin-top: 12px;
+  margin-top: 10px;
   overflow: hidden;
 }
 .bar-fill {
@@ -161,7 +172,7 @@ main {
 }
 
 .card-sub {
-  margin-top: 8px;
+  margin-top: 6px;
   font-size: 12px;
   min-height: 14px;
 }
@@ -169,8 +180,8 @@ main {
 .spark {
   display: block;
   width: 100%;
-  height: 34px;
-  margin-top: 10px;
+  height: 28px;
+  margin-top: 8px;
 }
 
 /* card de taxa (rede) */
@@ -230,9 +241,9 @@ main {
   display: flex;
   -webkit-align-items: center;
   align-items: center;
-  padding: 12px 16px;
+  padding: 10px 16px;
   border-radius: 9px;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .cdot {
   width: 9px;
@@ -405,7 +416,7 @@ main {
   display: flex;
   -webkit-flex-wrap: wrap;
   flex-wrap: wrap;
-  margin: 14px -7px 0;
+  margin: 10px -7px 0;
 }
 .double-row > .card {
   -webkit-flex: 1 1 440px;
@@ -453,4 +464,64 @@ main {
 }
 .card-icon svg {
   display: block;
+}
+
+/* --- Widget de clima no centro do cabecalho ------------------------------- */
+.weather-panel {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  font-size: 13px;
+  white-space: nowrap;
+  -webkit-transition: opacity 0.8s ease;
+  transition: opacity 0.8s ease;
+}
+.weather-panel.weather-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.weather-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+  line-height: 1;
+}
+.weather-icon svg {
+  display: block;
+}
+.weather-val {
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+.weather-sep {
+  margin: 0 10px;
+}
+.weather-day {
+  display: -webkit-inline-flex;
+  display: inline-flex;
+  -webkit-align-items: center;
+  align-items: center;
+  margin: 0 7px;
+}
+.weather-day-name {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+.weather-day-temp {
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 12px;
+}
+
+/* --- Eventos da agenda: cor por urgencia ---------------------------------- */
+.cal-event--soon {
+  border-left: 3px solid #d29922;
+  padding-left: 11px;
+}
+.cal-event--active {
+  border-left: 3px solid #f85149;
+  padding-left: 11px;
 }

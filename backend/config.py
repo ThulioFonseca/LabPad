@@ -60,3 +60,7 @@ FEEDS_CACHE_TTL = float(_env("FEEDS_CACHE_TTL", "900"))
 
 # Interface de rede a monitorar. Vazio = soma de todas as interfaces.
 NETWORK_IFACE = _env("MONITOR_NETWORK_IFACE", "")
+
+# Clima: nome da cidade a monitorar (ex: "Sao Paulo", "Rio de Janeiro").
+# Vazio = secao desativada.
+WEATHER_CITY = _env("WEATHER_CITY", "")

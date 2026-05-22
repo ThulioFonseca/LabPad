@@ -14,6 +14,17 @@
   var netRefs = null;
   var netBuffer = [];
 
+  /* Weather */
+  var weatherRefs = null;
+  var lastWeather = null;
+  var weatherVisible = 0;
+  var WEATHER_SHOW_MS = 10000;
+  var WEATHER_FADE_MS = 800;
+  var WEATHER_GAP_MS  = 1200;
+
+  /* Calendar */
+  var lastCalendar = null;
+
   function byId(id) { return document.getElementById(id); }
 
   /* --- Montagem inicial dos widgets do config.js --------------------------*/
@@ -31,6 +42,8 @@
 
     netRefs = Widgets.initNetCard(byId('section-network'));
     sizeCanvas(netRefs && netRefs.canvas);
+
+    weatherRefs = Widgets.initWeather(byId('section-weather'));
   }
 
   function sizeCanvas(canvas) {
@@ -78,8 +91,6 @@
     var i, widget;
     var hostData = data.host || {};
 
-    setText(byId('hostname'), hostData.hostname || DASH);
-
     Widgets.renderMeta(byId('section-meta'), hostData);
 
     for (i = 0; i < CONFIG.widgets.length; i++) {
@@ -113,7 +124,47 @@
     setText(node, '(' + up + ' / ' + list.length + ' ativos)');
   }
 
-  /* --- Loop de polling ----------------------------------------------------*/
+  /* --- Rotacao do widget de clima ----------------------------------------*/
+  function weatherStep() {
+    if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
+
+    var panels = weatherRefs.panels;
+    var next = (weatherVisible + 1) % panels.length;
+
+    /* fade out painel atual */
+    panels[weatherVisible].className = 'weather-panel weather-hidden';
+
+    setTimeout(function () {
+      for (var i = 0; i < panels.length; i++) {
+        panels[i].className = 'weather-panel weather-hidden';
+      }
+      weatherVisible = next;
+      panels[weatherVisible].className = 'weather-panel';
+
+      setTimeout(weatherStep, WEATHER_SHOW_MS);
+    }, WEATHER_FADE_MS + WEATHER_GAP_MS);
+  }
+
+  function startWeatherRotation() {
+    if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
+    var panels = weatherRefs.panels;
+    weatherVisible = 0;
+    for (var i = 0; i < panels.length; i++) {
+      panels[i].className = 'weather-panel weather-hidden';
+    }
+    panels[0].className = 'weather-panel';
+    setTimeout(weatherStep, WEATHER_SHOW_MS);
+  }
+
+  /* --- Tick da agenda: re-renderiza para atualizar cores de urgencia ------*/
+  function calendarTick() {
+    if (lastCalendar) {
+      Widgets.renderCalendar(byId('section-calendar'), lastCalendar);
+    }
+    setTimeout(calendarTick, 60000);
+  }
+
+  /* --- Loop de polling das metricas --------------------------------------*/
   function poll() {
     var url = (CONFIG.apiBase || '') + '/api/metrics?_=' + (new Date()).getTime();
     getJSON(url, function (data) {
@@ -130,14 +181,22 @@
     setTimeout(poll, CONFIG.refreshMs);
   }
 
-  /* --- Loop dos feeds (agenda + noticias) ---------------------------------*/
+  /* --- Loop dos feeds (agenda + noticias + clima) -------------------------*/
   function pollFeeds() {
     var url = (CONFIG.apiBase || '') + '/api/feeds?_=' + (new Date()).getTime();
     getJSON(url, function (data) {
       try {
+        lastCalendar = data.calendar;
         Widgets.renderCalendar(byId('section-calendar'), data.calendar);
         Widgets.renderNews(byId('section-news'), data.news);
         feedsLoaded = true;
+
+        if (data.weather && data.weather.configured) {
+          var firstTime = !lastWeather;
+          lastWeather = data.weather;
+          Widgets.renderWeather(weatherRefs, lastWeather);
+          if (firstTime) { startWeatherRotation(); }
+        }
       } catch (e) { /* nunca quebra o loop */ }
       setTimeout(pollFeeds, CONFIG.feedsRefreshMs);
     }, function () {
@@ -175,5 +234,6 @@
   tickClock();
   poll();
   pollFeeds();
+  setTimeout(calendarTick, 60000);
 
 })();

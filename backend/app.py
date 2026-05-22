@@ -10,7 +10,7 @@ import time
 from flask import Flask, jsonify, send_from_directory
 
 import config
-from collectors import calendar_feed, containers, host, news, sensors
+from collectors import calendar_feed, containers, host, news, sensors, weather
 
 STATIC_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
@@ -52,6 +52,7 @@ def _build_feeds():
     return {
         "calendar": _safe(calendar_feed.collect, {"events": [], "configured": True}),
         "news": _safe(news.collect, {"items": [], "configured": True}),
+        "weather": _safe(weather.collect, {"configured": False}),
         "meta": {"time": time.time()},
     }
 

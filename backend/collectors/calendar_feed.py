@@ -99,6 +99,8 @@ def collect():
             "day_key": day.isoformat(),
             "day_label": _day_label(day, today),
             "time_label": _time_label(start_local, end_local, all_day),
+            "start_epoch": int(start_local.timestamp()),
+            "end_epoch": int(end_local.timestamp()) if end_local else None,
         }))
 
     rows.sort(key=lambda row: row[0])

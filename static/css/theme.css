@@ -121,6 +121,21 @@ body {
 .docker-top-name { color: #c8ccd4; }
 .docker-top-cpu  { color: #8b909c; }
 
+/* --- Widget de clima ------------------------------------------------------ */
+.topbar-center    { color: #c8ccd4; }
+.weather-val      { color: #e6e8ec; }
+.weather-sep      { color: #2a2e37; }
+.weather-day-name { color: #6a7080; }
+.weather-day-temp { color: #c8ccd4; }
+
+/* --- Eventos em breve / em andamento -------------------------------------- */
+.cal-event--soon   { background-color: rgba(210, 153, 34, 0.10); }
+.cal-event--soon .cal-time  { color: #e3b341; }
+.cal-event--soon .cal-title { color: #e3b341; }
+.cal-event--active { background-color: rgba(248, 81, 73, 0.10); }
+.cal-event--active .cal-time  { color: #ff7b72; }
+.cal-event--active .cal-title { color: #ff7b72; }
+
 /* --- Containers warn/crit ------------------------------------------------- */
 .crow--warn { border-color: #d29922; }
 .crow--crit { border-color: #f85149; }
