@@ -52,31 +52,39 @@ def _safe(collect_fn, fallback):
         return result
 
 
+def _run_parallel(jobs):
+    """jobs: {chave: (collect_fn, fallback)} -> {chave: resultado}.
+
+    Roda os coletores em paralelo (cada um isolado por _safe): o tempo total
+    passa a ser o do coletor mais lento, nao a soma de todos.
+    """
+    results = {}
+    with ThreadPoolExecutor(max_workers=len(jobs)) as executor:
+        futures = {key: executor.submit(_safe, fn, fallback)
+                   for key, (fn, fallback) in jobs.items()}
+        for key in jobs:
+            results[key] = futures[key].result()
+    return results
+
+
 def _build_metrics():
-    return {
-        "host": _safe(host.collect, {}),
-        "sensors": _safe(sensors.collect, {"cpu_temp": None, "all": []}),
-        "containers": _safe(containers.collect, {"list": []}),
-        "meta": {"time": time.time(), "refresh_ms": config.REFRESH_MS},
-    }
+    data = _run_parallel({
+        "host":       (host.collect, {}),
+        "sensors":    (sensors.collect, {"cpu_temp": None, "all": []}),
+        "containers": (containers.collect, {"list": []}),
+    })
+    data["meta"] = {"time": time.time(), "refresh_ms": config.REFRESH_MS}
+    return data
 
 
 def _build_feeds():
-    # Coletores rodam em paralelo: tempo total = o do mais lento (agenda),
-    # nao a soma dos tres. Permite timeout generoso na agenda sem atrasar clima.
-    jobs = {
+    # Cada feed chama uma API externa lenta — roda os tres em paralelo para o
+    # tempo total ser o do mais lento (agenda), nao a soma.
+    raw = _run_parallel({
         "calendar": (calendar_feed.collect, {"events": [], "configured": True}),
         "news":     (news.collect, {"items": [], "configured": True}),
         "weather":  (weather.collect, {"configured": False}),
-    }
-    raw = {}
-    with ThreadPoolExecutor(max_workers=3) as executor:
-        futures = {
-            key: executor.submit(_safe, fn, fallback)
-            for key, (fn, fallback) in jobs.items()
-        }
-        for key in jobs:
-            raw[key] = futures[key].result()
+    })
 
     result = {}
     for key, data in raw.items():

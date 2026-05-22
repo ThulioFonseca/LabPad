@@ -54,6 +54,18 @@ def _read_hostname():
     return socket.gethostname()
 
 
+# SO, hostname e contagem de nucleos nao mudam em runtime — lidos so uma vez.
+_static_cache = {}
+
+
+def _static():
+    if not _static_cache:
+        _static_cache["os"] = _read_os_name()
+        _static_cache["hostname"] = _read_hostname()
+        _static_cache["cpu_count"] = psutil.cpu_count() or 1
+    return _static_cache
+
+
 def _disks():
     """Auto-descobre particoes reais do host via /proc/1/mounts (pid: host).
 
@@ -147,11 +159,12 @@ def collect():
     agg_total = sum(d['total'] for d in disks if d['total'] is not None)
     agg_percent = round(agg_used / agg_total * 100.0, 1) if agg_total else None
 
+    static = _static()
     return {
-        "hostname": _read_hostname(),
-        "os": _read_os_name(),
+        "hostname": static["hostname"],
+        "os": static["os"],
         "cpu_percent": round(cpu, 1),
-        "cpu_count": psutil.cpu_count() or 1,
+        "cpu_count": static["cpu_count"],
         "mem_percent": round(mem.percent, 1),
         "mem_used": mem.used,
         "mem_total": mem.total,

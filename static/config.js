@@ -29,7 +29,6 @@ var CONFIG = {
    *   id       identificador unico
    *   title    titulo exibido
    *   kind     'gauge'  card com numero + barra (0..max)
-   *            'rate'   card de taxa de dados (download/upload)
    *            'info'   linha de texto (sem barra)
    *   section  'host' ou 'system' (em qual painel entra)
    *   path     caminho do valor no JSON  (ex: 'host.cpu_percent')
@@ -41,10 +40,6 @@ var CONFIG = {
    *   warn     a partir deste valor o card fica amarelo
    *   crit     a partir deste valor o card fica vermelho
    *   sub      {used:'...', total:'...'} linha extra "usado / total"
-   *
-   * Especificos de 'rate':
-   *   path     caminho do download (bytes/s)
-   *   path2    caminho do upload   (bytes/s)
    *
    * Especificos de 'info':
    *   fmt      'text' | 'duration' (segundos -> "6d 4h") | 'load' (vetor)

@@ -34,7 +34,12 @@ body {
 .rate,
 .cimage,
 .cstat-val,
-.cstatus {
+.cstatus,
+.cal-time,
+.docker-count,
+.docker-top-item,
+.weather-val,
+.weather-day-temp {
   font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
@@ -372,7 +377,6 @@ main {
   flex: 0 0 auto;
   width: 98px;
   font-size: 13px;
-  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 .cal-body {
   -webkit-flex: 1 1 auto;
@@ -503,7 +507,6 @@ main {
   font-size: 22px;
   font-weight: 600;
   margin-top: 10px;
-  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 .docker-top {
   margin-top: 12px;
@@ -517,7 +520,6 @@ main {
   justify-content: space-between;
   padding: 3px 0;
   font-size: 12px;
-  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 .docker-top-name {
   overflow: hidden;
@@ -565,9 +567,6 @@ main {
 .weather-icon svg {
   display: block;
 }
-.weather-val {
-  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
-}
 .weather-sep {
   margin: 0 10px;
 }
@@ -585,7 +584,6 @@ main {
   margin-right: 4px;
 }
 .weather-day-temp {
-  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
   font-size: 12px;
 }
 

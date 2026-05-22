@@ -2,124 +2,12 @@
  * widgets.js  —  criacao e atualizacao dos cards.
  *
  * Generico: widgets novos sao definidos so em config.js; nao se mexe aqui.
+ * Depende de format.js (el, setText, getPath, fmt*) e icons.js (ICONS, ...).
  * Tudo em JavaScript ES5 (var/function) por causa do Safari 9 / iPad 2.
  * ===========================================================================*/
 
-/* --- Utilitarios ----------------------------------------------------------*/
-
-/* Le um valor aninhado pelo caminho 'a.b.0.c' (indices de array sao numeros). */
-function getPath(obj, path) {
-  if (!obj || !path) { return undefined; }
-  var parts = path.split('.');
-  var cur = obj;
-  for (var i = 0; i < parts.length; i++) {
-    if (cur === null || cur === undefined) { return undefined; }
-    cur = cur[parts[i]];
-  }
-  return cur;
-}
-
-/* Define o texto de um elemento de forma segura (cria o no de texto se faltar). */
-function setText(node, text) {
-  if (!node) { return; }
-  if (node.firstChild && node.firstChild.nodeType === 3) {
-    node.firstChild.nodeValue = text;
-  } else {
-    node.innerHTML = '';
-    node.appendChild(document.createTextNode(text));
-  }
-}
-
-/* Cria um elemento com classe e (opcionalmente) texto. */
-function el(tag, className, text) {
-  var node = document.createElement(tag);
-  if (className) { node.className = className; }
-  if (text !== undefined && text !== null) {
-    node.appendChild(document.createTextNode(text));
-  }
-  return node;
-}
-
-var DASH = '—'; /* travessao usado quando nao ha valor */
-
-/* Icones SVG inline — currentColor herda a cor do elemento pai. */
-var ICONS = {
-  cpu: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="8" height="8" rx="1"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="6" y1="12" x2="6" y2="15"/><line x1="10" y1="12" x2="10" y2="15"/><line x1="1" y1="6" x2="4" y2="6"/><line x1="1" y1="10" x2="4" y2="10"/><line x1="12" y1="6" x2="15" y2="6"/><line x1="12" y1="10" x2="15" y2="10"/></svg>',
-  mem: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="5" width="14" height="7" rx="1"/><line x1="4" y1="5" x2="4" y2="12"/><line x1="8" y1="5" x2="8" y2="12"/><line x1="12" y1="5" x2="12" y2="12"/><line x1="4" y1="3" x2="4" y2="5"/><line x1="8" y1="3" x2="8" y2="5"/><line x1="12" y1="3" x2="12" y2="5"/></svg>',
-  temp: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="8" y1="1" x2="8" y2="8"/><path d="M5.5 8.5A2.5 2.5 0 1 0 10.5 8.5"/><circle cx="8" cy="11" r="2" fill="currentColor" stroke="none"/></svg>',
-  net: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,5 8,1 12,5"/><line x1="8" y1="1" x2="8" y2="10"/><polyline points="4,11 8,15 12,11"/></svg>',
-  disk: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><ellipse cx="8" cy="4.5" rx="6" ry="2.5"/><path d="M2 4.5v7c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-7"/></svg>',
-  docker: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="3" height="3" rx="0.5"/><rect x="5" y="6" width="3" height="3" rx="0.5"/><rect x="9" y="6" width="3" height="3" rx="0.5"/><rect x="5" y="2" width="3" height="3" rx="0.5"/><path d="M14.5 7.5c-0.5-1.5-2-1.5-2-1.5H2c0 4 3 5 6 5s5-1 6.5-3.5z"/></svg>'
-};
-
-/* Icones de clima por grupo WMO — cores fixas, independentes do tema. */
-var WEATHER_ICONS = {
-  clear:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" fill="#f5c542"/><line x1="12" y1="2" x2="12" y2="5" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="22" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="12" x2="5" y2="12" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="19" y1="12" x2="22" y2="12" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="4.22" y1="4.22" x2="6.34" y2="6.34" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="19.78" y1="4.22" x2="17.66" y2="6.34" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="6.34" y1="17.66" x2="4.22" y2="19.78" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/></svg>',
-  partly:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="10" cy="10" r="4" fill="#f5c542"/><rect x="6" y="13" width="13" height="7" rx="3.5" fill="#b0bec5"/><rect x="4" y="15" width="10" height="5" rx="2.5" fill="#cfd8dc"/></svg>',
-  cloudy:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="10" width="18" height="9" rx="4.5" fill="#90a4ae"/><rect x="6" y="7" width="11" height="7" rx="3.5" fill="#b0bec5"/></svg>',
-  fog:     '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#90a4ae" stroke-width="2" stroke-linecap="round"><line x1="3" y1="8" x2="21" y2="8"/><line x1="5" y1="12" x2="19" y2="12"/><line x1="3" y1="16" x2="21" y2="16"/></svg>',
-  drizzle: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="9" rx="4.5" fill="#90a4ae"/><line x1="8" y1="17" x2="7" y2="21" stroke="#64b5f6" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="17" x2="12" y2="21" stroke="#64b5f6" stroke-width="2" stroke-linecap="round"/><line x1="18" y1="17" x2="17" y2="21" stroke="#64b5f6" stroke-width="2" stroke-linecap="round"/></svg>',
-  rain:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="9" rx="4.5" fill="#78909c"/><line x1="7" y1="16" x2="5" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="10" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="16" x2="15" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/></svg>',
-  snow:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="9" rx="4.5" fill="#90a4ae"/><text x="5" y="23" font-size="11" fill="#b3e5fc">* * *</text></svg>',
-  shower:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="6" r="3" fill="#f5c542"/><rect x="5" y="8" width="14" height="7" rx="3.5" fill="#78909c"/><line x1="9" y1="18" x2="8" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/><line x1="14" y1="18" x2="13" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/></svg>',
-  storm:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="10" rx="5" fill="#546e7a"/><polyline points="13,13 10,19 14,19 11,24" stroke="#fdd835" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
-};
-
-/* Icones da lua por fase (0=lua nova .. 7=minguante). */
-var MOON_ICONS = [
-  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/></svg>',
-  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 1 12 21 A5 9 0 0 0 12 3Z" fill="#f5c542"/></svg>',
-  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 1 12 21 L12 3Z" fill="#f5c542"/></svg>',
-  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f5c542" stroke="#e5b100" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 0 12 21 A3 9 0 0 1 12 3Z" fill="#37474f"/></svg>',
-  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f5c542" stroke="#e5b100" stroke-width="1.5"/></svg>',
-  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#f5c542" stroke="#e5b100" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 1 12 21 A3 9 0 0 0 12 3Z" fill="#37474f"/></svg>',
-  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 0 12 21 L12 3Z" fill="#f5c542"/></svg>',
-  '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 0 12 21 A5 9 0 0 1 12 3Z" fill="#f5c542"/></svg>'
-];
-
-function _wmoIcon(code) {
-  if (code === 0)  { return WEATHER_ICONS.clear; }
-  if (code <= 2)   { return WEATHER_ICONS.partly; }
-  if (code === 3)  { return WEATHER_ICONS.cloudy; }
-  if (code <= 48)  { return WEATHER_ICONS.fog; }
-  if (code <= 57)  { return WEATHER_ICONS.drizzle; }
-  if (code <= 65)  { return WEATHER_ICONS.rain; }
-  if (code <= 77)  { return WEATHER_ICONS.snow; }
-  if (code <= 82)  { return WEATHER_ICONS.shower; }
-  if (code <= 86)  { return WEATHER_ICONS.snow; }
-  return WEATHER_ICONS.storm;
-}
-
-function fmtBytes(n) {
-  if (n === null || n === undefined || isNaN(n)) { return DASH; }
-  var units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-  var i = 0;
-  n = Number(n);
-  while (n >= 1024 && i < units.length - 1) { n = n / 1024; i = i + 1; }
-  var txt = (i === 0) ? String(Math.round(n))
-          : (n < 10 ? n.toFixed(1) : String(Math.round(n)));
-  return txt + ' ' + units[i];
-}
-
-function fmtRate(n) {
-  if (n === null || n === undefined || isNaN(n)) { return DASH; }
-  return fmtBytes(n) + '/s';
-}
-
-function fmtDuration(sec) {
-  if (sec === null || sec === undefined || isNaN(sec)) { return DASH; }
-  sec = Math.floor(Number(sec));
-  var d = Math.floor(sec / 86400);
-  var hh = Math.floor((sec % 86400) / 3600);
-  var mm = Math.floor((sec % 3600) / 60);
-  if (d > 0) { return d + 'd ' + hh + 'h'; }
-  if (hh > 0) { return hh + 'h ' + mm + 'm'; }
-  return mm + 'm';
-}
-
-function fmtNumber(value) {
-  return (Math.round(value * 10) / 10).toString();
-}
+/* Mapeia o id do widget gauge para a chave do icone em ICONS. */
+var GAUGE_ICONS = { cpu: 'cpu', mem: 'mem', temp: 'temp', disk: 'disk' };
 
 /* Nivel (ok/warn/crit) de um valor segundo os limites do widget. */
 function levelFor(widget, value) {
@@ -142,10 +30,23 @@ var LEVEL_COLOR = {
 
 var Widgets = {};
 
+/* Monta <div.card-head> com <span.card-title> contendo icone (opcional) + texto. */
+Widgets._cardHead = function (iconKey, titleText) {
+  var head = el('div', 'card-head');
+  var titleEl = el('span', 'card-title');
+  if (iconKey && ICONS[iconKey]) {
+    var iconSpan = el('span', 'card-icon');
+    iconSpan.innerHTML = ICONS[iconKey];
+    titleEl.appendChild(iconSpan);
+  }
+  titleEl.appendChild(document.createTextNode(titleText));
+  head.appendChild(titleEl);
+  return head;
+};
+
 /* Cria o DOM de um widget. Devolve um objeto com 'root' e refs para updates. */
 Widgets.create = function (widget) {
   if (widget.kind === 'info') { return Widgets._createInfo(widget); }
-  if (widget.kind === 'rate') { return Widgets._createRate(widget); }
   return Widgets._createGauge(widget);
 };
 
@@ -153,7 +54,6 @@ Widgets.create = function (widget) {
 Widgets.update = function (refs, widget, data, buffer) {
   if (!refs) { return; }
   if (widget.kind === 'info') { return Widgets._updateInfo(refs, widget, data); }
-  if (widget.kind === 'rate') { return Widgets._updateRate(refs, widget, data, buffer); }
   return Widgets._updateGauge(refs, widget, data, buffer);
 };
 
@@ -162,16 +62,7 @@ Widgets.update = function (refs, widget, data, buffer) {
 Widgets._createGauge = function (widget) {
   var root = el('div', 'card card--none');
 
-  var head = el('div', 'card-head');
-  var titleEl = el('span', 'card-title');
-  var iconKey = { cpu: 'cpu', mem: 'mem', temp: 'temp', disk: 'disk' }[widget.id] || null;
-  if (iconKey && ICONS[iconKey]) {
-    var iconSpan = el('span', 'card-icon');
-    iconSpan.innerHTML = ICONS[iconKey];
-    titleEl.appendChild(iconSpan);
-  }
-  titleEl.appendChild(document.createTextNode(widget.title));
-  head.appendChild(titleEl);
+  var head = Widgets._cardHead(GAUGE_ICONS[widget.id] || null, widget.title);
   var value = el('span', 'card-value');
   var num = el('span', 'num', DASH);
   value.appendChild(num);
@@ -184,7 +75,7 @@ Widgets._createGauge = function (widget) {
   bar.appendChild(fill);
   root.appendChild(bar);
 
-  var sub = el('div', 'card-sub', ' ');
+  var sub = el('div', 'card-sub', ' ');
   root.appendChild(sub);
 
   var canvas = null;
@@ -216,47 +107,6 @@ Widgets._updateGauge = function (refs, widget, data, buffer) {
 
   if (refs.canvas && buffer) {
     drawSparkline(refs.canvas, buffer, LEVEL_COLOR[level] || LEVEL_COLOR.ok);
-  }
-};
-
-/* ---- rate (rede) ---- */
-
-Widgets._createRate = function (widget) {
-  var root = el('div', 'card');
-
-  var head = el('div', 'card-head');
-  head.appendChild(el('span', 'card-title', widget.title));
-  root.appendChild(head);
-
-  var row = el('div', 'rate-row');
-
-  var down = el('span', 'rate rate--down');
-  down.appendChild(el('span', 'rate-arrow', '↓'));
-  var rx = el('span', 'rate-val', DASH);
-  down.appendChild(rx);
-
-  var up = el('span', 'rate rate--up');
-  up.appendChild(el('span', 'rate-arrow', '↑'));
-  var tx = el('span', 'rate-val', DASH);
-  up.appendChild(tx);
-
-  row.appendChild(down);
-  row.appendChild(up);
-  root.appendChild(row);
-
-  var canvas = null;
-  if (widget.spark) {
-    canvas = el('canvas', 'spark');
-    root.appendChild(canvas);
-  }
-  return { root: root, rx: rx, tx: tx, canvas: canvas };
-};
-
-Widgets._updateRate = function (refs, widget, data, buffer) {
-  setText(refs.rx, fmtRate(getPath(data, widget.path)));
-  setText(refs.tx, fmtRate(getPath(data, widget.path2)));
-  if (refs.canvas && buffer) {
-    drawSparkline(refs.canvas, buffer, LEVEL_COLOR.ok);
   }
 };
 
@@ -441,14 +291,7 @@ Widgets.renderMeta = function (node, hostData) {
 Widgets.initNetCard = function (cardEl) {
   if (!cardEl) { return null; }
 
-  var head = el('div', 'card-head');
-  var titleEl = el('span', 'card-title');
-  var iconSpan = el('span', 'card-icon');
-  iconSpan.innerHTML = ICONS.net;
-  titleEl.appendChild(iconSpan);
-  titleEl.appendChild(document.createTextNode('Rede'));
-  head.appendChild(titleEl);
-  cardEl.appendChild(head);
+  cardEl.appendChild(Widgets._cardHead('net', 'Rede'));
 
   var row = el('div', 'rate-row');
 
@@ -488,14 +331,7 @@ Widgets.renderDockerSummary = function (cardEl, payload) {
   if (!cardEl) { return; }
   cardEl.innerHTML = '';
 
-  var head = el('div', 'card-head');
-  var titleEl = el('span', 'card-title');
-  var iconSpan = el('span', 'card-icon');
-  iconSpan.innerHTML = ICONS.docker;
-  titleEl.appendChild(iconSpan);
-  titleEl.appendChild(document.createTextNode('Docker'));
-  head.appendChild(titleEl);
-  cardEl.appendChild(head);
+  cardEl.appendChild(Widgets._cardHead('docker', 'Docker'));
 
   var list = (payload && payload.list) ? payload.list : [];
   var running = 0;

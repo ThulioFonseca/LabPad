@@ -3,24 +3,23 @@
 Dashboard de monitoramento do homelab pensado para rodar num **iPad 2 (iOS 9.3.5)**
 como monitor de parede sempre ligado.
 
-Mostra, em tempo quase real, os recursos do **host Ubuntu** e dos **containers Docker**.
-Roda como um único container e serve uma página feita sob medida para o Safari 9 —
-sem CSS Grid, sem `fetch`, sem frameworks, sem build. Bonito, leve e fácil de alterar.
+Mostra, em tempo quase real, os recursos do **host Ubuntu** e dos **containers
+Docker**, além de **agenda**, **notícias** e **clima**. Roda como um único
+container e serve uma página feita sob medida para o Safari 9 — sem CSS Grid,
+sem `fetch`, sem frameworks, sem build. Bonito, leve e fácil de alterar.
 
 ```
 ┌───────────────────────────────────────────────┐
-│ Homelab  servidor            ● online  14:22   │
+│ Homelab        ☀ 24°C · 60%       ● online 14:22│
 ├───────────────────────────────────────────────┤
-│  HOST                                          │
-│  ┌ CPU ──┐ ┌ Memoria ┐ ┌ Disco ┐ ┌ Temp ┐ ...  │
-│  SISTEMA                                        │
-│  ┌ SO ┐ ┌ Uptime ┐ ┌ Load ┐ ┌ Nucleos ┐        │
-│  CONTAINERS  (3 / 4 ativos)                     │
-│  ● nginx     CPU 0.4%  RAM 28 MB   up          │
-│  ● postgres  CPU 2.1%  RAM 310 MB  up          │
-│  AGENDA              NOTICIAS                   │
-│  Hoje 14:00 Reuniao  Titulo da noticia 1        │
-│  Amanha     Dentista Titulo da noticia 2        │
+│ HOST   ubuntu · up 6d · load 0.4 · 8 nucleos    │
+│ ┌ CPU ┐ ┌ Memoria ┐ ┌ Disco ┐ ┌ Temp ┐         │
+│ ┌ Rede ──────────┐ ┌ Docker ─────────┐         │
+│ AGENDA              NOTICIAS                    │
+│ Hoje 14:00 Reuniao  ▦ Titulo da noticia 1       │
+│ CONTAINERS  (3 / 4 ativos)                      │
+│ ● nginx     CPU 0.4%  RAM 28 MB   up            │
+│ ● postgres  CPU 2.1%  RAM 310 MB  up            │
 └───────────────────────────────────────────────┘
 ```
 
@@ -73,15 +72,16 @@ Host Ubuntu ── Docker
                 └─ container "homelab-monitor"  (Flask + Python)
                      GET /            -> dashboard (static/)
                      GET /api/metrics -> hardware + containers (5 s)
-                     GET /api/feeds   -> agenda + noticias (10 min)
+                     GET /api/feeds   -> agenda + noticias + clima (10 min)
 ```
 
 - O container roda com `pid: host` + `network_mode: host` para o `psutil` ler o
   hardware **real do host** (e não o do container).
 - Todos os volumes são **somente leitura** (`:ro`). O container nunca escreve no host.
 - O dashboard faz polling de `/api/metrics` a cada 5 s via `XMLHttpRequest`.
-- A agenda e as notícias vêm de `/api/feeds`, atualizado a cada 10 min — o backend
-  busca os feeds externos e os mantém em cache (não sobrecarrega os provedores).
+- A agenda, as notícias e o clima vêm de `/api/feeds`, atualizado a cada 10 min —
+  o backend busca os feeds externos e os mantém em cache (não sobrecarrega os
+  provedores).
 
 ### Segurança
 
@@ -89,10 +89,11 @@ A dashboard **não tem autenticação** — pensada para uso só na **rede local
 Não exponha a porta 8723 para a internet. O socket do Docker é montado como
 somente leitura, mas ainda assim dá visibilidade dos containers; mantenha na LAN.
 
-## Agenda e notícias
+## Agenda, notícias e clima
 
-As seções **Agenda** e **Notícias** são configuradas pelo arquivo `.env`
-(carregado automaticamente pelo `docker compose`). Veja [`.env.example`](.env.example).
+As seções **Agenda**, **Notícias** e **Clima** são configuradas pelo arquivo
+`.env` (carregado automaticamente pelo `docker compose`). Veja
+[`.env.example`](.env.example).
 
 | Variável           | Para quê serve                                          |
 |--------------------|---------------------------------------------------------|
@@ -101,6 +102,7 @@ As seções **Agenda** e **Notícias** são configuradas pelo arquivo `.env`
 | `CALENDAR_DAYS`    | Quantos dias à frente exibir (padrão `3`)               |
 | `NEWS_RSS_URL`     | URL de um feed RSS/Atom                                 |
 | `NEWS_LIMIT`       | Quantas notícias exibir (padrão `5`)                    |
+| `WEATHER_CITY`     | Cidade do widget de clima (ex.: `Sao Paulo`)            |
 
 **Como obter o link `.ics` do calendário:** no Outlook web, *Configurações →
 Calendário → Calendários compartilhados → Publicar calendário* — copie o link
@@ -113,6 +115,11 @@ Calendário → Calendários compartilhados → Publicar calendário* — copie 
 Deixar uma URL em branco **desativa** a seção correspondente — a dashboard segue
 funcionando normalmente. Eventos recorrentes (reuniões semanais etc.) são
 expandidos automaticamente.
+
+O **clima** aparece no centro do cabeçalho e alterna entre temperatura/umidade,
+previsão de 5 dias e fase da lua. Os dados vêm da
+[Open-Meteo](https://open-meteo.com) (gratuita, sem chave de API); basta
+informar `WEATHER_CITY`. Vazio desativa o widget.
 
 ## Como expandir (o ponto forte do projeto)
 
@@ -142,7 +149,6 @@ Edite lá e recarregue. A estrutura/layout fica em `base.css` (normalmente intoc
 | `kind`  | Uso                                            |
 |---------|------------------------------------------------|
 | `gauge` | número + barra 0..max (CPU, RAM, disco, temp)  |
-| `rate`  | taxa de dados, download/upload (rede)          |
 | `info`  | linha de texto (uptime, SO, load average)      |
 
 Cada campo de widget está documentado dentro do próprio `config.js`.
@@ -159,16 +165,19 @@ backend/
     containers.py        status, CPU%, RAM e rede por container
     calendar_feed.py     agenda: le o .ics do Outlook publicado
     news.py              noticias: le um feed RSS/Atom
+    weather.py           clima e fase da lua (Open-Meteo, sem chave)
 static/
   index.html             esqueleto da pagina
   config.js          ★   widgets e intervalos — edite aqui
   css/base.css           layout (Flexbox, sem Grid)
   css/theme.css      ★   cores — edite aqui para re-tematizar
   js/xhr.js              requisicoes (XMLHttpRequest, substitui fetch)
+  js/format.js           utilitarios de DOM e formatacao
+  js/icons.js            icones SVG (cards, clima, lua)
   js/sparkline.js        mini-grafico em <canvas>
-  js/widgets.js          criacao/atualizacao de cards + agenda/noticias
+  js/widgets.js          componentes: cards, agenda, noticias, clima
   js/dashboard.js        polling + render
-.env               ★   URLs do calendario/RSS e fuso (a partir do .env.example)
+.env               ★   URLs do calendario/RSS, cidade do clima e fuso
 Dockerfile · docker-compose.yml · requirements.txt
 ```
 
