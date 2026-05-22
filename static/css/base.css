@@ -57,8 +57,8 @@ body {
   flex: 1 1 0;
   display: -webkit-flex;
   display: flex;
-  -webkit-align-items: baseline;
-  align-items: baseline;
+  -webkit-align-items: center;
+  align-items: center;
 }
 
 .topbar-center {
