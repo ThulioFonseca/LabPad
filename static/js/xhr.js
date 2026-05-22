@@ -8,10 +8,10 @@
  *   onOk(objeto)   — chamado com o JSON ja parseado
  *   onErr(motivo)  — chamado em erro (timeout, rede, http, parse)
  */
-function getJSON(url, onOk, onErr) {
+function getJSON(url, onOk, onErr, timeoutMs) {
   var xhr = new XMLHttpRequest();
   xhr.open('GET', url, true);
-  xhr.timeout = 12000;
+  xhr.timeout = timeoutMs || 12000;
 
   xhr.onreadystatechange = function () {
     if (xhr.readyState !== 4) { return; }

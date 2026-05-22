@@ -18,9 +18,13 @@ STATIC_DIR = os.path.join(
 )
 
 app = Flask(__name__, static_folder=None)
-# Garante que logs WARNING+ aparecem no docker logs mesmo em modo dev.
+# app.logger nao tem handlers no modo dev — usa o root logger diretamente.
 logging.basicConfig(level=logging.INFO,
-                    format="%(asctime)s [%(levelname)s] %(message)s")
+                    format="%(asctime)s [%(levelname)s] %(message)s",
+                    force=True)
+# Propaga logs da app para o root logger onde os handlers estao configurados.
+app.logger.setLevel(logging.INFO)
+app.logger.propagate = True
 
 # Cache curto: varias aberturas/recargas nao recoletam tudo a cada request.
 _cache = {"time": 0.0, "data": None}
@@ -40,7 +44,8 @@ def _safe(collect_fn, fallback):
         return collect_fn()
     except Exception as exc:
         name = getattr(collect_fn, "__module__", None) or getattr(collect_fn, "__name__", "?")
-        app.logger.warning("Coletor [%s] falhou: %s", name, exc)
+        # Usa logging diretamente (root logger) — garantido no docker logs.
+        logging.warning("Coletor [%s] falhou: %s", name, exc)
         result = dict(fallback)
         result["error"] = str(exc)
         return result
@@ -67,12 +72,12 @@ def _build_feeds():
             _last_good_feeds[key] = data
             result[key] = data
         elif key in _last_good_feeds:
-            app.logger.warning("Feed [%s] com erro, servindo ultimo dado bom. Erro: %s",
-                               key, data.get("error", "?"))
+            logging.warning("Feed [%s] com erro, servindo ultimo dado bom. Erro: %s",
+                            key, data.get("error", "?"))
             result[key] = _last_good_feeds[key]
         else:
-            app.logger.warning("Feed [%s] falhou sem dado previo disponivel: %s",
-                               key, data.get("error", "?"))
+            logging.warning("Feed [%s] falhou sem dado previo disponivel: %s",
+                            key, data.get("error", "?"))
             result[key] = data
     result["meta"] = {"time": time.time()}
     return result
@@ -131,8 +136,8 @@ def client_error():
         src = body.get("source", "?")
         line = body.get("lineno", "?")
         ctx = body.get("context", "")
-        app.logger.error("JS-ERROR [%s:%s] %s%s", src, line, msg,
-                         (" | ctx: " + ctx) if ctx else "")
+        logging.error("JS-ERROR [%s:%s] %s%s", src, line, msg,
+                      (" | ctx: " + ctx) if ctx else "")
     except Exception:
         pass
     return jsonify({"ok": True})
