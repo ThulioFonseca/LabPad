@@ -61,6 +61,18 @@
     <span id="last-update"></span>
   </footer>
 
+  <script>
+    /* Captura erros JS nao tratados e envia para o backend (aparece em docker logs). */
+    window.onerror = function (message, source, lineno) {
+      try {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/client-error', true);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send(JSON.stringify({ message: message, source: source, lineno: lineno }));
+      } catch (e2) { /* nao pode fazer nada */ }
+      return false; /* nao suprime o erro — continua propagando */
+    };
+  </script>
   <script src="config.js"></script>
   <script src="js/xhr.js"></script>
   <script src="js/sparkline.js"></script>

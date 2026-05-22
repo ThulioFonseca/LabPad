@@ -27,6 +27,17 @@
 
   function byId(id) { return document.getElementById(id); }
 
+  /* Envia erro para o backend (aparece em docker logs como JS-ERROR). */
+  function reportError(context, err) {
+    try {
+      var msg = (err && err.message) ? err.message : String(err);
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', '/api/client-error', true);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.send(JSON.stringify({ message: msg, source: 'dashboard.js', lineno: 0, context: context }));
+    } catch (e2) { /* nao pode fazer nada */ }
+  }
+
   /* --- Montagem inicial dos widgets do config.js --------------------------*/
   function buildWidgets() {
     var i, widget, built, section;
@@ -164,7 +175,7 @@
     var url = (CONFIG.apiBase || '') + '/api/metrics?_=' + (new Date()).getTime();
     getJSON(url, function (data) {
       setOnline(true);
-      try { render(data); } catch (e) { /* nunca quebra o loop */ }
+      try { render(data); } catch (e) { reportError('render', e); }
       schedule();
     }, function () {
       setOnline(false);
@@ -196,7 +207,7 @@
             Widgets.renderWeatherSlide(weatherRefs.panel, lastWeather, weatherSlide);
           }
         }
-      } catch (e) { /* nunca quebra o loop */ }
+      } catch (e) { reportError('pollFeeds', e); }
       setTimeout(pollFeeds, CONFIG.feedsRefreshMs);
     }, function () {
       if (!feedsLoaded) { showFeedMessage('Sem conexao com o servidor.'); }

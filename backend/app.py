@@ -3,11 +3,12 @@
 Serve o dashboard estatico e a API de metricas. Roda dentro de um container;
 ver Dockerfile / docker-compose.yml.
 """
+import logging
 import os
 import threading
 import time
 
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 
 import config
 from collectors import calendar_feed, containers, host, news, sensors, weather
@@ -17,6 +18,9 @@ STATIC_DIR = os.path.join(
 )
 
 app = Flask(__name__, static_folder=None)
+# Garante que logs WARNING+ aparecem no docker logs mesmo em modo dev.
+logging.basicConfig(level=logging.INFO,
+                    format="%(asctime)s [%(levelname)s] %(message)s")
 
 # Cache curto: varias aberturas/recargas nao recoletam tudo a cada request.
 _cache = {"time": 0.0, "data": None}
@@ -31,10 +35,12 @@ _last_good_feeds = {}
 
 
 def _safe(collect_fn, fallback):
-    """Roda um coletor isolando falhas — um erro nunca derruba o JSON inteiro."""
+    """Roda um coletor isolando falhas. Loga o erro para aparecer em docker logs."""
     try:
         return collect_fn()
-    except Exception as exc:  # resiliencia proposital
+    except Exception as exc:
+        name = getattr(collect_fn, "__module__", None) or getattr(collect_fn, "__name__", "?")
+        app.logger.warning("Coletor [%s] falhou: %s", name, exc)
         result = dict(fallback)
         result["error"] = str(exc)
         return result
@@ -58,22 +64,22 @@ def _build_feeds():
     result = {}
     for key, data in raw.items():
         if "error" not in data:
-            _last_good_feeds[key] = data  # atualiza ultimo bom
+            _last_good_feeds[key] = data
             result[key] = data
         elif key in _last_good_feeds:
-            result[key] = _last_good_feeds[key]  # serve dado stale
+            app.logger.warning("Feed [%s] com erro, servindo ultimo dado bom. Erro: %s",
+                               key, data.get("error", "?"))
+            result[key] = _last_good_feeds[key]
         else:
-            result[key] = data  # primeira vez sem dado bom: exibe o erro
+            app.logger.warning("Feed [%s] falhou sem dado previo disponivel: %s",
+                               key, data.get("error", "?"))
+            result[key] = data
     result["meta"] = {"time": time.time()}
     return result
 
 
 @app.route("/api/metrics")
 def metrics():
-    # Lê o cache sem bloquear a coleta: verifica se está fresco sob o lock,
-    # coleta FORA do lock (operação lenta), e só então atualiza sob o lock.
-    # Isso evita que uma coleta lenta (Docker socket, psutil) bloqueie todas
-    # as requisições subsequentes pelo tempo do timeout do SDK (60 s padrão).
     with _cache_lock:
         now = time.time()
         if _cache["data"] is not None and (now - _cache["time"]) < config.CACHE_TTL:
@@ -102,7 +108,6 @@ def feeds():
             response.headers["Cache-Control"] = "no-store"
             return response
 
-    # Coleta fora do lock: chama servicos externos (ICS, RSS, Open-Meteo).
     data = _build_feeds()
 
     with _feeds_lock:
@@ -117,6 +122,22 @@ def feeds():
     return response
 
 
+@app.route("/api/client-error", methods=["POST"])
+def client_error():
+    """Recebe erros JavaScript do browser e os loga no docker logs."""
+    try:
+        body = request.get_json(force=True, silent=True) or {}
+        msg = body.get("message", "?")
+        src = body.get("source", "?")
+        line = body.get("lineno", "?")
+        ctx = body.get("context", "")
+        app.logger.error("JS-ERROR [%s:%s] %s%s", src, line, msg,
+                         (" | ctx: " + ctx) if ctx else "")
+    except Exception:
+        pass
+    return jsonify({"ok": True})
+
+
 @app.route("/api/health")
 def health():
     return jsonify({"ok": True, "time": time.time()})
@@ -129,7 +150,6 @@ def index():
 
 @app.route("/<path:path>")
 def static_files(path):
-    # max_age=0: editar config.js / theme.css e recarregar mostra a mudanca.
     return send_from_directory(STATIC_DIR, path, max_age=0)
 
 
