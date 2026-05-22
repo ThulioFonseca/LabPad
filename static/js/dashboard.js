@@ -189,6 +189,88 @@
     if (closeBtn) { closeBtn.onclick = closeSystemModal; }
   }
 
+  /* --- Modal de logs (sobreposto ao modal de containers) ---------------- */
+  var logsInterval = null;
+  var currentLogId = null;
+  var LOGS_REFRESH_MS = 5000;
+  var LOGS_TAIL = 200;
+
+  function openLogsModal(id, name) {
+    currentLogId = id;
+    setText(byId('logs-modal-name'), name || '?');
+    setText(byId('logs-modal-pre'), 'Carregando...');
+    var m = byId('logs-modal');
+    if (m) { m.className = 'modal-backdrop modal-backdrop--open'; }
+    fetchLogs(id, true);
+    if (logsInterval) { clearInterval(logsInterval); }
+    logsInterval = setInterval(function () {
+      fetchLogs(id, false);
+    }, LOGS_REFRESH_MS);
+  }
+
+  function closeLogsModal() {
+    if (logsInterval) { clearInterval(logsInterval); logsInterval = null; }
+    currentLogId = null;
+    var m = byId('logs-modal');
+    if (m) { m.className = 'modal-backdrop'; }
+  }
+
+  function fetchLogs(id, force) {
+    var url = (CONFIG.apiBase || '') + '/api/containers/'
+            + encodeURIComponent(id) + '/logs?tail=' + LOGS_TAIL
+            + '&_=' + (new Date()).getTime();
+    getJSON(url, function (data) {
+      if (currentLogId !== id) { return; }  /* trocou de container */
+      var pre = byId('logs-modal-pre');
+      var body = byId('logs-modal-body');
+      if (data.error) { setText(pre, 'Erro: ' + data.error); return; }
+      var text = data.logs || '';
+      /* Preserva posicao se o usuario subiu para ler historico. */
+      var nearBottom = !body
+        || (body.scrollHeight - body.scrollTop - body.clientHeight < 50);
+      setText(pre, text || '(sem logs)');
+      if (body && (force || nearBottom)) { body.scrollTop = body.scrollHeight; }
+    }, function (err) {
+      if (currentLogId !== id) { return; }
+      setText(byId('logs-modal-pre'), 'Erro ao buscar logs: ' + err);
+    });
+  }
+
+  function wireLogsModal() {
+    /* Delega o clique nas linhas (sao reconstruidas pelo render a cada ciclo). */
+    var list = byId('section-containers');
+    if (list) {
+      list.onclick = function (e) {
+        var node = e.target;
+        while (node && node !== list) {
+          if (node.className
+              && (' ' + node.className + ' ').indexOf(' crow ') >= 0) {
+            var id = node.getAttribute('data-id');
+            var name = node.getAttribute('data-name');
+            if (id) { openLogsModal(id, name); }
+            return;
+          }
+          node = node.parentNode;
+        }
+      };
+    }
+
+    var backdrop = byId('logs-modal');
+    if (backdrop) { backdrop.onclick = closeLogsModal; }
+    var box = byId('logs-modal-box');
+    if (box) { box.onclick = function (e) { e.stopPropagation(); }; }
+    var closeBtn = byId('logs-modal-close');
+    if (closeBtn) { closeBtn.onclick = closeLogsModal; }
+    var refreshBtn = byId('logs-modal-refresh');
+    if (refreshBtn) {
+      refreshBtn.innerHTML = ICONS.refresh;
+      refreshBtn.onclick = function (e) {
+        e.stopPropagation();
+        if (currentLogId) { fetchLogs(currentLogId, true); }
+      };
+    }
+  }
+
   /* --- Rotacao do widget de clima (painel unico) -------------------------*/
   function weatherStep() {
     if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
@@ -297,6 +379,7 @@
   buildWidgets();
   wireContainersModal();
   wireSystemModal();
+  wireLogsModal();
   window.onresize = resizeAllCanvases;
   showFeedMessage('Carregando...');
   tickClock();

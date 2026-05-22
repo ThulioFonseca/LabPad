@@ -147,6 +147,17 @@ def feeds():
     return response
 
 
+@app.route("/api/containers/<container_id>/logs")
+def container_logs(container_id):
+    """Devolve as ultimas N linhas de log de um container Docker."""
+    tail = request.args.get("tail", default=200, type=int)
+    tail = max(10, min(tail, 1000))
+    data = containers.get_logs(container_id, tail=tail)
+    response = jsonify(data)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @app.route("/api/client-error", methods=["POST"])
 def client_error():
     """Recebe erros JavaScript do browser e os loga no docker logs."""

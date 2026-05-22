@@ -94,6 +94,23 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="logs-modal">
+    <div class="modal modal--logs" id="logs-modal-box">
+      <div class="modal-head">
+        <h2 class="modal-title">Logs: <span id="logs-modal-name"></span></h2>
+        <div class="modal-head-actions">
+          <button class="modal-action" id="logs-modal-refresh" type="button"
+                  aria-label="Atualizar"></button>
+          <button class="modal-close" id="logs-modal-close" type="button"
+                  aria-label="Fechar">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body modal-body--logs" id="logs-modal-body">
+        <pre class="logs-pre" id="logs-modal-pre"></pre>
+      </div>
+    </div>
+  </div>
+
   <script>
     /* Captura erros JS nao tratados e envia para o backend (aparece em docker logs). */
     window.onerror = function (message, source, lineno) {

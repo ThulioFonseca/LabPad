@@ -207,6 +207,10 @@ Widgets._containerRow = function (c) {
   row.appendChild(mini);
 
   row.appendChild(el('span', 'cstatus', running ? 'up' : (c.status || 'down')));
+
+  /* Anota id/nome para o delegate de clique abrir o modal de logs. */
+  row.setAttribute('data-id', c.id || '');
+  row.setAttribute('data-name', c.name || '');
   return row;
 };
 

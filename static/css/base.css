@@ -800,3 +800,43 @@ main {
   font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
   font-size: 12.5px;
 }
+
+/* --- Linha de container clicavel (abre modal de logs) ------------------- */
+.crow { cursor: pointer; }
+.crow:active { opacity: 0.85; }
+
+/* --- Modal de logs (sobreposto ao modal de containers) ------------------ */
+#logs-modal { z-index: 200; }      /* sobrepoe o modal de containers (100) */
+.modal--logs { max-width: 920px; max-height: 90%; }
+.modal-body--logs { padding: 0; }
+.logs-pre {
+  margin: 0;
+  padding: 14px 18px;
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* --- Acoes no cabecalho do modal (refresh + close) ---------------------- */
+.modal-head-actions {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.modal-action {
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 4px;
+  margin-right: 8px;
+  cursor: pointer;
+  opacity: 0.7;
+  line-height: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.modal-action:active { opacity: 1; }
+.modal-action svg { display: block; }

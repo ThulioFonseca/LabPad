@@ -1,8 +1,12 @@
 """Coletor de metricas dos containers Docker (via socket montado :ro)."""
 import json
+import re
 from concurrent.futures import ThreadPoolExecutor
 
 import docker
+
+
+_ANSI_RE = re.compile(r'\x1b\[[0-9;]*[A-Za-z]')
 
 _client = None
 _runtime_cache = {}
@@ -121,3 +125,21 @@ def collect():
     # Ativos primeiro, depois ordem alfabetica.
     items.sort(key=lambda c: (c["status"] != "running", c["name"].lower()))
     return {"list": items, "runtime": _runtime()}
+
+
+def get_logs(container_id, tail=200):
+    """Devolve as ultimas `tail` linhas de log do container.
+
+    Limpa codigos ANSI (cores) — virariam lixo num <pre>. Erros viram
+    {"error": ...} para o frontend exibir.
+    """
+    try:
+        c = _client_get().containers.get(container_id)
+        raw = c.logs(tail=tail, timestamps=False, stdout=True, stderr=True)
+        if isinstance(raw, (bytes, bytearray)):
+            text = raw.decode('utf-8', errors='replace')
+        else:
+            text = str(raw)
+        return {"name": c.name, "logs": _ANSI_RE.sub('', text)}
+    except Exception as exc:
+        return {"error": str(exc)}
