@@ -495,3 +495,19 @@
 .mode-dark .theme-mode-btn--active { background-color: #2a2e37; }
 .mode-light .theme-opt--active,
 .mode-light .theme-mode-btn--active { background-color: #eef0f3; }
+
+
+/* === Modal de containers (caixa por modo) ================================= */
+
+.mode-dark .modal {
+  background-color: #1e2128;
+  border-color: #2a2e37;
+  color: #e6e8ec;
+}
+.mode-light .modal {
+  background-color: #ffffff;
+  border-color: #e2e5ea;
+  color: #1c2026;
+}
+.mode-dark  .modal-head { border-bottom-color: #2a2e37; }
+.mode-light .modal-head { border-bottom-color: #e2e5ea; }

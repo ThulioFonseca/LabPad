@@ -136,6 +136,34 @@
     setText(node, '(' + up + ' / ' + list.length + ' ativos)');
   }
 
+  /* --- Modal da lista de containers --------------------------------------*/
+  function openContainersModal() {
+    var m = byId('containers-modal');
+    if (m) { m.className = 'modal-backdrop modal-backdrop--open'; }
+  }
+
+  function closeContainersModal() {
+    var m = byId('containers-modal');
+    if (m) { m.className = 'modal-backdrop'; }
+  }
+
+  function wireContainersModal() {
+    /* O card Docker (#section-docker-summary) persiste — renderDockerSummary
+       so troca os filhos via innerHTML, entao o onclick sobrevive. */
+    var dockerCard = byId('section-docker-summary');
+    if (dockerCard) { dockerCard.onclick = openContainersModal; }
+
+    var backdrop = byId('containers-modal');
+    if (backdrop) { backdrop.onclick = closeContainersModal; }
+
+    /* Clique dentro da caixa nao chega ao backdrop (que fecha o modal). */
+    var box = byId('containers-modal-box');
+    if (box) { box.onclick = function (e) { e.stopPropagation(); }; }
+
+    var closeBtn = byId('containers-modal-close');
+    if (closeBtn) { closeBtn.onclick = closeContainersModal; }
+  }
+
   /* --- Rotacao do widget de clima (painel unico) -------------------------*/
   function weatherStep() {
     if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
@@ -242,6 +270,7 @@
 
   /* --- Inicializacao ------------------------------------------------------*/
   buildWidgets();
+  wireContainersModal();
   window.onresize = resizeAllCanvases;
   showFeedMessage('Carregando...');
   tickClock();

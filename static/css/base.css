@@ -676,3 +676,77 @@ main {
   appearance: none;
 }
 .theme-mode-btn--active { font-weight: 600; }
+
+/* --- Card Docker: gatilho do modal de containers ------------------------- */
+#section-docker-summary { cursor: pointer; }
+#section-docker-summary:active { opacity: 0.75; }
+
+/* --- Modal de containers -------------------------------------------------- */
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  padding: 24px;
+  background-color: rgba(0, 0, 0, 0.55);
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+}
+.modal-backdrop--open {
+  display: -webkit-flex;
+  display: flex;
+}
+.modal {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  width: 100%;
+  max-width: 720px;
+  max-height: 85%;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.modal-head {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  padding: 13px 18px;
+  border-bottom: 1px solid transparent;
+}
+.modal-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: inherit;
+  font-size: 26px;
+  line-height: 1;
+  padding: 0 6px;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.modal-body {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;   /* rolagem com inercia no iOS */
+  padding: 14px 18px 18px;
+}

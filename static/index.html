@@ -61,18 +61,27 @@
       </section>
     </div>
 
-    <section class="panel">
-      <h2 class="panel-title">
-        Containers <span class="panel-count" id="container-count"></span>
-      </h2>
-      <div class="container-list" id="section-containers"></div>
-    </section>
   </main>
 
   <footer class="footer">
     <span id="footer-text">Homelab Monitor</span>
     <span id="last-update"></span>
   </footer>
+
+  <div class="modal-backdrop" id="containers-modal">
+    <div class="modal" id="containers-modal-box">
+      <div class="modal-head">
+        <h2 class="modal-title">
+          Containers <span class="panel-count" id="container-count"></span>
+        </h2>
+        <button class="modal-close" id="containers-modal-close" type="button"
+                aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="container-list" id="section-containers"></div>
+      </div>
+    </div>
+  </div>
 
   <script>
     /* Captura erros JS nao tratados e envia para o backend (aparece em docker logs). */
