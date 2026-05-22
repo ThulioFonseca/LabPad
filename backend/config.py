@@ -57,3 +57,6 @@ NEWS_LIMIT = int(_env("NEWS_LIMIT", "5"))
 
 # Feeds externos sao lentos e mudam pouco: cache longo (segundos).
 FEEDS_CACHE_TTL = float(_env("FEEDS_CACHE_TTL", "900"))
+
+# Interface de rede a monitorar. Vazio = soma de todas as interfaces.
+NETWORK_IFACE = _env("MONITOR_NETWORK_IFACE", "")
