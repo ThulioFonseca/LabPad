@@ -42,6 +42,16 @@ function el(tag, className, text) {
 
 var DASH = '—'; /* travessao usado quando nao ha valor */
 
+/* Icones SVG inline — currentColor herda a cor do elemento pai. */
+var ICONS = {
+  cpu: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="8" height="8" rx="1"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="6" y1="12" x2="6" y2="15"/><line x1="10" y1="12" x2="10" y2="15"/><line x1="1" y1="6" x2="4" y2="6"/><line x1="1" y1="10" x2="4" y2="10"/><line x1="12" y1="6" x2="15" y2="6"/><line x1="12" y1="10" x2="15" y2="10"/></svg>',
+  mem: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="5" width="14" height="7" rx="1"/><line x1="4" y1="5" x2="4" y2="12"/><line x1="8" y1="5" x2="8" y2="12"/><line x1="12" y1="5" x2="12" y2="12"/><line x1="4" y1="3" x2="4" y2="5"/><line x1="8" y1="3" x2="8" y2="5"/><line x1="12" y1="3" x2="12" y2="5"/></svg>',
+  temp: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><line x1="8" y1="1" x2="8" y2="8"/><path d="M5.5 8.5A2.5 2.5 0 1 0 10.5 8.5"/><circle cx="8" cy="11" r="2" fill="currentColor" stroke="none"/></svg>',
+  net: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,5 8,1 12,5"/><line x1="8" y1="1" x2="8" y2="10"/><polyline points="4,11 8,15 12,11"/></svg>',
+  disk: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><ellipse cx="8" cy="4.5" rx="6" ry="2.5"/><path d="M2 4.5v7c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-7"/></svg>',
+  docker: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="3" height="3" rx="0.5"/><rect x="5" y="6" width="3" height="3" rx="0.5"/><rect x="9" y="6" width="3" height="3" rx="0.5"/><rect x="5" y="2" width="3" height="3" rx="0.5"/><path d="M14.5 7.5c-0.5-1.5-2-1.5-2-1.5H2c0 4 3 5 6 5s5-1 6.5-3.5z"/></svg>'
+};
+
 function fmtBytes(n) {
   if (n === null || n === undefined || isNaN(n)) { return DASH; }
   var units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
@@ -115,7 +125,15 @@ Widgets._createGauge = function (widget) {
   var root = el('div', 'card card--none');
 
   var head = el('div', 'card-head');
-  head.appendChild(el('span', 'card-title', widget.title));
+  var titleEl = el('span', 'card-title');
+  var iconKey = { cpu: 'cpu', mem: 'mem', temp: 'temp', disk: 'disk' }[widget.id] || null;
+  if (iconKey && ICONS[iconKey]) {
+    var iconSpan = el('span', 'card-icon');
+    iconSpan.innerHTML = ICONS[iconKey];
+    titleEl.appendChild(iconSpan);
+  }
+  titleEl.appendChild(document.createTextNode(widget.title));
+  head.appendChild(titleEl);
   var value = el('span', 'card-value');
   var num = el('span', 'num', DASH);
   value.appendChild(num);
@@ -265,7 +283,16 @@ Widgets.renderContainers = function (container, payload) {
 
 Widgets._containerRow = function (c) {
   var running = (c.status === 'running');
-  var row = el('div', 'crow crow--' + (running ? 'up' : 'down'));
+  var level = 'ok';
+  if (running) {
+    var cpuVal = typeof c.cpu_percent === 'number' ? c.cpu_percent : 0;
+    var memVal = typeof c.mem_percent === 'number' ? c.mem_percent : 0;
+    if (cpuVal >= 95 || memVal >= 95) { level = 'crit'; }
+    else if (cpuVal >= 80 || memVal >= 80) { level = 'warn'; }
+  }
+  var rowCls = 'crow crow--' + (running ? 'up' : 'down');
+  if (running && level !== 'ok') { rowCls += ' crow--' + level; }
+  var row = el('div', rowCls);
 
   row.appendChild(el('span', 'cdot'));
 
@@ -342,6 +369,123 @@ Widgets._calEvent = function (ev) {
   if (ev.location) { body.appendChild(el('div', 'cal-loc', ev.location)); }
   row.appendChild(body);
   return row;
+};
+
+
+/* --- Meta-line: OS, uptime, load, nucleos -------------------------------- */
+
+Widgets.renderMeta = function (node, hostData) {
+  if (!node) { return; }
+  var parts = [];
+  if (hostData.os) { parts.push(hostData.os); }
+  if (typeof hostData.uptime === 'number') {
+    parts.push('up ' + fmtDuration(hostData.uptime));
+  }
+  if (hostData.load && hostData.load.length && hostData.load[0] !== null) {
+    parts.push('load ' + hostData.load[0]);
+  }
+  if (hostData.cpu_count) {
+    parts.push(hostData.cpu_count + (hostData.cpu_count === 1 ? ' nucleo' : ' nucleos'));
+  }
+  setText(node, parts.join('  \xb7  '));
+};
+
+
+/* --- Card de rede (double-row) ------------------------------------------- */
+
+Widgets.initNetCard = function (cardEl) {
+  if (!cardEl) { return null; }
+
+  var head = el('div', 'card-head');
+  var titleEl = el('span', 'card-title');
+  var iconSpan = el('span', 'card-icon');
+  iconSpan.innerHTML = ICONS.net;
+  titleEl.appendChild(iconSpan);
+  titleEl.appendChild(document.createTextNode('Rede'));
+  head.appendChild(titleEl);
+  cardEl.appendChild(head);
+
+  var row = el('div', 'rate-row');
+
+  var down = el('span', 'rate rate--down');
+  down.appendChild(el('span', 'rate-arrow', '↓'));
+  var rx = el('span', 'rate-val', DASH);
+  down.appendChild(rx);
+
+  var up = el('span', 'rate rate--up');
+  up.appendChild(el('span', 'rate-arrow', '↑'));
+  var tx = el('span', 'rate-val', DASH);
+  up.appendChild(tx);
+
+  row.appendChild(down);
+  row.appendChild(up);
+  cardEl.appendChild(row);
+
+  var canvas = el('canvas', 'spark');
+  cardEl.appendChild(canvas);
+
+  return { rx: rx, tx: tx, canvas: canvas };
+};
+
+Widgets.updateNetCard = function (refs, data, buffer) {
+  if (!refs) { return; }
+  setText(refs.rx, fmtRate(getPath(data, 'host.net_rx')));
+  setText(refs.tx, fmtRate(getPath(data, 'host.net_tx')));
+  if (refs.canvas && buffer) {
+    drawSparkline(refs.canvas, buffer, LEVEL_COLOR.ok);
+  }
+};
+
+
+/* --- Docker Summary (double-row) ----------------------------------------- */
+
+Widgets.renderDockerSummary = function (cardEl, payload) {
+  if (!cardEl) { return; }
+  cardEl.innerHTML = '';
+
+  var head = el('div', 'card-head');
+  var titleEl = el('span', 'card-title');
+  var iconSpan = el('span', 'card-icon');
+  iconSpan.innerHTML = ICONS.docker;
+  titleEl.appendChild(iconSpan);
+  titleEl.appendChild(document.createTextNode('Docker'));
+  head.appendChild(titleEl);
+  cardEl.appendChild(head);
+
+  var list = (payload && payload.list) ? payload.list : [];
+  var running = 0;
+  for (var i = 0; i < list.length; i++) {
+    if (list[i].status === 'running') { running = running + 1; }
+  }
+
+  cardEl.appendChild(el('div', 'docker-count',
+    running + ' / ' + list.length + ' ativos'));
+
+  /* Top 3 por score combinado CPU% + Mem% */
+  var active = [];
+  for (var j = 0; j < list.length; j++) {
+    if (list[j].status === 'running') { active.push(list[j]); }
+  }
+  active.sort(function (a, b) {
+    var sa = (a.cpu_percent || 0) + (a.mem_percent || 0);
+    var sb = (b.cpu_percent || 0) + (b.mem_percent || 0);
+    return sb - sa;
+  });
+
+  var top = active.slice(0, 3);
+  if (top.length) {
+    var topDiv = el('div', 'docker-top');
+    for (var k = 0; k < top.length; k++) {
+      var c = top[k];
+      var item = el('div', 'docker-top-item');
+      item.appendChild(el('span', 'docker-top-name', c.name || '?'));
+      var cpuStr = (typeof c.cpu_percent === 'number')
+        ? (fmtNumber(c.cpu_percent) + '% cpu') : DASH;
+      item.appendChild(el('span', 'docker-top-cpu', cpuStr));
+      topDiv.appendChild(item);
+    }
+    cardEl.appendChild(topDiv);
+  }
 };
 
 

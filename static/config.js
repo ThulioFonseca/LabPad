@@ -58,28 +58,13 @@ var CONFIG = {
       path: 'host.mem_percent', unit: '%', warn: 80, crit: 92, spark: true,
       sub: { used: 'host.mem_used', total: 'host.mem_total' } },
 
-    { id: 'disk', title: 'Disco /', kind: 'gauge', section: 'host',
-      path: 'host.disk.0.percent', unit: '%', warn: 80, crit: 92, spark: false,
-      sub: { used: 'host.disk.0.used', total: 'host.disk.0.total' } },
+    { id: 'disk', title: 'Disco', kind: 'gauge', section: 'host',
+      path: 'host.disk_agg_percent', unit: '%', warn: 75, crit: 90, spark: false,
+      sub: { used: 'host.disk_agg_used', total: 'host.disk_agg_total' } },
 
     { id: 'temp', title: 'Temp CPU', kind: 'gauge', section: 'host',
       path: 'sensors.cpu_temp', unit: '°', max: 90, warn: 70, crit: 85,
-      spark: true },
-
-    { id: 'net', title: 'Rede', kind: 'rate', section: 'host',
-      path: 'host.net_rx', path2: 'host.net_tx', spark: true },
-
-    { id: 'os', title: 'Sistema operacional', kind: 'info', section: 'system',
-      path: 'host.os', fmt: 'text' },
-
-    { id: 'uptime', title: 'Uptime', kind: 'info', section: 'system',
-      path: 'host.uptime', fmt: 'duration' },
-
-    { id: 'load', title: 'Load average', kind: 'info', section: 'system',
-      path: 'host.load', fmt: 'load' },
-
-    { id: 'cores', title: 'Nucleos de CPU', kind: 'info', section: 'system',
-      path: 'host.cpu_count', fmt: 'text' }
+      spark: true }
 
   ]
 };

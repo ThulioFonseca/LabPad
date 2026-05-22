@@ -27,19 +27,12 @@
   <main>
     <section class="panel">
       <h2 class="panel-title">Host</h2>
+      <div class="panel-meta" id="section-meta"></div>
       <div class="card-grid" id="section-host"></div>
-    </section>
-
-    <section class="panel">
-      <h2 class="panel-title">Sistema</h2>
-      <div class="info-row" id="section-system"></div>
-    </section>
-
-    <section class="panel">
-      <h2 class="panel-title">
-        Containers <span class="panel-count" id="container-count"></span>
-      </h2>
-      <div class="container-list" id="section-containers"></div>
+      <div class="double-row" id="section-wide">
+        <div class="card" id="section-network"></div>
+        <div class="card" id="section-docker-summary"></div>
+      </div>
     </section>
 
     <div class="feeds-row">
@@ -52,6 +45,13 @@
         <div class="feed-list" id="section-news"></div>
       </section>
     </div>
+
+    <section class="panel">
+      <h2 class="panel-title">
+        Containers <span class="panel-count" id="container-count"></span>
+      </h2>
+      <div class="container-list" id="section-containers"></div>
+    </section>
   </main>
 
   <footer class="footer">
@@ -59,7 +59,6 @@
     <span id="last-update"></span>
   </footer>
 
-  <!-- Ordem importa: config -> utilitarios -> componentes -> orquestrador. -->
   <script src="config.js"></script>
   <script src="js/xhr.js"></script>
   <script src="js/sparkline.js"></script>

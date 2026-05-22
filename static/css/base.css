@@ -391,3 +391,66 @@ main {
   .cmini { display: none; }
   .topbar, main, .footer { padding-left: 14px; padding-right: 14px; }
 }
+
+/* --- Meta-line abaixo do titulo Host -------------------------------------- */
+.panel-meta {
+  font-size: 11px;
+  margin: -6px 2px 14px;
+  letter-spacing: 0.03em;
+}
+
+/* --- Linha larga: Rede + Docker Summary (dobro da largura normal) --------- */
+.double-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: 14px -7px 0;
+}
+.double-row > .card {
+  -webkit-flex: 1 1 440px;
+  flex: 1 1 440px;
+  min-width: 300px;
+  margin: 7px;
+}
+
+/* --- Docker Summary ------------------------------------------------------- */
+.docker-count {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 10px;
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+.docker-top {
+  margin-top: 12px;
+  border-top: 1px solid transparent;
+  padding-top: 10px;
+}
+.docker-top-item {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 12px;
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+}
+.docker-top-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60%;
+}
+
+/* --- Icone SVG inline nos card-title -------------------------------------- */
+.card-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 5px;
+  line-height: 1;
+  position: relative;
+  top: -1px;
+}
+.card-icon svg {
+  display: block;
+}

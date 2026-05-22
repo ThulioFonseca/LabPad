@@ -111,3 +111,24 @@ body {
   color: #6a7080;
   border-top: 1px solid #23262e;
 }
+
+/* --- Meta-line ------------------------------------------------------------ */
+.panel-meta { color: #6a7080; }
+
+/* --- Docker Summary ------------------------------------------------------- */
+.docker-count { color: #e6e8ec; }
+.docker-top { border-top-color: #2a2e37; }
+.docker-top-name { color: #c8ccd4; }
+.docker-top-cpu  { color: #8b909c; }
+
+/* --- Containers warn/crit ------------------------------------------------- */
+.crow--warn { border-color: #d29922; }
+.crow--crit { border-color: #f85149; }
+.crow--warn .cdot       { background-color: #d29922; }
+.crow--crit .cdot       { background-color: #f85149; }
+.crow--warn .cname      { color: #e3b341; }
+.crow--crit .cname      { color: #ff7b72; }
+.crow--warn .cmini-fill { background-color: #d29922; }
+.crow--crit .cmini-fill { background-color: #f85149; }
+.crow--warn .cstatus    { color: #d29922; }
+.crow--crit .cstatus    { color: #f85149; }
