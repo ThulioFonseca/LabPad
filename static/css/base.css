@@ -492,10 +492,10 @@ main {
   flex-direction: column;
 }
 .spark--fill {
-  -webkit-flex: 1 1 0;
-  flex: 1 1 0;
-  height: auto;          /* sobrescreve os 28px fixos de .spark */
-  min-height: 56px;
+  /* base = os 28px de .spark (NAO usar height:auto: canvas cai p/ 150px).
+     Cresce para preencher a altura sobrando do card, sem forca-lo a esticar. */
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
 }
 
 /* --- Docker Summary ------------------------------------------------------- */
