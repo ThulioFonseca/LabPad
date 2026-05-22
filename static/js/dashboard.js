@@ -17,10 +17,10 @@
   /* Weather */
   var weatherRefs = null;
   var lastWeather = null;
-  var weatherVisible = 0;
+  var weatherSlide = 0;
+  var WEATHER_SLIDES = 3;
   var WEATHER_SHOW_MS = 10000;
   var WEATHER_FADE_MS = 800;
-  var WEATHER_GAP_MS  = 1200;
 
   /* Calendar */
   var lastCalendar = null;
@@ -124,35 +124,30 @@
     setText(node, '(' + up + ' / ' + list.length + ' ativos)');
   }
 
-  /* --- Rotacao do widget de clima ----------------------------------------*/
+  /* --- Rotacao do widget de clima (painel unico) -------------------------*/
   function weatherStep() {
     if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
+    var panel = weatherRefs.panel;
 
-    var panels = weatherRefs.panels;
-    var next = (weatherVisible + 1) % panels.length;
-
-    /* fade out painel atual */
-    panels[weatherVisible].className = 'weather-panel weather-hidden';
+    /* fade out */
+    panel.className = 'weather-panel weather-hidden';
 
     setTimeout(function () {
-      for (var i = 0; i < panels.length; i++) {
-        panels[i].className = 'weather-panel weather-hidden';
-      }
-      weatherVisible = next;
-      panels[weatherVisible].className = 'weather-panel';
-
+      /* troca conteudo enquanto invisivel */
+      weatherSlide = (weatherSlide + 1) % WEATHER_SLIDES;
+      Widgets.renderWeatherSlide(panel, lastWeather, weatherSlide);
+      /* fade in */
+      panel.className = 'weather-panel';
       setTimeout(weatherStep, WEATHER_SHOW_MS);
-    }, WEATHER_FADE_MS + WEATHER_GAP_MS);
+    }, WEATHER_FADE_MS);
   }
 
   function startWeatherRotation() {
     if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
-    var panels = weatherRefs.panels;
-    weatherVisible = 0;
-    for (var i = 0; i < panels.length; i++) {
-      panels[i].className = 'weather-panel weather-hidden';
-    }
-    panels[0].className = 'weather-panel';
+    var panel = weatherRefs.panel;
+    weatherSlide = 0;
+    Widgets.renderWeatherSlide(panel, lastWeather, 0);
+    panel.className = 'weather-panel';
     setTimeout(weatherStep, WEATHER_SHOW_MS);
   }
 
@@ -194,14 +189,19 @@
         if (data.weather && data.weather.configured) {
           var firstTime = !lastWeather;
           lastWeather = data.weather;
-          Widgets.renderWeather(weatherRefs, lastWeather);
-          if (firstTime) { startWeatherRotation(); }
+          if (firstTime) {
+            startWeatherRotation();
+          } else {
+            /* Atualiza o slide visivel com dados mais recentes */
+            Widgets.renderWeatherSlide(weatherRefs.panel, lastWeather, weatherSlide);
+          }
         }
       } catch (e) { /* nunca quebra o loop */ }
       setTimeout(pollFeeds, CONFIG.feedsRefreshMs);
     }, function () {
       if (!feedsLoaded) { showFeedMessage('Sem conexao com o servidor.'); }
-      setTimeout(pollFeeds, CONFIG.feedsRefreshMs);
+      /* Falha de rede: tenta de novo em 30s em vez de esperar 10 min */
+      setTimeout(pollFeeds, 30000);
     });
   }
 

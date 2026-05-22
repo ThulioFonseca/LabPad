@@ -26,6 +26,9 @@ _cache_lock = threading.Lock()
 _feeds_cache = {"time": 0.0, "data": None}
 _feeds_lock = threading.Lock()
 
+# Ultimo dado bom por componente de feed — serve dado stale se fetch falhar.
+_last_good_feeds = {}
+
 
 def _safe(collect_fn, fallback):
     """Roda um coletor isolando falhas — um erro nunca derruba o JSON inteiro."""
@@ -47,14 +50,22 @@ def _build_metrics():
 
 
 def _build_feeds():
-    # fallback configured=True -> uma falha de rede aparece como "erro ao ler",
-    # nao como "nao configurado" (esse so quando a URL esta vazia).
-    return {
+    raw = {
         "calendar": _safe(calendar_feed.collect, {"events": [], "configured": True}),
-        "news": _safe(news.collect, {"items": [], "configured": True}),
-        "weather": _safe(weather.collect, {"configured": False}),
-        "meta": {"time": time.time()},
+        "news":     _safe(news.collect, {"items": [], "configured": True}),
+        "weather":  _safe(weather.collect, {"configured": False}),
     }
+    result = {}
+    for key, data in raw.items():
+        if "error" not in data:
+            _last_good_feeds[key] = data  # atualiza ultimo bom
+            result[key] = data
+        elif key in _last_good_feeds:
+            result[key] = _last_good_feeds[key]  # serve dado stale
+        else:
+            result[key] = data  # primeira vez sem dado bom: exibe o erro
+    result["meta"] = {"time": time.time()}
+    return result
 
 
 @app.route("/api/metrics")
@@ -85,14 +96,23 @@ def metrics():
 def feeds():
     with _feeds_lock:
         now = time.time()
-        fresh = (
-            _feeds_cache["data"] is not None
-            and (now - _feeds_cache["time"]) < config.FEEDS_CACHE_TTL
-        )
-        if not fresh:
-            _feeds_cache["data"] = _build_feeds()
-            _feeds_cache["time"] = now
-        response = jsonify(_feeds_cache["data"])
+        if (_feeds_cache["data"] is not None
+                and (now - _feeds_cache["time"]) < config.FEEDS_CACHE_TTL):
+            response = jsonify(_feeds_cache["data"])
+            response.headers["Cache-Control"] = "no-store"
+            return response
+
+    # Coleta fora do lock: chama servicos externos (ICS, RSS, Open-Meteo).
+    data = _build_feeds()
+
+    with _feeds_lock:
+        if (_feeds_cache["data"] is None
+                or (time.time() - _feeds_cache["time"]) >= config.FEEDS_CACHE_TTL):
+            _feeds_cache["data"] = data
+            _feeds_cache["time"] = time.time()
+        data = _feeds_cache["data"]
+
+    response = jsonify(data)
     response.headers["Cache-Control"] = "no-store"
     return response
 

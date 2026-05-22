@@ -538,59 +538,56 @@ Widgets.renderDockerSummary = function (cardEl, payload) {
 
 Widgets.initWeather = function (containerEl) {
   if (!containerEl) { return null; }
-  var panels = [];
-  for (var i = 0; i < 3; i++) {
-    var p = el('div', 'weather-panel weather-hidden');
-    containerEl.appendChild(p);
-    panels.push(p);
-  }
-  return { panels: panels, current: -1 };
+  /* Um unico painel: troca de conteudo enquanto esta invisivel (opacity:0).
+     Evita empilhar 3 elementos no topbar e problemas de layout/transition. */
+  var panel = el('div', 'weather-panel weather-hidden');
+  containerEl.appendChild(panel);
+  return { panel: panel };
 };
 
-Widgets.renderWeather = function (weatherRefs, payload) {
-  if (!weatherRefs || !payload || !payload.configured) { return; }
+/* Preenche o painel com o slide indicado (0=atual, 1=previsao, 2=lua). */
+Widgets.renderWeatherSlide = function (panel, payload, slideIndex) {
+  if (!panel || !payload || !payload.configured) { return; }
+  panel.innerHTML = '';
 
-  var panels = weatherRefs.panels;
+  if (slideIndex === 0) {
+    /* Temperatura atual + humidade */
+    var cur = payload.current || {};
+    var icon0 = el('span', 'weather-icon');
+    icon0.innerHTML = _wmoIcon(cur.code || 0);
+    panel.appendChild(icon0);
+    panel.appendChild(el('span', 'weather-val',
+      (cur.temp !== undefined ? cur.temp + '\xb0C' : DASH)));
+    panel.appendChild(el('span', 'weather-sep', '\xb7'));
+    panel.appendChild(el('span', 'weather-val',
+      (cur.humidity !== undefined ? cur.humidity + '%' : DASH)));
 
-  /* Painel 0: temperatura atual + humidade */
-  var p0 = panels[0];
-  p0.innerHTML = '';
-  var cur = payload.current || {};
-  var iconSpan0 = el('span', 'weather-icon');
-  iconSpan0.innerHTML = _wmoIcon(cur.code || 0);
-  p0.appendChild(iconSpan0);
-  p0.appendChild(el('span', 'weather-val', (cur.temp !== undefined ? cur.temp + '\xb0C' : DASH)));
-  p0.appendChild(el('span', 'weather-sep', '\xb7'));
-  p0.appendChild(el('span', 'weather-val', (cur.humidity !== undefined ? cur.humidity + '%' : DASH)));
+  } else if (slideIndex === 1) {
+    /* Previsao 5 dias */
+    var forecast = payload.forecast || [];
+    var dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+    for (var fi = 0; fi < forecast.length && fi < 5; fi++) {
+      var f = forecast[fi];
+      var dayEl = el('span', 'weather-day');
+      var d = f.date ? new Date(f.date + 'T12:00:00') : null;
+      dayEl.appendChild(el('span', 'weather-day-name', d ? dayNames[d.getDay()] : ''));
+      var icon1 = el('span', 'weather-icon');
+      icon1.innerHTML = _wmoIcon(f.code || 0);
+      dayEl.appendChild(icon1);
+      var hi = (f.high !== null && f.high !== undefined) ? Math.round(f.high) : DASH;
+      var lo = (f.low  !== null && f.low  !== undefined) ? Math.round(f.low)  : DASH;
+      dayEl.appendChild(el('span', 'weather-day-temp', hi + '/' + lo));
+      panel.appendChild(dayEl);
+    }
 
-  /* Painel 1: previsao 5 dias */
-  var p1 = panels[1];
-  p1.innerHTML = '';
-  var forecast = payload.forecast || [];
-  var days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
-  for (var j = 0; j < forecast.length && j < 5; j++) {
-    var f = forecast[j];
-    var dayEl = el('span', 'weather-day');
-    var d = f.date ? new Date(f.date + 'T12:00:00') : null;
-    var dayName = d ? days[d.getDay()] : '';
-    dayEl.appendChild(el('span', 'weather-day-name', dayName));
-    var iconSpan1 = el('span', 'weather-icon');
-    iconSpan1.innerHTML = _wmoIcon(f.code || 0);
-    dayEl.appendChild(iconSpan1);
-    var tempStr = (f.high !== null && f.high !== undefined ? Math.round(f.high) : DASH)
-      + '/' + (f.low !== null && f.low !== undefined ? Math.round(f.low) : DASH);
-    dayEl.appendChild(el('span', 'weather-day-temp', tempStr));
-    p1.appendChild(dayEl);
+  } else {
+    /* Fase da lua */
+    var moon = payload.moon || {};
+    var icon2 = el('span', 'weather-icon');
+    icon2.innerHTML = MOON_ICONS[moon.phase_index || 0] || '';
+    panel.appendChild(icon2);
+    panel.appendChild(el('span', 'weather-val', moon.name || DASH));
   }
-
-  /* Painel 2: fase da lua */
-  var p2 = panels[2];
-  p2.innerHTML = '';
-  var moon = payload.moon || {};
-  var moonIconSpan = el('span', 'weather-icon');
-  moonIconSpan.innerHTML = MOON_ICONS[moon.phase_index || 0] || '';
-  p2.appendChild(moonIconSpan);
-  p2.appendChild(el('span', 'weather-val', moon.name || DASH));
 };
 
 
