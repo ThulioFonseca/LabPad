@@ -113,9 +113,10 @@
     }
 
     pushNetBuffer(data);
-    Widgets.updateNetCard(netRefs, data, netBuffer);
-
+    /* Docker summary define a altura da double-row; medir o canvas depois. */
     Widgets.renderDockerSummary(byId('section-docker-summary'), data.containers);
+    sizeCanvas(netRefs && netRefs.canvas);
+    Widgets.updateNetCard(netRefs, data, netBuffer);
 
     Widgets.renderContainers(byId('section-containers'), data.containers);
     updateContainerCount(data.containers);

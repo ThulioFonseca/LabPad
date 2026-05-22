@@ -466,7 +466,7 @@ Widgets.initNetCard = function (cardEl) {
   row.appendChild(up);
   cardEl.appendChild(row);
 
-  var canvas = el('canvas', 'spark');
+  var canvas = el('canvas', 'spark spark--fill');
   cardEl.appendChild(canvas);
 
   return { rx: rx, tx: tx, canvas: canvas };
@@ -612,10 +612,26 @@ Widgets.renderNews = function (container, payload) {
   }
 
   for (var i = 0; i < items.length; i++) {
-    var item = items[i];
-    var row = el('div', 'news-item');
-    row.appendChild(el('div', 'news-title', item.title || ''));
-    if (item.age) { row.appendChild(el('div', 'news-age', item.age)); }
-    container.appendChild(row);
+    container.appendChild(Widgets._newsItem(items[i]));
   }
+};
+
+Widgets._newsItem = function (item) {
+  /* Sem imagem: layout atual (titulo + idade empilhados). */
+  if (!item.image) {
+    var plain = el('div', 'news-item');
+    plain.appendChild(el('div', 'news-title', item.title || ''));
+    if (item.age) { plain.appendChild(el('div', 'news-age', item.age)); }
+    return plain;
+  }
+  /* Com imagem: miniatura quadrada a esquerda, texto ao lado. */
+  var row = el('div', 'news-item news-item--media');
+  var thumb = el('div', 'news-thumb');
+  thumb.style.backgroundImage = 'url("' + item.image + '")';
+  row.appendChild(thumb);
+  var text = el('div', 'news-text');
+  text.appendChild(el('div', 'news-title', item.title || ''));
+  if (item.age) { text.appendChild(el('div', 'news-age', item.age)); }
+  row.appendChild(text);
+  return row;
 };

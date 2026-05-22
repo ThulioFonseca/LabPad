@@ -265,10 +265,16 @@ main {
 .cname {
   font-size: 15px;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .cimage {
   font-size: 12px;
   margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .cstat {
   -webkit-flex: 0 0 auto;
@@ -397,10 +403,63 @@ main {
   margin-top: 5px;
 }
 
-/* Telas estreitas (iPad em retrato): esconde o mini-grafico de mem por linha. */
-@media (max-width: 560px) {
+/* Noticia com miniatura: imagem quadrada + texto ao lado. */
+.news-item--media {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.news-thumb {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  margin-right: 12px;
+  background-size: cover;          /* Safari 9 ok; object-fit nao seria */
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.news-text {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.news-item--media .news-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;           /* ate 2 linhas, depois reticencias */
+  overflow: hidden;
+}
+
+/* --- Telas estreitas (celular em retrato) --------------------------------- */
+@media (max-width: 600px) {
+  /* Cabecalho: marca + status na 1a linha, clima ocupa a 2a linha inteira. */
+  .topbar {
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+  }
+  .brand  { -webkit-flex: 1 1 auto; flex: 1 1 auto; }
+  .status { -webkit-flex: 1 1 auto; flex: 1 1 auto; }
+  .topbar-center {
+    -webkit-order: 3;
+    order: 3;
+    -webkit-flex: 1 1 100%;
+    flex: 1 1 100%;
+    margin-top: 8px;
+  }
+  .weather-day { margin: 0 4px; }
+  .weather-sep { margin: 0 7px; }
+
+  main, .footer { padding-left: 14px; padding-right: 14px; }
+
+  /* Lista de containers: aperta espacamento e esconde o mini-grafico. */
   .cmini { display: none; }
-  .topbar, main, .footer { padding-left: 14px; padding-right: 14px; }
+  .crow  { padding: 9px 12px; }
+  .cdot  { margin-right: 10px; }
+  .cstat, .cstatus { margin-left: 12px; }
 }
 
 /* --- Meta-line abaixo do titulo Host -------------------------------------- */
@@ -423,6 +482,20 @@ main {
   flex: 1 1 440px;
   min-width: 300px;
   margin: 7px;
+}
+
+/* Card de rede: vira coluna flex e o grafico cresce p/ preencher a altura. */
+#section-network {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+.spark--fill {
+  -webkit-flex: 1 1 0;
+  flex: 1 1 0;
+  height: auto;          /* sobrescreve os 28px fixos de .spark */
+  min-height: 56px;
 }
 
 /* --- Docker Summary ------------------------------------------------------- */

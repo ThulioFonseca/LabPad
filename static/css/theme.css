@@ -105,6 +105,7 @@ body {
 }
 .news-title { color: #e6e8ec; }
 .news-age   { color: #6a7080; }
+.news-thumb { background-color: #2a2e37; }
 
 /* --- Rodape ----------------------------------------------------------------*/
 .footer {
