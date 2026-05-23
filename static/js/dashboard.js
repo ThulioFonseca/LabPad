@@ -17,11 +17,14 @@
   /* Weather */
   var weatherRefs = null;
   var lastWeather = null;
-  var weatherCurrentId = 'current';
+  var weatherCurrentId = 'city';
   var weatherGeneration = 0;     /* invalida setTimeouts antigos ao reiniciar */
-  var WEATHER_SLIDE_INDEX = { current: 0, forecast: 1, moon: 2 };
   var WEATHER_SHOW_MS = 10000;
   var WEATHER_FADE_MS = 800;
+
+  /* Loop dos feeds: timer trackeado p/ permitir refetch imediato sem
+     acumular setTimeouts (chamado em Settings.onBackendSave). */
+  var feedsTimer = null;
 
   /* Calendar */
   var lastCalendar = null;
@@ -285,28 +288,32 @@
 
   function renderWeatherCurrent() {
     if (!weatherRefs || !lastWeather) { return; }
-    var idx = WEATHER_SLIDE_INDEX[weatherCurrentId];
-    if (idx === undefined) { idx = 0; weatherCurrentId = 'current'; }
-    Widgets.renderWeatherSlide(weatherRefs.panel, lastWeather, idx);
+    Widgets.renderWeatherSlide(weatherRefs.panel, lastWeather, weatherCurrentId);
   }
 
   function weatherStep(gen) {
     if (gen !== weatherGeneration) { return; }
     if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
-    var slides = enabledWeatherSlides();
-    if (slides.length <= 1) { return; }
 
     var panel = weatherRefs.panel;
     panel.className = 'weather-panel weather-hidden';
 
     setTimeout(function () {
       if (gen !== weatherGeneration) { return; }
-      var s2 = enabledWeatherSlides();
-      var i = s2.indexOf(weatherCurrentId);
-      weatherCurrentId = (i < 0) ? s2[0] : s2[(i + 1) % s2.length];
+      var enabled = enabledWeatherSlides();
+      var nextId;
+      if (weatherCurrentId === 'city') {
+        /* Saindo da intro: vai pro primeiro slide habilitado. */
+        nextId = enabled[0];
+      } else {
+        var i = enabled.indexOf(weatherCurrentId);
+        nextId = (i < 0) ? enabled[0] : enabled[(i + 1) % enabled.length];
+      }
+      weatherCurrentId = nextId;
       renderWeatherCurrent();
       panel.className = 'weather-panel';
-      if (s2.length > 1) {
+      /* So continua girando se ha >1 slides habilitados (city ja saiu). */
+      if (enabled.length > 1) {
         setTimeout(function () { weatherStep(gen); }, WEATHER_SHOW_MS);
       }
     }, WEATHER_FADE_MS);
@@ -316,13 +323,11 @@
     if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
     weatherGeneration += 1;
     var gen = weatherGeneration;
-    var slides = enabledWeatherSlides();
-    weatherCurrentId = slides[0];
+    /* Sempre comeca pelo slide 'city' (intro, exibido uma vez). */
+    weatherCurrentId = 'city';
     renderWeatherCurrent();
     weatherRefs.panel.className = 'weather-panel';
-    if (slides.length > 1) {
-      setTimeout(function () { weatherStep(gen); }, WEATHER_SHOW_MS);
-    }
+    setTimeout(function () { weatherStep(gen); }, WEATHER_SHOW_MS);
   }
 
   /* Mostra/esconde sparklines conforme Settings.spark(id). */
@@ -366,6 +371,10 @@
 
   /* --- Loop dos feeds (agenda + noticias + clima) -------------------------*/
   function pollFeeds() {
+    /* Cancela timer pendente — permite refetch imediato (onBackendSave) sem
+       acumular polls em paralelo. */
+    if (feedsTimer) { clearTimeout(feedsTimer); feedsTimer = null; }
+
     var url = (CONFIG.apiBase || '') + '/api/feeds?_=' + (new Date()).getTime();
     /* Timeout de 40s: feeds chamam APIs externas; a agenda pode levar ate ~25s. */
     getJSON(url, function (data) {
@@ -376,21 +385,23 @@
         feedsLoaded = true;
 
         if (data.weather && data.weather.configured) {
+          var prevCity = lastWeather ? lastWeather.city : null;
           var firstTime = !lastWeather;
           lastWeather = data.weather;
-          if (firstTime) {
+          /* Cidade nova (ou primeira carga): reinicia rotacao — o slide
+             'city' reaparece confirmando visualmente a mudanca. */
+          if (firstTime || data.weather.city !== prevCity) {
             startWeatherRotation();
           } else {
-            /* Atualiza o slide visivel com dados mais recentes */
             renderWeatherCurrent();
           }
         }
       } catch (e) { reportError('pollFeeds', e); }
-      setTimeout(pollFeeds, CONFIG.feedsRefreshMs);
+      feedsTimer = setTimeout(pollFeeds, CONFIG.feedsRefreshMs);
     }, function () {
       if (!feedsLoaded) { showFeedMessage('Sem conexao com o servidor.'); }
       /* Falha de rede: tenta de novo em 30s em vez de esperar 10 min */
-      setTimeout(pollFeeds, 30000);
+      feedsTimer = setTimeout(pollFeeds, 30000);
     }, 40000);
   }
 
@@ -425,7 +436,16 @@
   if (window.Settings && Settings.onChange) {
     Settings.onChange(function () {
       applySparkVisibility();
-      startWeatherRotation();
+      /* Slides do clima: weatherStep le enabledWeatherSlides() a cada passo,
+         entao toggles aplicam sozinhos no proximo ciclo (sem restart aqui — evita
+         mostrar a cidade ANTIGA por um instante quando o save inclui troca de cidade). */
+    });
+  }
+  if (window.Settings && Settings.onBackendSave) {
+    Settings.onBackendSave(function () {
+      /* Save de fonte de dados (cidade/URL/limite/dias): refaz pollFeeds
+         imediato em vez de esperar o ciclo de 10 min. */
+      pollFeeds();
     });
   }
   window.onresize = resizeAllCanvases;

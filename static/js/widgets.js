@@ -450,12 +450,24 @@ Widgets.initWeather = function (containerEl) {
   return { panel: panel };
 };
 
-/* Preenche o painel com o slide indicado (0=atual, 1=previsao, 2=lua). */
-Widgets.renderWeatherSlide = function (panel, payload, slideIndex) {
+/* Preenche o painel com o slide indicado. Aceita id string
+   ('current'/'forecast'/'moon'/'city') ou indice numerico (compat: 0/1/2). */
+Widgets.renderWeatherSlide = function (panel, payload, slideId) {
   if (!panel || !payload || !payload.configured) { return; }
   panel.innerHTML = '';
 
-  if (slideIndex === 0) {
+  var id = slideId;
+  if (id === 0) { id = 'current'; }
+  else if (id === 1) { id = 'forecast'; }
+  else if (id === 2) { id = 'moon'; }
+
+  if (id === 'city') {
+    /* Slide de intro: nome da cidade monitorada. */
+    panel.appendChild(el('span', 'weather-val', payload.city || DASH));
+    return;
+  }
+
+  if (id === 'current') {
     /* Temperatura atual + humidade */
     var cur = payload.current || {};
     var icon0 = el('span', 'weather-icon');
@@ -467,7 +479,7 @@ Widgets.renderWeatherSlide = function (panel, payload, slideIndex) {
     panel.appendChild(el('span', 'weather-val',
       (cur.humidity !== undefined ? cur.humidity + '%' : DASH)));
 
-  } else if (slideIndex === 1) {
+  } else if (id === 'forecast') {
     /* Previsao 5 dias */
     var forecast = payload.forecast || [];
     var dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];

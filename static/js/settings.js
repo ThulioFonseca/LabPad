@@ -69,7 +69,8 @@
   /* === Estado ============================================================ */
   var fe = clone(FE_DEFAULTS);
   var be = null;                /* preenchido pelo GET /api/settings */
-  var listeners = [];           /* Settings.onChange */
+  var listeners = [];           /* Settings.onChange (qualquer mudanca) */
+  var beListeners = [];         /* Settings.onBackendSave (so apos PUT 200) */
   var menuEl = null;            /* nao usado mais (legado removido) */
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -125,12 +126,21 @@
       try { listeners[i](window.Settings); } catch (e) {}
     }
   }
+  function notifyBackend() {
+    for (var i = 0; i < beListeners.length; i++) {
+      try { beListeners[i](window.Settings); } catch (e) {}
+    }
+  }
 
   /* === API publica (consumida por widgets.js / dashboard.js) ============= */
   window.Settings = {
     spark: function (id) { return fe.sparks[id] !== false; },
     weatherSlides: function () { return fe.weatherSlides.slice(); },
-    onChange: function (cb) { if (typeof cb === 'function') { listeners.push(cb); } }
+    onChange: function (cb) { if (typeof cb === 'function') { listeners.push(cb); } },
+    /* Dispara SO depois de um PUT /api/settings retornar 200 — sinal claro
+       de que dados do servidor mudaram (cidade/URL/limite). dashboard.js usa
+       para refazer o pollFeeds imediato em vez de esperar o ciclo de 10 min. */
+    onBackendSave: function (cb) { if (typeof cb === 'function') { beListeners.push(cb); } }
   };
 
   /* === Helpers de formulario ============================================ */
@@ -345,6 +355,7 @@
       if (xhr.status === 200) {
         try { be = JSON.parse(xhr.responseText); } catch (e) {}
         notify();
+        notifyBackend();   /* dashboard refaz pollFeeds imediato */
         toast('Salvo.');
         closeSettingsModal();
       } else {
