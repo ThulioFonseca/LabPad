@@ -437,6 +437,13 @@ main {
   overflow: hidden;
 }
 
+/* Fonte mais larga e legivel a distancia nas listas de agenda e noticias.
+   '#section-X *' sobrepoe ate '.cal-time' (que vinha do grupo monoespacado). */
+#section-calendar, #section-calendar *,
+#section-news, #section-news * {
+  font-family: Verdana, "DejaVu Sans", Geneva, sans-serif;
+}
+
 /* --- Telas estreitas (celular em retrato) --------------------------------- */
 @media (max-width: 600px) {
   /* Cabecalho: marca + status na 1a linha, clima ocupa a 2a linha inteira. */
