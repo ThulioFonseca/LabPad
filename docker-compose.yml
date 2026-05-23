@@ -17,3 +17,7 @@ services:
       - /sys:/sys:ro
       - /etc/os-release:/etc/os-release:ro
       - /etc/hostname:/host-hostname:ro
+      - homelab-monitor-data:/data     # persiste /data/settings.json
+
+volumes:
+  homelab-monitor-data:

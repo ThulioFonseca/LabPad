@@ -6,7 +6,7 @@ import re
 import feedparser
 import requests
 
-import config
+import settings
 
 _TIMEOUT = 12
 _UA = "Mozilla/5.0 (HomelabMonitor)"
@@ -62,7 +62,7 @@ def _age_label(published_struct):
 
 
 def collect():
-    url = config.NEWS_RSS_URL
+    url = settings.get("news", "url", "")
     if not url:
         return {"items": [], "configured": False}
 
@@ -70,8 +70,9 @@ def collect():
     response.raise_for_status()
     parsed = feedparser.parse(response.content)
 
+    limit = settings.get("news", "limit", 5)
     items = []
-    for entry in parsed.entries[:config.NEWS_LIMIT]:
+    for entry in parsed.entries[:limit]:
         when = entry.get("published_parsed") or entry.get("updated_parsed")
         items.append({
             "title": entry.get("title", "(sem titulo)"),

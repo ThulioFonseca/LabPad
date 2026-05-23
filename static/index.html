@@ -8,14 +8,28 @@
   <meta name="apple-mobile-web-app-title" content="Homelab">
   <title>Homelab Monitor</title>
   <script>
-    /* Aplica o tema salvo antes da pintura (evita flash do tema anterior). */
+    /* Aplica o tema/layout salvos antes da pintura (sem flash). */
     (function () {
-      var t = 'minimal', m = 'dark';
+      var t = 'minimal', m = 'dark', ch = 'normal', nh = 'normal';
       try {
-        t = localStorage.getItem('homelab.theme') || 'minimal';
-        m = localStorage.getItem('homelab.mode') || 'dark';
+        var raw = localStorage.getItem('homelab.settings');
+        if (raw) {
+          var p = JSON.parse(raw);
+          if (p) {
+            if (p.theme) { t = p.theme; }
+            if (p.mode)  { m = p.mode; }
+            if (p.cardHeight)     { ch = p.cardHeight; }
+            if (p.newsCardHeight) { nh = p.newsCardHeight; }
+          }
+        }
+        /* compat com a v1 do theme.js (chaves separadas) */
+        var oldT = localStorage.getItem('homelab.theme');
+        var oldM = localStorage.getItem('homelab.mode');
+        if (oldT) { t = oldT; }
+        if (oldM) { m = oldM; }
       } catch (e) { /* localStorage indisponivel */ }
-      document.documentElement.className = 'theme-' + t + ' mode-' + m;
+      document.documentElement.className =
+        'theme-' + t + ' mode-' + m + ' cards-' + ch + ' news-' + nh;
     })();
   </script>
   <link rel="stylesheet" href="css/base.css">
@@ -37,7 +51,7 @@
       <span class="status-dot" id="status-dot"></span>
       <span id="status-text">conectando&hellip;</span>
       <span class="clock" id="clock">--:--:--</span>
-      <span class="theme-control" id="theme-control"><!-- engrenagem: theme.js --></span>
+      <span class="theme-control" id="theme-control"><!-- engrenagem: settings.js --></span>
     </div>
   </header>
 
@@ -94,6 +108,17 @@
     </div>
   </div>
 
+  <div class="modal-backdrop" id="settings-modal">
+    <div class="modal modal--settings" id="settings-modal-box">
+      <div class="modal-head">
+        <h2 class="modal-title">Configuracoes</h2>
+        <button class="modal-close" id="settings-modal-close" type="button"
+                aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body" id="settings-modal-body"></div>
+    </div>
+  </div>
+
   <div class="modal-backdrop" id="logs-modal">
     <div class="modal modal--logs" id="logs-modal-box">
       <div class="modal-head">
@@ -129,7 +154,7 @@
   <script src="js/icons.js"></script>
   <script src="js/sparkline.js"></script>
   <script src="js/widgets.js"></script>
-  <script src="js/theme.js"></script>
+  <script src="js/settings.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>

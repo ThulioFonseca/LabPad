@@ -10,6 +10,7 @@ import recurring_ical_events
 import requests
 
 import config
+import settings
 
 # (connect 5s, read 25s) — calendarios Office365 corporativos sao lentos.
 _TIMEOUT = (5, 25)
@@ -59,7 +60,7 @@ def _time_label(start_local, end_local, all_day):
 
 
 def collect():
-    url = config.CALENDAR_ICS_URL
+    url = settings.get("calendar", "url", "")
     if not url:
         return {"events": [], "configured": False}
 
@@ -70,7 +71,8 @@ def collect():
     tz = _tz()
     now = datetime.datetime.now(tz)
     today = now.date()
-    window_end = now + datetime.timedelta(days=config.CALENDAR_DAYS)
+    days = settings.get("calendar", "days", 3)
+    window_end = now + datetime.timedelta(days=days)
 
     # recurring_ical_events expande RRULE (reunioes semanais etc.) na janela.
     occurrences = recurring_ical_events.of(calendar).between(now, window_end)

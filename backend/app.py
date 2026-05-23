@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, jsonify, request, send_from_directory
 
 import config
+import settings
 from collectors import calendar_feed, containers, host, news, sensors, weather
 
 STATIC_DIR = os.path.join(
@@ -177,6 +178,87 @@ def client_error():
 @app.route("/api/health")
 def health():
     return jsonify({"ok": True, "time": time.time()})
+
+
+def _validate_settings(body):
+    """Valida e normaliza o payload do PUT /api/settings.
+
+    Devolve um dict com {secao: {chave: valor}} contendo SOMENTE os campos
+    validos do payload. Em caso de erro de validacao, devolve {"error": ...}.
+    """
+    if not isinstance(body, dict):
+        return {"error": "payload invalido"}
+    clean = {}
+
+    w = body.get("weather") or {}
+    if "city" in w:
+        clean.setdefault("weather", {})["city"] = str(w["city"]).strip()[:100]
+
+    c = body.get("calendar") or {}
+    if "url" in c:
+        u = str(c["url"]).strip()[:500]
+        if u and not (u.startswith("http://") or u.startswith("https://")):
+            return {"error": "calendar.url precisa comecar com http(s)://"}
+        clean.setdefault("calendar", {})["url"] = u
+    if "days" in c:
+        try:
+            d = int(c["days"])
+        except (TypeError, ValueError):
+            return {"error": "calendar.days deve ser inteiro"}
+        if d < 1 or d > 30:
+            return {"error": "calendar.days fora do intervalo 1..30"}
+        clean.setdefault("calendar", {})["days"] = d
+
+    n = body.get("news") or {}
+    if "url" in n:
+        u = str(n["url"]).strip()[:500]
+        if u and not (u.startswith("http://") or u.startswith("https://")):
+            return {"error": "news.url precisa comecar com http(s)://"}
+        clean.setdefault("news", {})["url"] = u
+    if "limit" in n:
+        try:
+            lim = int(n["limit"])
+        except (TypeError, ValueError):
+            return {"error": "news.limit deve ser inteiro"}
+        if lim < 1 or lim > 50:
+            return {"error": "news.limit fora do intervalo 1..50"}
+        clean.setdefault("news", {})["limit"] = lim
+
+    return clean
+
+
+def _invalidate_settings_caches(prev, new):
+    """Limpa caches afetados quando uma fonte muda (cidade, URL etc.)."""
+    if prev["weather"]["city"] != new["weather"]["city"]:
+        weather._geo_cache.clear()
+        _last_good_feeds.pop("weather", None)
+    if prev["calendar"]["url"] != new["calendar"]["url"]:
+        _last_good_feeds.pop("calendar", None)
+    if prev["news"]["url"] != new["news"]["url"]:
+        _last_good_feeds.pop("news", None)
+    # Forca rebuild no proximo GET /api/feeds.
+    with _feeds_lock:
+        _feeds_cache["data"] = None
+        _feeds_cache["time"] = 0.0
+
+
+@app.route("/api/settings", methods=["GET"])
+def get_settings():
+    response = jsonify(settings.get_effective())
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/api/settings", methods=["PUT"])
+def put_settings():
+    body = request.get_json(force=True, silent=True)
+    cleaned = _validate_settings(body)
+    if "error" in cleaned:
+        return jsonify(cleaned), 400
+    prev, new = settings.update(cleaned)
+    _invalidate_settings_caches(prev, new)
+    logging.info("Settings atualizadas: %s", list(cleaned.keys()))
+    return jsonify(new)
 
 
 @app.route("/")

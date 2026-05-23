@@ -139,17 +139,30 @@ Exemplo — mostrar contagem de processos:
   path:'host.proc_count', fmt:'text' }
 ```
 
-### Mudar a aparência
+### Painel de configurações
 
-Use o **botão de engrenagem** no canto superior direito: ele abre um menu com
-**5 temas** — Minimal, Neumorfismo, Elevado, Contorno e Vidro Fosco — cada um
-com variante **clara** e **escura**. A escolha é salva no navegador
-(`localStorage`) e reaplicada nas próximas aberturas, sem flash.
+O **botão de engrenagem** no canto superior direito abre um painel completo
+que ajusta o dashboard **ao vivo** (sem editar `.env` nem rebuildar a imagem).
+Ele tem 5 seções:
+
+- **Tema** — 5 estilos (Minimal, Neumorfismo, Elevado, Contorno, Vidro Fosco)
+  e modo claro/escuro.
+- **Cards** — altura (compacto/normal/folgado) e quais cards mostram sparkline.
+- **Clima** — cidade monitorada e quais slides aparecem na topbar.
+- **Agenda** — URL `.ics` e quantos dias à frente exibir.
+- **Notícias** — URL do RSS, quantas exibir e altura do card.
+
+Configurações de **aparência** (tema, modo, alturas, sparklines, slides) ficam
+no `localStorage` do navegador. As de **fonte de dados** (cidade, URLs,
+limites, dias) são gravadas em `/data/settings.json` num volume Docker
+nomeado — sobrevivem a rebuilds e valem na próxima coleta. Os valores do
+`.env` continuam como **defaults iniciais**: enquanto não há override, vale o
+`.env`. O botão "Restaurar padrões" reverte só os ajustes de frontend.
 
 Cada tema é um *estilo* (sombra, borda, forma), não só uma cor. O Minimal
-escuro vive em [`static/css/theme.css`](static/css/theme.css); os demais ficam
-em `themes.css`, aplicados por classes em `<html>` (`theme-X mode-Y`). A
-estrutura/layout fica em `base.css` (normalmente intocado).
+escuro vive em [`static/css/theme.css`](static/css/theme.css); os demais e as
+variantes claras ficam em `themes.css`, aplicados por classes em `<html>`
+(`theme-X mode-Y cards-Z news-W`). A estrutura/layout fica em `base.css`.
 
 ### Tipos de widget disponíveis
 
@@ -184,9 +197,10 @@ static/
   js/icons.js            icones SVG (cards, clima, lua)
   js/sparkline.js        mini-grafico em <canvas>
   js/widgets.js          componentes: cards, agenda, noticias, clima
-  js/theme.js            seletor de tema (engrenagem)
+  js/settings.js         painel de configuracoes (engrenagem -> modal)
   js/dashboard.js        polling + render
-.env               ★   URLs do calendario/RSS, cidade do clima e fuso
+backend/settings.py      store mutavel (.env + /data/settings.json)
+.env               ★   defaults de calendario/RSS/clima/fuso
 Dockerfile · docker-compose.yml · requirements.txt
 ```
 

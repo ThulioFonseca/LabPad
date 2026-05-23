@@ -479,22 +479,31 @@
 
 /* === Menu da engrenagem (so por modo) ===================================== */
 
-.mode-dark .theme-menu {
-  background-color: #1e2128;
+/* === Painel de configuracoes (controles + toast) ========================= */
+
+.mode-dark .form-input, .mode-dark .form-select {
+  background-color: #14171c;
   border-color: #2a2e37;
   color: #e6e8ec;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
 }
-.mode-light .theme-menu {
-  background-color: #ffffff;
-  border-color: #e2e5ea;
+.mode-light .form-input, .mode-light .form-select {
+  background-color: #f6f7f9;
+  border-color: #d4d8de;
   color: #1c2026;
-  box-shadow: 0 8px 24px rgba(20, 28, 40, 0.18);
 }
-.mode-dark .theme-opt--active,
-.mode-dark .theme-mode-btn--active { background-color: #2a2e37; }
-.mode-light .theme-opt--active,
-.mode-light .theme-mode-btn--active { background-color: #eef0f3; }
+.mode-dark  .form-input:focus, .mode-dark  .form-select:focus { border-color: #4f8cff; }
+.mode-light .form-input:focus, .mode-light .form-select:focus { border-color: #2563eb; }
+
+.mode-dark  .settings-actions { border-top-color: #2a2e37; }
+.mode-light .settings-actions { border-top-color: #e2e5ea; }
+
+.mode-dark  .btn-save { background-color: #4f8cff; color: #ffffff; border-color: #4f8cff; }
+.mode-light .btn-save { background-color: #2563eb; color: #ffffff; border-color: #2563eb; }
+.mode-dark  .btn-secondary { color: #c8ccd4; }
+.mode-light .btn-secondary { color: #586070; }
+
+.mode-dark  .toast { background-color: #1e2128; color: #e6e8ec; border-color: #2a2e37; }
+.mode-light .toast { background-color: #ffffff; color: #1c2026; border-color: #e2e5ea; }
 
 
 /* === Modal de containers (caixa por modo) ================================= */

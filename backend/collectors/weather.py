@@ -8,7 +8,7 @@ try:
 except ImportError:
     from urllib2 import urlopen, Request, URLError
 
-import config
+import settings
 
 _TIMEOUT = 8
 
@@ -66,7 +66,7 @@ def _resolve_city(city):
 
 
 def collect():
-    city = config.WEATHER_CITY
+    city = settings.get("weather", "city", "")
     if not city:
         return {"configured": False}
 

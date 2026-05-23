@@ -17,8 +17,9 @@
   /* Weather */
   var weatherRefs = null;
   var lastWeather = null;
-  var weatherSlide = 0;
-  var WEATHER_SLIDES = 3;
+  var weatherCurrentId = 'current';
+  var weatherGeneration = 0;     /* invalida setTimeouts antigos ao reiniciar */
+  var WEATHER_SLIDE_INDEX = { current: 0, forecast: 1, moon: 2 };
   var WEATHER_SHOW_MS = 10000;
   var WEATHER_FADE_MS = 800;
 
@@ -272,30 +273,70 @@
   }
 
   /* --- Rotacao do widget de clima (painel unico) -------------------------*/
-  function weatherStep() {
-    if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
-    var panel = weatherRefs.panel;
+  /* Slides ativos vem do Settings (subset de current/forecast/moon). Cada
+     startWeatherRotation gera um novo "token" — setTimeouts antigos viram
+     no-op, evitando rotacoes duplicadas quando o usuario salva configs. */
 
-    /* fade out */
+  function enabledWeatherSlides() {
+    var s = (window.Settings && Settings.weatherSlides)
+            ? Settings.weatherSlides() : ['current', 'forecast', 'moon'];
+    return s.length ? s : ['current'];
+  }
+
+  function renderWeatherCurrent() {
+    if (!weatherRefs || !lastWeather) { return; }
+    var idx = WEATHER_SLIDE_INDEX[weatherCurrentId];
+    if (idx === undefined) { idx = 0; weatherCurrentId = 'current'; }
+    Widgets.renderWeatherSlide(weatherRefs.panel, lastWeather, idx);
+  }
+
+  function weatherStep(gen) {
+    if (gen !== weatherGeneration) { return; }
+    if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
+    var slides = enabledWeatherSlides();
+    if (slides.length <= 1) { return; }
+
+    var panel = weatherRefs.panel;
     panel.className = 'weather-panel weather-hidden';
 
     setTimeout(function () {
-      /* troca conteudo enquanto invisivel */
-      weatherSlide = (weatherSlide + 1) % WEATHER_SLIDES;
-      Widgets.renderWeatherSlide(panel, lastWeather, weatherSlide);
-      /* fade in */
+      if (gen !== weatherGeneration) { return; }
+      var s2 = enabledWeatherSlides();
+      var i = s2.indexOf(weatherCurrentId);
+      weatherCurrentId = (i < 0) ? s2[0] : s2[(i + 1) % s2.length];
+      renderWeatherCurrent();
       panel.className = 'weather-panel';
-      setTimeout(weatherStep, WEATHER_SHOW_MS);
+      if (s2.length > 1) {
+        setTimeout(function () { weatherStep(gen); }, WEATHER_SHOW_MS);
+      }
     }, WEATHER_FADE_MS);
   }
 
   function startWeatherRotation() {
     if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
-    var panel = weatherRefs.panel;
-    weatherSlide = 0;
-    Widgets.renderWeatherSlide(panel, lastWeather, 0);
-    panel.className = 'weather-panel';
-    setTimeout(weatherStep, WEATHER_SHOW_MS);
+    weatherGeneration += 1;
+    var gen = weatherGeneration;
+    var slides = enabledWeatherSlides();
+    weatherCurrentId = slides[0];
+    renderWeatherCurrent();
+    weatherRefs.panel.className = 'weather-panel';
+    if (slides.length > 1) {
+      setTimeout(function () { weatherStep(gen); }, WEATHER_SHOW_MS);
+    }
+  }
+
+  /* Mostra/esconde sparklines conforme Settings.spark(id). */
+  function applySparkVisibility() {
+    if (!window.Settings) { return; }
+    var id;
+    for (id in refs) {
+      if (refs.hasOwnProperty(id) && refs[id] && refs[id].canvas) {
+        refs[id].canvas.style.display = Settings.spark(id) ? '' : 'none';
+      }
+    }
+    if (netRefs && netRefs.canvas) {
+      netRefs.canvas.style.display = Settings.spark('net') ? '' : 'none';
+    }
   }
 
   /* --- Tick da agenda: re-renderiza para atualizar cores de urgencia ------*/
@@ -341,7 +382,7 @@
             startWeatherRotation();
           } else {
             /* Atualiza o slide visivel com dados mais recentes */
-            Widgets.renderWeatherSlide(weatherRefs.panel, lastWeather, weatherSlide);
+            renderWeatherCurrent();
           }
         }
       } catch (e) { reportError('pollFeeds', e); }
@@ -380,6 +421,13 @@
   wireContainersModal();
   wireSystemModal();
   wireLogsModal();
+  applySparkVisibility();
+  if (window.Settings && Settings.onChange) {
+    Settings.onChange(function () {
+      applySparkVisibility();
+      startWeatherRotation();
+    });
+  }
   window.onresize = resizeAllCanvases;
   showFeedMessage('Carregando...');
   tickClock();
