@@ -42,6 +42,21 @@ var MOON_ICONS = [
 ];
 
 /* Mapeia um codigo WMO (Open-Meteo) para o icone de clima correspondente. */
+/* Mapeia codigo WMO -> texto curto humano (pt-BR). */
+var WMO_LABEL = {
+  0: 'Limpo', 1: 'Predom. limpo', 2: 'Parc. nublado', 3: 'Nublado',
+  45: 'Nevoeiro', 48: 'Nevoeiro com gelo',
+  51: 'Chuvisco leve', 53: 'Chuvisco', 55: 'Chuvisco forte',
+  56: 'Chuvisco gelado', 57: 'Chuvisco gelado forte',
+  61: 'Chuva leve', 63: 'Chuva', 65: 'Chuva forte',
+  66: 'Chuva gelada', 67: 'Chuva gelada forte',
+  71: 'Neve leve', 73: 'Neve', 75: 'Neve forte', 77: 'Granizo',
+  80: 'Pancadas leves', 81: 'Pancadas', 82: 'Pancadas fortes',
+  85: 'Pancadas de neve', 86: 'Pancadas de neve fortes',
+  95: 'Trovoadas', 96: 'Trovoadas com granizo', 99: 'Trovoadas fortes'
+};
+function _wmoLabel(code) { return WMO_LABEL[code] || '—'; }
+
 function _wmoIcon(code) {
   if (code === 0)  { return WEATHER_ICONS.clear; }
   if (code <= 2)   { return WEATHER_ICONS.partly; }

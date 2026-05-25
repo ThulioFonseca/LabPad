@@ -905,3 +905,129 @@ main {
   transition: opacity 0.25s ease;
 }
 .toast--show { opacity: 1; }
+
+/* --- Modal de clima detalhado ------------------------------------------- */
+#weather-modal { z-index: 140; }
+.modal--weather { max-width: 780px; max-height: 90%; }
+.wx-modal-city { font-weight: 400; opacity: 0.7; }
+
+/* Secao generica */
+.wx-section { margin-bottom: 22px; }
+.wx-section:last-child { margin-bottom: 0; }
+.wx-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin: 0 0 10px;
+}
+
+/* Heroi (cidade, icone, temp grande, condicao, min/max/sensacao) */
+.wx-hero {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  padding: 4px 0 18px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid currentColor;
+  -webkit-border-image: none;
+  border-image: none;
+}
+.wx-hero { border-color: rgba(127, 127, 127, 0.18); }
+.wx-hero-icon {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  margin-right: 20px;
+  line-height: 0;
+}
+.wx-hero-icon svg { width: 64px; height: 64px; display: block; }
+.wx-hero-info { -webkit-flex: 1 1 auto; flex: 1 1 auto; min-width: 0; }
+.wx-hero-temp { font-size: 44px; font-weight: 300; line-height: 1; }
+.wx-hero-cond { font-size: 14px; opacity: 0.78; margin-top: 6px; }
+.wx-hero-extra { font-size: 12px; opacity: 0.55; margin-top: 6px; }
+
+/* Strip horizontal das proximas horas */
+.wx-hourly {
+  display: -webkit-flex;
+  display: flex;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+.wx-hour {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  width: 58px;
+  text-align: center;
+  padding: 4px 0;
+}
+.wx-hour-time { font-size: 11px; opacity: 0.6; }
+.wx-hour-icon { margin: 6px auto 4px; line-height: 0; }
+.wx-hour-icon svg { width: 22px; height: 22px; display: block; margin: 0 auto; }
+.wx-hour-temp { font-size: 13px; }
+.wx-hour-prob { font-size: 10px; opacity: 0.6; margin-top: 2px; color: #42a5f5; }
+
+/* Range bar (mín-max) por dia */
+.wx-tempchart, .wx-daily { line-height: 1.4; }
+.wx-temprow, .wx-day-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  padding: 5px 0;
+}
+.wx-temprow-day  { -webkit-flex: 0 0 56px; flex: 0 0 56px; opacity: 0.78; font-size: 12px; }
+.wx-temprow-min  { -webkit-flex: 0 0 36px; flex: 0 0 36px; text-align: right; opacity: 0.6; font-size: 12px; }
+.wx-temprow-bar  { -webkit-flex: 1 1 auto; flex: 1 1 auto; padding: 0 8px; }
+.wx-temprow-bar svg { display: block; width: 100%; height: 10px; }
+.wx-temprow-max  { -webkit-flex: 0 0 40px; flex: 0 0 40px; font-size: 12px; }
+
+/* Grafico de precipitacao (SVG ocupa o container) */
+.wx-precip svg { display: block; width: 100%; height: 110px; }
+
+/* Lista diaria (dia + icone + prob + range bar) */
+.wx-day-name { -webkit-flex: 0 0 60px; flex: 0 0 60px; font-size: 13px; }
+.wx-day-icon { -webkit-flex: 0 0 28px; flex: 0 0 28px; line-height: 0; }
+.wx-day-icon svg { width: 20px; height: 20px; display: block; }
+.wx-day-prob { -webkit-flex: 0 0 48px; flex: 0 0 48px; font-size: 11px; opacity: 0.65;
+               color: #42a5f5; text-align: right; padding-right: 6px; }
+.wx-day-range { -webkit-flex: 1 1 auto; flex: 1 1 auto; padding-left: 8px; }
+
+/* Grid de metricas (sol, vento, UV, umidade, sensacao, chuva hoje) */
+.wx-metrics {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: 0 -6px;
+}
+.wx-metric {
+  -webkit-flex: 1 1 30%;
+  flex: 1 1 30%;
+  min-width: 130px;
+  box-sizing: border-box;
+  padding: 11px 13px;
+  margin: 6px;
+  border: 1px solid currentColor;
+  border-color: rgba(127, 127, 127, 0.25);
+  border-radius: 8px;
+}
+.wx-metric-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.55;
+  margin-bottom: 5px;
+}
+.wx-metric-val { font-size: 18px; font-weight: 600; }
+.wx-metric-sub { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+
+/* Telas estreitas */
+@media (max-width: 600px) {
+  .wx-hero-icon svg { width: 52px; height: 52px; }
+  .wx-hero-temp { font-size: 36px; }
+  .wx-metric { -webkit-flex: 1 1 45%; flex: 1 1 45%; }
+  .wx-temprow-day, .wx-day-name { -webkit-flex-basis: 48px; flex-basis: 48px; }
+}

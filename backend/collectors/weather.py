@@ -12,6 +12,29 @@ import settings
 
 _TIMEOUT = 8
 
+
+def _at(arr, i, default=None):
+    """Indexacao defensiva: lista vazia ou indice fora -> default."""
+    try:
+        return arr[i]
+    except (IndexError, TypeError):
+        return default
+
+
+def _round_v(v, ndigits=1):
+    return None if v is None else round(v, ndigits)
+
+
+def _round_at(arr, i, ndigits=1):
+    return _round_v(_at(arr, i), ndigits)
+
+
+def _hhmm(iso_dt):
+    """'2026-05-23T06:14' -> '06:14'."""
+    if not iso_dt or "T" not in iso_dt:
+        return None
+    return iso_dt.split("T", 1)[1][:5]
+
 # Coordenadas resolvidas em cache — so chama geocoding uma vez por processo.
 _geo_cache = {"city": None, "lat": None, "lon": None}
 
@@ -75,38 +98,70 @@ def collect():
     url = (
         "https://api.open-meteo.com/v1/forecast"
         "?latitude={lat}&longitude={lon}"
-        "&current=temperature_2m,relative_humidity_2m,weather_code"
-        "&daily=weather_code,temperature_2m_max,temperature_2m_min"
-        "&timezone=auto&forecast_days=6"
+        "&current=temperature_2m,relative_humidity_2m,apparent_temperature,"
+        "is_day,weather_code,wind_speed_10m,wind_direction_10m,precipitation,uv_index"
+        "&hourly=temperature_2m,precipitation,precipitation_probability,weather_code"
+        "&daily=weather_code,temperature_2m_max,temperature_2m_min,"
+        "precipitation_sum,precipitation_probability_max,sunrise,sunset,"
+        "uv_index_max,wind_speed_10m_max,wind_direction_10m_dominant"
+        "&forecast_days=7&timezone=auto"
     ).format(lat=lat, lon=lon)
 
     data = _fetch(url)
 
-    cur = data.get("current", {})
-    daily = data.get("daily", {})
-    times = daily.get("time", [])
-    codes = daily.get("weather_code", [])
-    highs = daily.get("temperature_2m_max", [])
-    lows = daily.get("temperature_2m_min", [])
+    # --- Proximas 24h (a partir da hora atual) ---
+    cur = data.get("current", {}) or {}
+    now_str = cur.get("time", "")
+    hourly = data.get("hourly", {}) or {}
+    ht = hourly.get("time", []) or []
+    try:
+        h0 = ht.index(now_str)
+    except ValueError:
+        h0 = 0
+    hourly_out = []
+    for i, t in enumerate(ht[h0:h0 + 24]):
+        hourly_out.append({
+            "time":   t,
+            "temp":   _round_at(hourly.get("temperature_2m", []), h0 + i),
+            "precip": _round_at(hourly.get("precipitation", []), h0 + i),
+            "prob":   _at(hourly.get("precipitation_probability", []), h0 + i),
+            "code":   _at(hourly.get("weather_code", []), h0 + i, 0),
+        })
 
-    # Pula o dia 0 (hoje em daily) e usa os proximos 5 dias
-    forecast = []
-    for i in range(1, min(6, len(times))):
-        forecast.append({
-            "date": times[i],
-            "code": codes[i] if i < len(codes) else 0,
-            "high": round(highs[i], 1) if i < len(highs) else None,
-            "low": round(lows[i], 1) if i < len(lows) else None,
+    # --- Diaria (hoje + 6 dias seguintes) ---
+    daily = data.get("daily", {}) or {}
+    dt = daily.get("time", []) or []
+    daily_out = []
+    for i in range(min(7, len(dt))):
+        daily_out.append({
+            "date":        dt[i],
+            "code":        _at(daily.get("weather_code", []), i, 0),
+            "high":        _round_at(daily.get("temperature_2m_max", []), i),
+            "low":         _round_at(daily.get("temperature_2m_min", []), i),
+            "precip_sum":  _round_at(daily.get("precipitation_sum", []), i),
+            "precip_prob": _at(daily.get("precipitation_probability_max", []), i),
+            "sunrise":     _hhmm(_at(daily.get("sunrise", []), i)),
+            "sunset":      _hhmm(_at(daily.get("sunset", []), i)),
+            "uv_max":      _round_at(daily.get("uv_index_max", []), i),
+            "wind_max":    _round_at(daily.get("wind_speed_10m_max", []), i),
+            "wind_dir":    _at(daily.get("wind_direction_10m_dominant", []), i),
         })
 
     return {
         "configured": True,
         "city": city,
         "current": {
-            "temp": round(cur.get("temperature_2m", 0), 1),
-            "humidity": cur.get("relative_humidity_2m"),
-            "code": cur.get("weather_code", 0),
+            "temp":       round(cur.get("temperature_2m", 0), 1),
+            "humidity":   cur.get("relative_humidity_2m"),
+            "feels_like": _round_v(cur.get("apparent_temperature")),
+            "is_day":     cur.get("is_day", 1) == 1,
+            "code":       cur.get("weather_code", 0),
+            "wind_speed": _round_v(cur.get("wind_speed_10m")),
+            "wind_dir":   cur.get("wind_direction_10m"),
+            "precip":     _round_v(cur.get("precipitation")),
+            "uv":         _round_v(cur.get("uv_index")),
         },
-        "forecast": forecast,
-        "moon": _moon(),
+        "hourly": hourly_out,
+        "daily":  daily_out,
+        "moon":   _moon(),
     }

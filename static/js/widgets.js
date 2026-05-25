@@ -480,11 +480,11 @@ Widgets.renderWeatherSlide = function (panel, payload, slideId) {
       (cur.humidity !== undefined ? cur.humidity + '%' : DASH)));
 
   } else if (id === 'forecast') {
-    /* Previsao 5 dias */
-    var forecast = payload.forecast || [];
+    /* Previsao 5 dias — pula daily[0] (hoje) e mostra os 5 proximos. */
+    var daily = payload.daily || [];
     var dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
-    for (var fi = 0; fi < forecast.length && fi < 5; fi++) {
-      var f = forecast[fi];
+    for (var fi = 1; fi < daily.length && fi < 6; fi++) {
+      var f = daily[fi];
       var dayEl = el('span', 'weather-day');
       var d = f.date ? new Date(f.date + 'T12:00:00') : null;
       dayEl.appendChild(el('span', 'weather-day-name', d ? dayNames[d.getDay()] : ''));
@@ -551,4 +551,321 @@ Widgets._newsItem = function (item) {
   if (item.age) { text.appendChild(el('div', 'news-age', item.age)); }
   row.appendChild(text);
   return row;
+};
+
+
+/* === Modal de clima detalhado (estilo iPhone / HA forecast card) ========= */
+
+var _SVGNS = 'http://www.w3.org/2000/svg';
+
+function _svg(tag, attrs) {
+  var n = document.createElementNS(_SVGNS, tag);
+  if (attrs) {
+    for (var k in attrs) {
+      if (attrs.hasOwnProperty(k)) { n.setAttribute(k, attrs[k]); }
+    }
+  }
+  return n;
+}
+
+function _wxSection(title) {
+  var s = el('section', 'wx-section');
+  if (title) { s.appendChild(el('h3', 'wx-section-title', title)); }
+  return s;
+}
+
+function _windCardinal(deg) {
+  if (deg === undefined || deg === null) { return ''; }
+  var dirs = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'];
+  return dirs[Math.round((deg % 360) / 45) % 8];
+}
+
+function _uvLevel(uv) {
+  if (uv === null || uv === undefined) { return ''; }
+  if (uv < 3)  { return 'Baixo'; }
+  if (uv < 6)  { return 'Moderado'; }
+  if (uv < 8)  { return 'Alto'; }
+  if (uv < 11) { return 'Muito alto'; }
+  return 'Extremo';
+}
+
+function _fmtTemp(v) {
+  return (v === null || v === undefined) ? DASH : Math.round(v) + '\xb0';
+}
+
+function _hourLabel(iso) {
+  /* '2026-05-23T14:00' -> '14h' */
+  if (!iso || iso.indexOf('T') < 0) { return ''; }
+  return iso.split('T')[1].substring(0, 2) + 'h';
+}
+
+function _dayLabel(iso, todayIdx, i) {
+  /* i=0 -> 'Hoje', i=1 -> 'Amanha', resto -> 'Seg'/'Ter'/... */
+  if (i === 0) { return 'Hoje'; }
+  if (i === 1) { return 'Amanha'; }
+  if (!iso) { return ''; }
+  var d = new Date(iso + 'T12:00:00');
+  var names = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+  return names[d.getDay()];
+}
+
+
+/* --- Heroi --------------------------------------------------------------- */
+Widgets._wxHero = function (p) {
+  var s = el('section', 'wx-hero');
+  var cur = p.current || {};
+  var today = (p.daily && p.daily[0]) || {};
+
+  var iconWrap = el('div', 'wx-hero-icon');
+  iconWrap.innerHTML = _wmoIcon(cur.code || 0);
+  s.appendChild(iconWrap);
+
+  var info = el('div', 'wx-hero-info');
+  info.appendChild(el('div', 'wx-hero-temp', _fmtTemp(cur.temp) + 'C'));
+  info.appendChild(el('div', 'wx-hero-cond', _wmoLabel(cur.code)));
+  var extra = [];
+  extra.push('Min ' + _fmtTemp(today.low));
+  extra.push('Max ' + _fmtTemp(today.high));
+  if (cur.feels_like !== null && cur.feels_like !== undefined) {
+    extra.push('Sensacao ' + _fmtTemp(cur.feels_like));
+  }
+  info.appendChild(el('div', 'wx-hero-extra', extra.join('  \xb7  ')));
+  s.appendChild(info);
+  return s;
+};
+
+
+/* --- Proximas horas ------------------------------------------------------ */
+Widgets._wxHourly = function (p) {
+  var sec = _wxSection('Proximas horas');
+  var strip = el('div', 'wx-hourly');
+  var hours = p.hourly || [];
+  for (var i = 0; i < hours.length; i++) {
+    var h = hours[i];
+    var cell = el('div', 'wx-hour');
+    cell.appendChild(el('div', 'wx-hour-time', i === 0 ? 'Agora' : _hourLabel(h.time)));
+    var icon = el('div', 'wx-hour-icon');
+    icon.innerHTML = _wmoIcon(h.code || 0);
+    cell.appendChild(icon);
+    cell.appendChild(el('div', 'wx-hour-temp', _fmtTemp(h.temp) + 'C'));
+    if (h.prob !== null && h.prob !== undefined && h.prob >= 10) {
+      cell.appendChild(el('div', 'wx-hour-prob', h.prob + '%'));
+    }
+    strip.appendChild(cell);
+  }
+  sec.appendChild(strip);
+  return sec;
+};
+
+
+/* --- Grafico mín/max por dia (range bar SVG) ----------------------------- */
+Widgets._wxTempChart = function (p) {
+  var sec = _wxSection('Temperatura (proximos dias)');
+  var days = p.daily || [];
+  if (!days.length) { return sec; }
+
+  /* eixo absoluto: pega min/max global dos 7 dias */
+  var gMin = Infinity, gMax = -Infinity;
+  for (var i = 0; i < days.length; i++) {
+    if (days[i].low !== null && days[i].low < gMin)  { gMin = days[i].low; }
+    if (days[i].high !== null && days[i].high > gMax) { gMax = days[i].high; }
+  }
+  if (!isFinite(gMin) || !isFinite(gMax)) { return sec; }
+  var span = Math.max(gMax - gMin, 1);
+
+  var chart = el('div', 'wx-tempchart');
+  for (var j = 0; j < days.length; j++) {
+    var d = days[j];
+    var row = el('div', 'wx-temprow');
+    row.appendChild(el('div', 'wx-temprow-day', _dayLabel(d.date, 0, j)));
+    row.appendChild(el('div', 'wx-temprow-min', _fmtTemp(d.low)));
+
+    /* barra range em SVG, posicionada por % no eixo [gMin..gMax] */
+    var barWrap = el('div', 'wx-temprow-bar');
+    var s = _svg('svg', { viewBox: '0 0 100 10', preserveAspectRatio: 'none' });
+    /* trilho */
+    s.appendChild(_svg('rect', { x: 0, y: 4, width: 100, height: 2,
+                                  rx: 1, fill: 'currentColor', 'fill-opacity': 0.18 }));
+    /* range mín-max */
+    var x1 = ((d.low - gMin) / span) * 100;
+    var x2 = ((d.high - gMin) / span) * 100;
+    s.appendChild(_svg('rect', { x: x1, y: 2, width: Math.max(x2 - x1, 1),
+                                  height: 6, rx: 3, fill: 'currentColor',
+                                  'fill-opacity': 0.85 }));
+    barWrap.appendChild(s);
+    row.appendChild(barWrap);
+
+    row.appendChild(el('div', 'wx-temprow-max', _fmtTemp(d.high)));
+    chart.appendChild(row);
+  }
+  sec.appendChild(chart);
+  return sec;
+};
+
+
+/* --- Grafico de precipitacao (bar chart SVG) ----------------------------- */
+Widgets._wxPrecipChart = function (p) {
+  var sec = _wxSection('Precipitacao (mm por dia)');
+  var days = p.daily || [];
+  if (!days.length) { return sec; }
+
+  var maxMm = 0;
+  for (var i = 0; i < days.length; i++) {
+    var v = days[i].precip_sum || 0;
+    if (v > maxMm) { maxMm = v; }
+  }
+  if (maxMm < 1) { maxMm = 1; }   /* escala minima para nao ficar gigante */
+
+  var W = 100;  /* viewBox horizontal % */
+  var H = 100;  /* viewBox vertical */
+  var n = days.length;
+  var slot = W / n;
+  var barW = slot * 0.6;
+  var pad = (slot - barW) / 2;
+  var topPad = 10;     /* espaco para os rotulos de mm */
+  var bottomPad = 14;  /* espaco para os rotulos de dia */
+  var chartH = H - topPad - bottomPad;
+
+  var wrap = el('div', 'wx-precip');
+  var s = _svg('svg', { viewBox: '0 0 ' + W + ' ' + H, preserveAspectRatio: 'none' });
+
+  for (var k = 0; k < n; k++) {
+    var d = days[k];
+    var v2 = d.precip_sum || 0;
+    var bh = (v2 / maxMm) * chartH;
+    var x = k * slot + pad;
+    var y = topPad + (chartH - bh);
+    s.appendChild(_svg('rect', { x: x, y: y, width: barW, height: bh,
+                                  rx: 1.5, fill: '#42a5f5' }));
+    if (v2 > 0) {
+      var label = _svg('text', { x: x + barW / 2, y: y - 1,
+                                  'text-anchor': 'middle', 'font-size': 5,
+                                  fill: 'currentColor', 'fill-opacity': 0.7 });
+      label.textContent = v2.toFixed(v2 < 10 ? 1 : 0);
+      s.appendChild(label);
+    }
+    var dayText = _svg('text', { x: x + barW / 2, y: H - 3,
+                                  'text-anchor': 'middle', 'font-size': 5,
+                                  fill: 'currentColor', 'fill-opacity': 0.6 });
+    dayText.textContent = _dayLabel(d.date, 0, k);
+    s.appendChild(dayText);
+  }
+  wrap.appendChild(s);
+  sec.appendChild(wrap);
+  return sec;
+};
+
+
+/* --- Lista diaria (dia · icone · range · %) ------------------------------ */
+Widgets._wxDailyList = function (p) {
+  var sec = _wxSection('Previsao');
+  var days = p.daily || [];
+  if (!days.length) { return sec; }
+
+  /* eixo absoluto compartilhado */
+  var gMin = Infinity, gMax = -Infinity;
+  for (var i = 0; i < days.length; i++) {
+    if (days[i].low !== null && days[i].low < gMin)  { gMin = days[i].low; }
+    if (days[i].high !== null && days[i].high > gMax) { gMax = days[i].high; }
+  }
+  var span = Math.max(gMax - gMin, 1);
+
+  var list = el('div', 'wx-daily');
+  for (var j = 0; j < days.length; j++) {
+    var d = days[j];
+    var row = el('div', 'wx-day-row');
+    row.appendChild(el('div', 'wx-day-name', _dayLabel(d.date, 0, j)));
+    var icon = el('div', 'wx-day-icon');
+    icon.innerHTML = _wmoIcon(d.code || 0);
+    row.appendChild(icon);
+    var prob = (d.precip_prob !== null && d.precip_prob !== undefined && d.precip_prob >= 10)
+      ? d.precip_prob + '%' : '';
+    row.appendChild(el('div', 'wx-day-prob', prob));
+
+    var range = el('div', 'wx-day-range');
+    var rangeWrap = el('div', 'wx-temprow-bar');
+    var s = _svg('svg', { viewBox: '0 0 100 10', preserveAspectRatio: 'none' });
+    s.appendChild(_svg('rect', { x: 0, y: 4, width: 100, height: 2,
+                                  rx: 1, fill: 'currentColor', 'fill-opacity': 0.18 }));
+    var x1 = ((d.low - gMin) / span) * 100;
+    var x2 = ((d.high - gMin) / span) * 100;
+    s.appendChild(_svg('rect', { x: x1, y: 2, width: Math.max(x2 - x1, 1),
+                                  height: 6, rx: 3, fill: 'currentColor',
+                                  'fill-opacity': 0.85 }));
+    rangeWrap.appendChild(s);
+    range.appendChild(el('span', 'wx-temprow-min', _fmtTemp(d.low)));
+    range.appendChild(rangeWrap);
+    range.appendChild(el('span', 'wx-temprow-max', _fmtTemp(d.high)));
+    range.style.display = '-webkit-flex';
+    range.style.display = 'flex';
+    range.style.alignItems = 'center';
+    row.appendChild(range);
+    list.appendChild(row);
+  }
+  sec.appendChild(list);
+  return sec;
+};
+
+
+/* --- Grid de metricas (sol, vento, UV, umidade, sensacao, chuva hoje) --- */
+Widgets._wxMetrics = function (p) {
+  var sec = _wxSection('Detalhes');
+  var grid = el('div', 'wx-metrics');
+  var cur = p.current || {};
+  var today = (p.daily && p.daily[0]) || {};
+
+  function card(label, val, sub) {
+    var c = el('div', 'wx-metric');
+    c.appendChild(el('div', 'wx-metric-label', label));
+    c.appendChild(el('div', 'wx-metric-val', val));
+    if (sub) { c.appendChild(el('div', 'wx-metric-sub', sub)); }
+    return c;
+  }
+
+  grid.appendChild(card('Sol',
+    (today.sunrise || DASH) + ' ↑',
+    (today.sunset  || DASH) + ' ↓'));
+  grid.appendChild(card('Vento',
+    (cur.wind_speed !== null && cur.wind_speed !== undefined ? cur.wind_speed + ' km/h' : DASH),
+    _windCardinal(cur.wind_dir)));
+  grid.appendChild(card('UV',
+    (cur.uv !== null && cur.uv !== undefined ? String(Math.round(cur.uv)) : DASH),
+    _uvLevel(cur.uv)));
+  grid.appendChild(card('Umidade',
+    (cur.humidity !== null && cur.humidity !== undefined ? cur.humidity + '%' : DASH),
+    ''));
+  grid.appendChild(card('Sensacao',
+    _fmtTemp(cur.feels_like) + 'C',
+    ''));
+  grid.appendChild(card('Chuva hoje',
+    (today.precip_sum !== null && today.precip_sum !== undefined ? today.precip_sum + ' mm' : DASH),
+    (today.precip_prob ? today.precip_prob + '% prob.' : '')));
+
+  sec.appendChild(grid);
+  return sec;
+};
+
+
+/* Orquestrador: monta o modal de detalhes do clima dentro de `node`. */
+Widgets.renderWeatherDetail = function (node, payload) {
+  if (!node) { return; }
+  node.innerHTML = '';
+  if (!payload || !payload.configured) {
+    node.appendChild(el('div', 'empty', 'Clima nao configurado.'));
+    return;
+  }
+  if (payload.error) {
+    node.appendChild(el('div', 'empty', 'Sem dados de clima.'));
+    return;
+  }
+  node.appendChild(Widgets._wxHero(payload));
+  if (payload.hourly && payload.hourly.length) {
+    node.appendChild(Widgets._wxHourly(payload));
+  }
+  if (payload.daily && payload.daily.length) {
+    node.appendChild(Widgets._wxTempChart(payload));
+    node.appendChild(Widgets._wxPrecipChart(payload));
+    node.appendChild(Widgets._wxDailyList(payload));
+  }
+  node.appendChild(Widgets._wxMetrics(payload));
 };

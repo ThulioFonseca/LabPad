@@ -240,6 +240,32 @@
     });
   }
 
+  /* --- Modal de detalhes do clima (clique no carrossel da topbar) -------*/
+  function openWeatherModal() {
+    if (!lastWeather) { return; }   /* sem dados ainda */
+    setText(byId('weather-modal-city'),
+      lastWeather.city ? ' — ' + lastWeather.city : '');
+    Widgets.renderWeatherDetail(byId('weather-modal-body'), lastWeather);
+    var m = byId('weather-modal');
+    if (m) { m.className = 'modal-backdrop modal-backdrop--open'; }
+  }
+
+  function closeWeatherModal() {
+    var m = byId('weather-modal');
+    if (m) { m.className = 'modal-backdrop'; }
+  }
+
+  function wireWeatherModal() {
+    var center = byId('section-weather');
+    if (center) { center.style.cursor = 'pointer'; center.onclick = openWeatherModal; }
+    var backdrop = byId('weather-modal');
+    if (backdrop) { backdrop.onclick = closeWeatherModal; }
+    var box = byId('weather-modal-box');
+    if (box) { box.onclick = function (e) { e.stopPropagation(); }; }
+    var closeBtn = byId('weather-modal-close');
+    if (closeBtn) { closeBtn.onclick = closeWeatherModal; }
+  }
+
   function wireLogsModal() {
     /* Delega o clique nas linhas (sao reconstruidas pelo render a cada ciclo). */
     var list = byId('section-containers');
@@ -395,6 +421,11 @@
           } else {
             renderWeatherCurrent();
           }
+          /* Atualiza o modal de detalhes se estiver aberto. */
+          var wm = byId('weather-modal');
+          if (wm && wm.className.indexOf('--open') >= 0) {
+            Widgets.renderWeatherDetail(byId('weather-modal-body'), lastWeather);
+          }
         }
       } catch (e) { reportError('pollFeeds', e); }
       feedsTimer = setTimeout(pollFeeds, CONFIG.feedsRefreshMs);
@@ -432,6 +463,7 @@
   wireContainersModal();
   wireSystemModal();
   wireLogsModal();
+  wireWeatherModal();
   applySparkVisibility();
   if (window.Settings && Settings.onChange) {
     Settings.onChange(function () {
