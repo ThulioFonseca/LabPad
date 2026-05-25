@@ -13,7 +13,8 @@ var ICONS = {
   disk: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><ellipse cx="8" cy="4.5" rx="6" ry="2.5"/><path d="M2 4.5v7c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-7"/></svg>',
   docker: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="6" width="3" height="3" rx="0.5"/><rect x="5" y="6" width="3" height="3" rx="0.5"/><rect x="9" y="6" width="3" height="3" rx="0.5"/><rect x="5" y="2" width="3" height="3" rx="0.5"/><path d="M14.5 7.5c-0.5-1.5-2-1.5-2-1.5H2c0 4 3 5 6 5s5-1 6.5-3.5z"/></svg>',
   info: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11.5"/><circle cx="8" cy="4.7" r="0.5" fill="currentColor" stroke="none"/></svg>',
-  refresh: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4h-4"/><path d="M2 13v-4h4"/><path d="M3.5 7a5 5 0 0 1 8.5-2L14 7"/><path d="M12.5 9a5 5 0 0 1-8.5 2L2 9"/></svg>'
+  refresh: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4h-4"/><path d="M2 13v-4h4"/><path d="M3.5 7a5 5 0 0 1 8.5-2L14 7"/><path d="M12.5 9a5 5 0 0 1-8.5 2L2 9"/></svg>',
+  external: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2h4v4"/><path d="M14 2L7 9"/><path d="M12 9v4a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h4"/></svg>'
 };
 
 /* Icones de clima por grupo WMO — cores fixas, independentes do tema. */

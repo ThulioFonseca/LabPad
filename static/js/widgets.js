@@ -547,11 +547,20 @@ Widgets.renderNews = function (container, payload) {
 };
 
 Widgets._newsItem = function (item) {
+  /* Anota link/titulo/imagem no row para o delegate de clique abrir o
+     modal de leitura. Usado tanto na variante simples quanto na media. */
+  function annotate(node) {
+    node.setAttribute('data-link',  item.link  || '');
+    node.setAttribute('data-title', item.title || '');
+    node.setAttribute('data-image', item.image || '');
+  }
+
   /* Sem imagem: layout atual (titulo + idade empilhados). */
   if (!item.image) {
     var plain = el('div', 'news-item');
     plain.appendChild(el('div', 'news-title', item.title || ''));
     if (item.age) { plain.appendChild(el('div', 'news-age', item.age)); }
+    annotate(plain);
     return plain;
   }
   /* Com imagem: miniatura quadrada a esquerda, texto ao lado. */
@@ -563,6 +572,7 @@ Widgets._newsItem = function (item) {
   text.appendChild(el('div', 'news-title', item.title || ''));
   if (item.age) { text.appendChild(el('div', 'news-age', item.age)); }
   row.appendChild(text);
+  annotate(row);
   return row;
 };
 

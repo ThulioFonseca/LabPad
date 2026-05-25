@@ -13,7 +13,7 @@ from flask import Flask, jsonify, request, send_from_directory
 
 import config
 import settings
-from collectors import calendar_feed, containers, host, news, sensors, weather
+from collectors import article, calendar_feed, containers, host, news, sensors, weather
 
 STATIC_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
@@ -146,6 +146,21 @@ def feeds():
     response = jsonify(data)
     response.headers["Cache-Control"] = "no-store"
     return response
+
+
+@app.route("/api/article")
+def article_route():
+    """Modo leitura: baixa a URL e devolve o conteudo principal limpo."""
+    url = (request.args.get("url") or "").strip()
+    if not url or len(url) > 1000:
+        return jsonify({"error": "url invalida"}), 400
+    if not (url.startswith("http://") or url.startswith("https://")):
+        return jsonify({"error": "url precisa comecar com http(s)://"}), 400
+    data = article.get(url)
+    status = 502 if "error" in data else 200
+    response = jsonify(data)
+    response.headers["Cache-Control"] = "no-store"
+    return response, status
 
 
 @app.route("/api/containers/<container_id>/logs")

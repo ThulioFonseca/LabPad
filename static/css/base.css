@@ -1088,3 +1088,74 @@ main {
   .wx-metric { -webkit-flex: 1 1 45%; flex: 1 1 45%; }
   .wx-temprow-day, .wx-day-name { -webkit-flex-basis: 48px; flex-basis: 48px; }
 }
+
+/* --- Modal de leitura (modo reader) -------------------------------------- */
+#article-modal { z-index: 140; }
+.modal--article { max-width: 760px; max-height: 92%; }
+.modal-body--article { padding: 0; }
+
+/* Cards de noticia ficam clicaveis. */
+.news-item { cursor: pointer; }
+.news-item:active { opacity: 0.85; }
+
+/* Imagem principal centralizada no topo do modal. */
+.article-hero-img {
+  display: block;
+  width: 100%;
+  max-height: 340px;
+  height: auto;
+  margin: 0 auto 4px;
+}
+
+.article-title {
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 22px 28px 8px;
+}
+.article-meta {
+  font-size: 12px;
+  opacity: 0.65;
+  letter-spacing: 0.04em;
+  margin: 0 28px 18px;
+}
+
+/* Reader mode: serif + linha generosa para leitura confortavel. */
+.article-content {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  line-height: 1.7;
+  margin: 0 28px 28px;
+}
+.article-content p { margin: 0 0 14px; }
+.article-content h2 { font-size: 20px; margin: 22px 0 10px; font-weight: 600; }
+.article-content h3 { font-size: 17px; margin: 18px 0 8px; font-weight: 600; }
+.article-content blockquote {
+  border-left: 3px solid rgba(127, 127, 127, 0.35);
+  margin: 14px 0;
+  padding: 4px 0 4px 14px;
+  font-style: italic;
+}
+.article-content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 14px auto;
+}
+.article-content ul, .article-content ol { padding-left: 22px; margin: 0 0 14px; }
+.article-content li { margin-bottom: 6px; }
+
+.article-loading, .article-error {
+  text-align: center;
+  padding: 32px 28px;
+  opacity: 0.7;
+  font-size: 13px;
+}
+.article-error { color: #f85149; opacity: 1; }
+
+@media (max-width: 600px) {
+  .article-title   { font-size: 21px; margin: 16px 16px 6px; }
+  .article-meta    { margin: 0 16px 14px; }
+  .article-content { margin: 0 16px 22px; font-size: 16px; }
+  .article-hero-img { max-height: 220px; }
+}
