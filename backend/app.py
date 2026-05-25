@@ -224,6 +224,17 @@ def _validate_settings(body):
             return {"error": "news.limit fora do intervalo 1..50"}
         clean.setdefault("news", {})["limit"] = lim
 
+    sy = body.get("system") or {}
+    if "timezone" in sy:
+        tz = str(sy["timezone"]).strip()[:100]
+        if tz:
+            try:
+                from zoneinfo import ZoneInfo
+                ZoneInfo(tz)
+            except Exception:
+                return {"error": "system.timezone invalido (use IANA, ex: America/Sao_Paulo)"}
+        clean.setdefault("system", {})["timezone"] = tz
+
     return clean
 
 
@@ -236,6 +247,9 @@ def _invalidate_settings_caches(prev, new):
         _last_good_feeds.pop("calendar", None)
     if prev["news"]["url"] != new["news"]["url"]:
         _last_good_feeds.pop("news", None)
+    if prev.get("system", {}).get("timezone") != new.get("system", {}).get("timezone"):
+        # Timezone afeta os horarios apresentados pela agenda.
+        _last_good_feeds.pop("calendar", None)
     # Forca rebuild no proximo GET /api/feeds.
     with _feeds_lock:
         _feeds_cache["data"] = None

@@ -1,8 +1,9 @@
 # Sobe o Homelab Monitor de forma autonoma:
-#   cp .env.example .env   # edite calendario, RSS, cidade do clima, fuso
 #   docker compose up -d --build
 #
-# As variaveis sao lidas do arquivo .env (veja .env.example).
+# Toda a configuracao (calendario, RSS, cidade do clima, fuso, tema, layout)
+# e feita pelo painel da engrenagem no dashboard e persiste em
+# /data/settings.json no volume nomeado abaixo.
 services:
   homelab-monitor:
     build: .
@@ -10,7 +11,8 @@ services:
     restart: unless-stopped
     pid: host                 # psutil le o hardware real do host, nao o do container
     network_mode: host        # expoe a porta 8723 direto no host
-    env_file: .env
+    # Sem env_file: a configuracao e feita pelo painel da engrenagem no
+    # dashboard e persiste em /data/settings.json (volume abaixo).
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /:/rootfs:ro

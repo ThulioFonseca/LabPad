@@ -25,18 +25,15 @@ sem `fetch`, sem frameworks, sem build. Bonito, leve e fácil de alterar.
 
 ## Como subir
 
-No host (onde o Docker roda), primeiro crie o `.env` com suas URLs:
-
-```bash
-cp .env.example .env      # depois edite o .env (calendario, RSS, fuso)
-```
-
-Em seguida suba o serviço:
-
 ```bash
 docker compose up -d --build      # Docker moderno
 # ou:  docker-compose up -d --build   (versao antiga)
 ```
+
+Não precisa de `.env`. Tudo (cidade do clima, URL da agenda, URL do RSS,
+limites, dias, fuso horário, tema, layout) é configurado pelo **botão de
+engrenagem** no canto superior direito do dashboard. As escolhas persistem em
+`/data/settings.json` num volume Docker nomeado — sobrevivem a rebuilds.
 
 Acesse de qualquer aparelho na rede local, **inclusive do iPad 2**:
 
@@ -91,35 +88,27 @@ somente leitura, mas ainda assim dá visibilidade dos containers; mantenha na LA
 
 ## Agenda, notícias e clima
 
-As seções **Agenda**, **Notícias** e **Clima** são configuradas pelo arquivo
-`.env` (carregado automaticamente pelo `docker compose`). Veja
-[`.env.example`](.env.example).
+Tudo é configurado pelo **painel da engrenagem** no canto superior direito do
+dashboard — sem `.env`, sem rebuild. Os valores persistem em
+`/data/settings.json` no volume Docker.
 
-| Variável           | Para quê serve                                          |
-|--------------------|---------------------------------------------------------|
-| `TZ`               | Fuso horário (ex.: `America/Sao_Paulo`)                 |
-| `CALENDAR_ICS_URL` | URL `.ics` de um calendário Outlook publicado           |
-| `CALENDAR_DAYS`    | Quantos dias à frente exibir (padrão `3`)               |
-| `NEWS_RSS_URL`     | URL de um feed RSS/Atom                                 |
-| `NEWS_LIMIT`       | Quantas notícias exibir (padrão `5`)                    |
-| `WEATHER_CITY`     | Cidade do widget de clima (ex.: `Sao Paulo`)            |
+- **Agenda** — URL `.ics` de um calendário Outlook publicado + quantos dias à
+  frente exibir.
+- **Notícias** — URL de um feed RSS/Atom + quantas exibir.
+- **Clima** — nome da cidade (Open-Meteo, gratuita, sem chave); alterna entre
+  cidade, temperatura/umidade, previsão de 5 dias e fase da lua.
+- **Sistema** — fuso horário (formato IANA, ex.: `America/Sao_Paulo`) usado
+  pelos horários da agenda.
 
 **Como obter o link `.ics` do calendário:** no Outlook web, *Configurações →
 Calendário → Calendários compartilhados → Publicar calendário* — copie o link
 **ICS** (termina em `.ics`), **não** o link HTML.
 
 > A URL do calendário é um *link-capacidade*: quem tiver o link vê sua agenda.
-> Por isso ela fica no `.env` (lado servidor) e não no `config.js` da página.
-> O `.env` está no `.dockerignore`; não o compartilhe.
+> Mantenha o dashboard na LAN (sem auth).
 
-Deixar uma URL em branco **desativa** a seção correspondente — a dashboard segue
-funcionando normalmente. Eventos recorrentes (reuniões semanais etc.) são
-expandidos automaticamente.
-
-O **clima** aparece no centro do cabeçalho e alterna entre temperatura/umidade,
-previsão de 5 dias e fase da lua. Os dados vêm da
-[Open-Meteo](https://open-meteo.com) (gratuita, sem chave de API); basta
-informar `WEATHER_CITY`. Vazio desativa o widget.
+Deixar uma URL em branco **desativa** a seção correspondente. Eventos
+recorrentes (reuniões semanais etc.) são expandidos automaticamente.
 
 ## Como expandir (o ponto forte do projeto)
 
@@ -142,8 +131,7 @@ Exemplo — mostrar contagem de processos:
 ### Painel de configurações
 
 O **botão de engrenagem** no canto superior direito abre um painel completo
-que ajusta o dashboard **ao vivo** (sem editar `.env` nem rebuildar a imagem).
-Ele tem 5 seções:
+que ajusta o dashboard **ao vivo**. Ele tem 6 seções:
 
 - **Tema** — 5 estilos (Minimal, Neumorfismo, Elevado, Contorno, Vidro Fosco)
   e modo claro/escuro.
@@ -151,13 +139,13 @@ Ele tem 5 seções:
 - **Clima** — cidade monitorada e quais slides aparecem na topbar.
 - **Agenda** — URL `.ics` e quantos dias à frente exibir.
 - **Notícias** — URL do RSS, quantas exibir e altura do card.
+- **Sistema** — fuso horário (IANA).
 
 Configurações de **aparência** (tema, modo, alturas, sparklines, slides) ficam
-no `localStorage` do navegador. As de **fonte de dados** (cidade, URLs,
-limites, dias) são gravadas em `/data/settings.json` num volume Docker
-nomeado — sobrevivem a rebuilds e valem na próxima coleta. Os valores do
-`.env` continuam como **defaults iniciais**: enquanto não há override, vale o
-`.env`. O botão "Restaurar padrões" reverte só os ajustes de frontend.
+no `localStorage` do navegador. As de **fonte de dados / sistema** (cidade,
+URLs, limites, dias, fuso) são gravadas em `/data/settings.json` num volume
+Docker nomeado — sobrevivem a rebuilds e valem na próxima coleta. O botão
+"Restaurar padrões" reverte só os ajustes de frontend.
 
 Cada tema é um *estilo* (sombra, borda, forma), não só uma cor. O Minimal
 escuro vive em [`static/css/theme.css`](static/css/theme.css); os demais e as
@@ -199,8 +187,7 @@ static/
   js/widgets.js          componentes: cards, agenda, noticias, clima
   js/settings.js         painel de configuracoes (engrenagem -> modal)
   js/dashboard.js        polling + render
-backend/settings.py      store mutavel (.env + /data/settings.json)
-.env               ★   defaults de calendario/RSS/clima/fuso
+backend/settings.py      store mutavel persistido em /data/settings.json
 Dockerfile · docker-compose.yml · requirements.txt
 ```
 

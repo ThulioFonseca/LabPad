@@ -25,7 +25,7 @@ _MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun",
 def _tz():
     try:
         from zoneinfo import ZoneInfo
-        return ZoneInfo(config.TIMEZONE)
+        return ZoneInfo(settings.get("system", "timezone", "UTC"))
     except Exception:
         return datetime.timezone.utc
 

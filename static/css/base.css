@@ -614,6 +614,42 @@ main {
   font-size: 12px;
 }
 
+/* --- Slide forecast: marquee no mobile ---------------------------------- */
+/* Contem o track no espaco disponivel — desktop mostra os 5 dias estaticos;
+   mobile aplica @keyframes wxmarquee fazendo o conjunto rolar e voltar
+   seamlessly (graficamente o track tem o conteudo duplicado e move 50%). */
+.weather-forecast {
+  display: inline-block;
+  vertical-align: middle;
+  overflow: hidden;
+  max-width: 100%;
+}
+.weather-forecast-track {
+  display: -webkit-inline-flex;
+  display: inline-flex;
+}
+/* Desktop: esconde a duplicata (a 6a..10a 'weather-day' do track). */
+@media (min-width: 601px) {
+  .weather-forecast-track > .weather-day:nth-child(n+6) { display: none; }
+}
+/* Mobile: marquee continuo. */
+@media (max-width: 600px) {
+  .weather-forecast { display: block; width: 100%; }
+  .weather-forecast-track {
+    -webkit-animation: wxmarquee 18s linear infinite;
+    animation: wxmarquee 18s linear infinite;
+    will-change: transform;
+  }
+  @-webkit-keyframes wxmarquee {
+    0%   { -webkit-transform: translateX(0); }
+    100% { -webkit-transform: translateX(-50%); }
+  }
+  @keyframes wxmarquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+}
+
 /* --- Eventos da agenda: cor por urgencia ---------------------------------- */
 .cal-event--soon {
   border-left: 3px solid #d29922;

@@ -18,11 +18,14 @@ _SETTINGS_PATH = os.environ.get("SETTINGS_PATH", "/data/settings.json")
 _lock = threading.Lock()
 _overrides = {}
 
-# Defaults vem do .env (config.py). Cada secao e um dict.
+# Defaults vindos de config.py (que la lê do .env, mas com fallbacks
+# hardcoded). config.py serve apenas como bootstrap — o usuario edita tudo
+# pelo painel da engrenagem, e os overrides ficam em /data/settings.json.
 _DEFAULTS = {
     "weather":  {"city": config.WEATHER_CITY},
     "calendar": {"url": config.CALENDAR_ICS_URL, "days": config.CALENDAR_DAYS},
     "news":     {"url": config.NEWS_RSS_URL, "limit": config.NEWS_LIMIT},
+    "system":   {"timezone": config.TIMEZONE},
 }
 
 

@@ -480,22 +480,35 @@ Widgets.renderWeatherSlide = function (panel, payload, slideId) {
       (cur.humidity !== undefined ? cur.humidity + '%' : DASH)));
 
   } else if (id === 'forecast') {
-    /* Previsao 5 dias — pula daily[0] (hoje) e mostra os 5 proximos. */
+    /* Previsao 5 dias — pula daily[0] (hoje). No desktop sao todos visiveis;
+       no mobile o CSS aplica um marquee infinito sobre o track. A duplicata
+       (2a passada) garante que o loop emende sem salto visual (mobile-only;
+       desktop esconde via CSS). */
     var daily = payload.daily || [];
     var dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
-    for (var fi = 1; fi < daily.length && fi < 6; fi++) {
-      var f = daily[fi];
+
+    function buildDay(f) {
       var dayEl = el('span', 'weather-day');
       var d = f.date ? new Date(f.date + 'T12:00:00') : null;
       dayEl.appendChild(el('span', 'weather-day-name', d ? dayNames[d.getDay()] : ''));
-      var icon1 = el('span', 'weather-icon');
-      icon1.innerHTML = _wmoIcon(f.code || 0);
-      dayEl.appendChild(icon1);
+      var ic = el('span', 'weather-icon');
+      ic.innerHTML = _wmoIcon(f.code || 0);
+      dayEl.appendChild(ic);
       var hi = (f.high !== null && f.high !== undefined) ? Math.round(f.high) : DASH;
       var lo = (f.low  !== null && f.low  !== undefined) ? Math.round(f.low)  : DASH;
       dayEl.appendChild(el('span', 'weather-day-temp', hi + '/' + lo));
-      panel.appendChild(dayEl);
+      return dayEl;
     }
+
+    var wrap = el('span', 'weather-forecast');
+    var track = el('span', 'weather-forecast-track');
+    for (var pass = 0; pass < 2; pass++) {
+      for (var fi = 1; fi < daily.length && fi < 6; fi++) {
+        track.appendChild(buildDay(daily[fi]));
+      }
+    }
+    wrap.appendChild(track);
+    panel.appendChild(wrap);
 
   } else {
     /* Fase da lua */

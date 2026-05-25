@@ -267,6 +267,7 @@
     body.appendChild(buildWeatherSection());
     body.appendChild(buildCalendarSection());
     body.appendChild(buildNewsSection());
+    body.appendChild(buildSystemSection());
     body.appendChild(buildActions());
   }
 
@@ -324,6 +325,14 @@
       numberInput('news.limit', limit, 1, 50)));
     s.appendChild(formRow('Altura do card',
       selectInput('newsCardHeight', HEIGHT_PRESETS, fe.newsCardHeight)));
+    return s;
+  }
+  function buildSystemSection() {
+    var s = section('Sistema');
+    var tz = be && be.system ? be.system.timezone : '';
+    s.appendChild(formRow('Fuso horario',
+      textInput('system.timezone', tz, 'ex.: America/Sao_Paulo'),
+      'Formato IANA — usado para os horarios da agenda.'));
     return s;
   }
   function buildActions() {
@@ -391,6 +400,8 @@
       if (newsUrl) { bePartial.news.url = newsUrl.value; }
       if (newsLim) { bePartial.news.limit = parseInt(newsLim.value, 10); }
     }
+    var tzInp = body.querySelector('input[name="system.timezone"]');
+    if (tzInp) { bePartial.system = { timezone: tzInp.value }; }
     return { fe: feNext, be: bePartial };
   }
 
