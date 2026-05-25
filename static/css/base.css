@@ -1167,3 +1167,71 @@ main {
   .article-content { margin: 0 auto 22px; padding: 0 16px; font-size: 16px; }
   .article-hero-img { max-height: 220px; }
 }
+
+/* =========================================================================
+   Skeleton loading — pulso shimmer durante a primeira carga.
+   Idempotente: a animacao roda apenas enquanto a classe estiver presente;
+   o JS remove .skeleton / .skeleton-block assim que o dado real chega.
+   Cinza neutro + brilho branco baixo funcionam nos 5 temas x claro/escuro
+   sem mapeamento por tema.
+   ========================================================================= */
+.skeleton {
+  display: inline-block;
+  vertical-align: middle;
+  background-color: rgba(127, 127, 127, 0.16);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0)    0%,
+    rgba(255, 255, 255, 0.10) 50%,
+    rgba(255, 255, 255, 0)    100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  background-position: -50% 0;
+  border-radius: 4px;
+  color: transparent;        /* esconde texto residual (ex.: DASH) */
+  -webkit-animation: skeleton-shimmer 1.5s linear infinite;
+          animation: skeleton-shimmer 1.5s linear infinite;
+}
+
+/* Tamanhos pre-medidos para cada papel — evita layout shift no swap. */
+.skeleton-num   { width: 56px; height: 22px; }
+.skeleton-line  { display: block; width: 70%; height: 12px; margin: 6px 0; }
+.skeleton-pill  { width: 90px;  height: 14px; border-radius: 7px; }
+
+/* Variante 'block': aplica direto num elemento existente (canvas, .bar-fill)
+   sem criar wrapper. Mantem o display do host (block / inline-block). */
+.skeleton-block {
+  background-color: rgba(127, 127, 127, 0.10);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0)    0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0)    100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  background-position: -50% 0;
+  -webkit-animation: skeleton-shimmer 1.5s linear infinite;
+          animation: skeleton-shimmer 1.5s linear infinite;
+}
+
+@-webkit-keyframes skeleton-shimmer {
+  0%   { background-position: -50% 0; }
+  100% { background-position: 150% 0; }
+}
+@keyframes skeleton-shimmer {
+  0%   { background-position: -50% 0; }
+  100% { background-position: 150% 0; }
+}
+
+/* Linha de skeleton para feed (agenda/noticias) — combina com .feed-list. */
+.feed-skeleton {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.12);
+}
+.feed-skeleton:last-child { border-bottom: none; }
+.feed-skeleton .skeleton-line:nth-child(1) { width: 85%; height: 14px; }
+.feed-skeleton .skeleton-line:nth-child(2) {
+  width: 40%; height: 10px; margin-top: 8px; opacity: 0.7;
+}

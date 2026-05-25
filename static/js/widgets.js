@@ -30,6 +30,13 @@ var LEVEL_COLOR = {
 
 var Widgets = {};
 
+/* Cria um <span class="skeleton skeleton-XXX"> para usar como placeholder
+   animado durante a carga inicial. setText() em format.js troca o elemento
+   por um nodo de texto puro no primeiro update — o pulso some sozinho. */
+Widgets._skel = function (sizeClass) {
+  return el('span', 'skeleton ' + (sizeClass || 'skeleton-num'));
+};
+
 /* Monta <div.card-head> com <span.card-title> contendo icone (opcional) + texto. */
 Widgets._cardHead = function (iconKey, titleText) {
   var head = el('div', 'card-head');
@@ -64,23 +71,29 @@ Widgets._createGauge = function (widget) {
 
   var head = Widgets._cardHead(GAUGE_ICONS[widget.id] || null, widget.title);
   var value = el('span', 'card-value');
-  var num = el('span', 'num', DASH);
+  /* Skeleton no numero ate o primeiro update (setText o substitui). */
+  var num = el('span', 'num');
+  num.appendChild(Widgets._skel('skeleton-num'));
   value.appendChild(num);
   value.appendChild(el('span', 'unit', widget.unit || ''));
   head.appendChild(value);
   root.appendChild(head);
 
+  /* Barra: comeca como bloco shimmer; _updateGauge tira a classe assim
+     que chega valor numerico (a partir dai e gradiente normal). */
   var bar = el('div', 'bar');
-  var fill = el('div', 'bar-fill');
+  var fill = el('div', 'bar-fill skeleton-block');
   bar.appendChild(fill);
   root.appendChild(bar);
 
-  var sub = el('div', 'card-sub', ' ');
+  /* Sub linha: skeleton ao inves de espaco em branco. */
+  var sub = el('div', 'card-sub');
+  sub.appendChild(Widgets._skel('skeleton-line'));
   root.appendChild(sub);
 
   var canvas = null;
   if (widget.spark) {
-    canvas = el('canvas', 'spark');
+    canvas = el('canvas', 'spark skeleton-block');
     root.appendChild(canvas);
   }
   return { root: root, num: num, fill: fill, sub: sub, canvas: canvas };
@@ -94,6 +107,16 @@ Widgets._updateGauge = function (refs, widget, data, buffer) {
 
   setText(refs.num, hasValue ? fmtNumber(value) : DASH);
   refs.root.className = 'card card--' + level;
+
+  /* Primeiro update real: remove o shimmer da barra e do canvas. Idempotente:
+     indexOf >= 0 falha silenciosa apos o swap, sem custo perceptivel. */
+  if (hasValue && refs.fill.className.indexOf('skeleton-block') >= 0) {
+    refs.fill.className = 'bar-fill';
+  }
+  if (hasValue && refs.canvas &&
+      refs.canvas.className.indexOf('skeleton-block') >= 0) {
+    refs.canvas.className = 'spark';
+  }
 
   var pct = hasValue ? (value / max) * 100 : 0;
   if (pct < 0) { pct = 0; }
@@ -366,19 +389,21 @@ Widgets.initNetCard = function (cardEl) {
 
   var down = el('span', 'rate rate--down');
   down.appendChild(el('span', 'rate-arrow', '↓'));
-  var rx = el('span', 'rate-val', DASH);
+  var rx = el('span', 'rate-val');
+  rx.appendChild(Widgets._skel('skeleton-num'));
   down.appendChild(rx);
 
   var up = el('span', 'rate rate--up');
   up.appendChild(el('span', 'rate-arrow', '↑'));
-  var tx = el('span', 'rate-val', DASH);
+  var tx = el('span', 'rate-val');
+  tx.appendChild(Widgets._skel('skeleton-num'));
   up.appendChild(tx);
 
   row.appendChild(down);
   row.appendChild(up);
   cardEl.appendChild(row);
 
-  var canvas = el('canvas', 'spark spark--fill');
+  var canvas = el('canvas', 'spark spark--fill skeleton-block');
   cardEl.appendChild(canvas);
 
   return { rx: rx, tx: tx, canvas: canvas };
@@ -388,6 +413,10 @@ Widgets.updateNetCard = function (refs, data, buffer) {
   if (!refs) { return; }
   setText(refs.rx, fmtRate(getPath(data, 'host.net_rx')));
   setText(refs.tx, fmtRate(getPath(data, 'host.net_tx')));
+  /* Tira o shimmer do canvas no primeiro update — idempotente. */
+  if (refs.canvas && refs.canvas.className.indexOf('skeleton-block') >= 0) {
+    refs.canvas.className = 'spark spark--fill';
+  }
   if (refs.canvas && buffer) {
     drawSparkline(refs.canvas, buffer, LEVEL_COLOR.ok);
   }
@@ -401,6 +430,23 @@ Widgets.renderDockerSummary = function (cardEl, payload) {
   cardEl.innerHTML = '';
 
   cardEl.appendChild(Widgets._cardHead('docker', 'Docker'));
+
+  /* Sem payload (primeira pintura): renderiza skeletons no lugar da contagem
+     e dos top-3. Polling subsequente sempre traz payload (mesmo que vazio),
+     entao o caminho normal abaixo assume a partir do segundo tick. */
+  if (!payload) {
+    var skelCount = el('div', 'docker-count');
+    skelCount.appendChild(Widgets._skel('skeleton-pill'));
+    cardEl.appendChild(skelCount);
+    var skelTop = el('div', 'docker-top');
+    for (var s = 0; s < 3; s++) {
+      var skelRow = el('div', 'docker-top-item');
+      skelRow.appendChild(Widgets._skel('skeleton-line'));
+      skelTop.appendChild(skelRow);
+    }
+    cardEl.appendChild(skelTop);
+    return;
+  }
 
   var list = (payload && payload.list) ? payload.list : [];
   var running = 0;
@@ -444,8 +490,11 @@ Widgets.renderDockerSummary = function (cardEl, payload) {
 Widgets.initWeather = function (containerEl) {
   if (!containerEl) { return null; }
   /* Um unico painel: troca de conteudo enquanto esta invisivel (opacity:0).
-     Evita empilhar 3 elementos no topbar e problemas de layout/transition. */
-  var panel = el('div', 'weather-panel weather-hidden');
+     Evita empilhar 3 elementos no topbar e problemas de layout/transition.
+     Comeca VISIVEL com uma pill skeleton — assim que o primeiro slide
+     entrar, renderWeatherSlide faz panel.innerHTML='' e tira o shimmer. */
+  var panel = el('div', 'weather-panel');
+  panel.appendChild(Widgets._skel('skeleton-pill'));
   containerEl.appendChild(panel);
   return { panel: panel };
 };

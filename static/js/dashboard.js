@@ -519,6 +519,21 @@
     }
   }
 
+  /* Placeholder animado para feeds enquanto pollFeeds nao retorna pela 1a vez.
+     Usado SO na carga inicial — refreshes subsequentes escrevem por cima do
+     conteudo real sem piscar skeleton. */
+  function showFeedSkeleton(sectionId, rows) {
+    var node = byId(sectionId);
+    if (!node) { return; }
+    node.innerHTML = '';
+    for (var i = 0; i < rows; i++) {
+      var row = el('div', 'feed-skeleton');
+      row.appendChild(el('span', 'skeleton skeleton-line'));
+      row.appendChild(el('span', 'skeleton skeleton-line'));
+      node.appendChild(row);
+    }
+  }
+
   /* --- Relogio ------------------------------------------------------------*/
   function clockText(d) {
     function pad(n) { return (n < 10 ? '0' : '') + n; }
@@ -554,7 +569,8 @@
     });
   }
   window.onresize = resizeAllCanvases;
-  showFeedMessage('Carregando...');
+  showFeedSkeleton('section-calendar', 4);
+  showFeedSkeleton('section-news', 4);
   tickClock();
   poll();
   pollFeeds();
