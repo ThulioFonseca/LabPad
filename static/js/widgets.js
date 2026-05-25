@@ -86,9 +86,15 @@ Widgets._createGauge = function (widget) {
   bar.appendChild(fill);
   root.appendChild(bar);
 
-  /* Sub linha: skeleton ao inves de espaco em branco. */
-  var sub = el('div', 'card-sub');
-  sub.appendChild(Widgets._skel('skeleton-line'));
+  /* Sub linha: so vira skeleton se o widget realmente preenche o sub
+     (mem/disk com "used / total"). CPU e Temp nao tem sub — fica como
+     espaco em branco para manter altura do card sem skeleton orfao. */
+  var sub = widget.sub
+    ? el('div', 'card-sub')
+    : el('div', 'card-sub', ' ');
+  if (widget.sub) {
+    sub.appendChild(Widgets._skel('skeleton-line'));
+  }
   root.appendChild(sub);
 
   var canvas = null;
