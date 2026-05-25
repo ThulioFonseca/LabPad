@@ -1287,13 +1287,12 @@ main {
             align-items: stretch;
   }
 
-  /* Cada painel de feed (Agenda / Noticias): coluna flex com titulo
-     fixo no topo e a lista scrollavel ocupando o resto.
-     height:100% + overflow:hidden sao explicitos (em vez de depender
-     so do align-items: stretch do pai) para garantir altura definida
-     em Safari 9 — assim o min-height:0 da feed-list realmente permite
-     overflow-y rolar. */
+  /* Cada painel de feed (Agenda / Noticias): contexto de posicionamento
+     para a feed-list (que vai absolute). Mantemos display:flex column
+     porque os navegadores modernos continuam usando-o; em Safari 9 a
+     posicao absoluta da feed-list bypassa o calculo de flex e funciona. */
   .panel--feed {
+    position: relative;            /* anchor p/ .feed-list absolute */
     display: -webkit-flex;
     display: flex;
     -webkit-flex-direction: column;
@@ -1302,18 +1301,29 @@ main {
     min-height: 0;
     overflow: hidden;
   }
+  /* Titulo com altura fixa: 18px de linha + 14px de margem = 32px.
+     Necessario para a feed-list absolute saber onde comecar (top: 32px). */
   .panel--feed > .panel-title {
     -webkit-flex: 0 0 auto;
             flex: 0 0 auto;
+    line-height: 18px;
+    height: 18px;
+    margin: 0 0 14px 2px;
   }
 
-  /* A lista que pode crescer indefinidamente — recebe o scroll proprio.
-     -webkit-overflow-scrolling:touch garante momentum no Safari 9/iPad 2. */
+  /* Safari 9 / iPad 2 bug: flex:1+min-height:0+overflow-y:auto em flex
+     aninhado NAO produz altura definida em pixels — iOS entao trata o
+     elemento como nao-rolavel e ignora o touch. Bypass: position:absolute
+     com top/bottom/left/right — a altura vem direto das coordenadas, sem
+     depender da spec moderna de flex. overflow-y:scroll (em vez de auto)
+     garante que iOS sempre considere a area como rolavel. */
   .feed-list {
-    -webkit-flex: 1 1 auto;
-            flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
+    position: absolute;
+    top: 32px;                     /* abaixo do .panel-title (18+14) */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
   }
 }
