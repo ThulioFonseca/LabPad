@@ -141,15 +141,8 @@
   }
 
   /* --- Modal da lista de containers --------------------------------------*/
-  function openContainersModal() {
-    var m = byId('containers-modal');
-    if (m) { m.className = 'modal-backdrop modal-backdrop--open'; }
-  }
-
-  function closeContainersModal() {
-    var m = byId('containers-modal');
-    if (m) { m.className = 'modal-backdrop'; }
-  }
+  function openContainersModal() { Modals.open('containers-modal'); }
+  function closeContainersModal() { Modals.close('containers-modal'); }
 
   function wireContainersModal() {
     /* O card Docker (#section-docker-summary) persiste — renderDockerSummary
@@ -169,15 +162,8 @@
   }
 
   /* --- Modal "Sistema" (botao (i) no titulo do painel Host) --------------*/
-  function openSystemModal() {
-    var m = byId('system-modal');
-    if (m) { m.className = 'modal-backdrop modal-backdrop--open'; }
-  }
-
-  function closeSystemModal() {
-    var m = byId('system-modal');
-    if (m) { m.className = 'modal-backdrop'; }
-  }
+  function openSystemModal() { Modals.open('system-modal'); }
+  function closeSystemModal() { Modals.close('system-modal'); }
 
   function wireSystemModal() {
     var btn = byId('host-info-btn');
@@ -203,8 +189,7 @@
     currentLogId = id;
     setText(byId('logs-modal-name'), name || '?');
     setText(byId('logs-modal-pre'), 'Carregando...');
-    var m = byId('logs-modal');
-    if (m) { m.className = 'modal-backdrop modal-backdrop--open'; }
+    Modals.open('logs-modal');
     fetchLogs(id, true);
     if (logsInterval) { clearInterval(logsInterval); }
     logsInterval = setInterval(function () {
@@ -215,8 +200,7 @@
   function closeLogsModal() {
     if (logsInterval) { clearInterval(logsInterval); logsInterval = null; }
     currentLogId = null;
-    var m = byId('logs-modal');
-    if (m) { m.className = 'modal-backdrop'; }
+    Modals.close('logs-modal');
   }
 
   function fetchLogs(id, force) {
@@ -246,14 +230,10 @@
     setText(byId('weather-modal-city'),
       lastWeather.city ? ' — ' + lastWeather.city : '');
     Widgets.renderWeatherDetail(byId('weather-modal-body'), lastWeather);
-    var m = byId('weather-modal');
-    if (m) { m.className = 'modal-backdrop modal-backdrop--open'; }
+    Modals.open('weather-modal');
   }
 
-  function closeWeatherModal() {
-    var m = byId('weather-modal');
-    if (m) { m.className = 'modal-backdrop'; }
-  }
+  function closeWeatherModal() { Modals.close('weather-modal'); }
 
   function wireWeatherModal() {
     var center = byId('section-weather');
@@ -422,8 +402,7 @@
             renderWeatherCurrent();
           }
           /* Atualiza o modal de detalhes se estiver aberto. */
-          var wm = byId('weather-modal');
-          if (wm && wm.className.indexOf('--open') >= 0) {
+          if (window.Modals && Modals.isOpen('weather-modal')) {
             Widgets.renderWeatherDetail(byId('weather-modal-body'), lastWeather);
           }
         }

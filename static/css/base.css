@@ -15,7 +15,7 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
@@ -23,6 +23,18 @@ body {
   font-size: 15px;
   line-height: 1.4;
   -webkit-text-size-adjust: 100%;
+  background-repeat: no-repeat;     /* evita tile do gradient (tema Vidro) */
+}
+
+/* Trava o scroll do dash enquanto um modal esta aberto. iOS bulletproof:
+   position:fixed + top negativo; window.Modals (settings.js) restaura a
+   posicao ao fechar o ultimo modal. */
+body.scroll-locked {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  overflow: hidden;
 }
 
 /* fonte monoespacada reaproveitada por varios elementos */
@@ -437,11 +449,19 @@ main {
   overflow: hidden;
 }
 
-/* Fonte mais larga e legivel a distancia nas listas de agenda e noticias.
-   '#section-X *' sobrepoe ate '.cal-time' (que vinha do grupo monoespacado). */
-#section-calendar, #section-calendar *,
-#section-news, #section-news * {
+/* Agenda: Verdana — letras largas e espacamento generoso, leitura confortavel
+   a distancia. '#section-X *' sobrepoe ate '.cal-time' (monoespacado). */
+#section-calendar, #section-calendar * {
   font-family: Verdana, "DejaVu Sans", Geneva, sans-serif;
+}
+
+/* Noticias: fonte monoespacada (estilo codigo) — glifos mais claros, menos
+   denso visualmente, melhor distincao 1/l/I/0/O. As fontes modernas no inicio
+   so atuam em desktops que as tenham instaladas; no iPad 2 cai em Menlo. */
+#section-news, #section-news * {
+  font-family: "Cascadia Code", "Fira Code", "JetBrains Mono",
+               "Source Code Pro", "SF Mono", Menlo, Consolas,
+               "Courier New", monospace;
 }
 
 /* --- Telas estreitas (celular em retrato) --------------------------------- */
