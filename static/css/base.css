@@ -449,19 +449,12 @@ main {
   overflow: hidden;
 }
 
-/* Agenda: Verdana — letras largas e espacamento generoso, leitura confortavel
-   a distancia. '#section-X *' sobrepoe ate '.cal-time' (monoespacado). */
-#section-calendar, #section-calendar * {
-  font-family: Verdana, "DejaVu Sans", Geneva, sans-serif;
-}
-
-/* Noticias: fonte monoespacada (estilo codigo) — glifos mais claros, menos
-   denso visualmente, melhor distincao 1/l/I/0/O. As fontes modernas no inicio
-   so atuam em desktops que as tenham instaladas; no iPad 2 cai em Menlo. */
+/* Agenda + Noticias: Didact Gothic (Google Fonts) — humanist sans com
+   x-height alto e tracking suave, otima legibilidade a distancia. Fallbacks
+   garantem visual decente se o load do Google Fonts falhar (offline). */
+#section-calendar, #section-calendar *,
 #section-news, #section-news * {
-  font-family: "Cascadia Code", "Fira Code", "JetBrains Mono",
-               "Source Code Pro", "SF Mono", Menlo, Consolas,
-               "Courier New", monospace;
+  font-family: "Didact Gothic", Verdana, "DejaVu Sans", Geneva, sans-serif;
 }
 
 /* --- Telas estreitas (celular em retrato) --------------------------------- */
@@ -1120,9 +1113,11 @@ main {
   margin: 0 28px 18px;
 }
 
-/* Reader mode: serif + linha generosa para leitura confortavel. */
+/* Reader mode: Merriweather — desenhada especificamente para leitura
+   prolongada em telas (x-height alto, contraste moderado). Fallback em
+   Georgia mantem a estetica serif se o Google Fonts nao carregar. */
 .article-content {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: "Merriweather", Georgia, "Times New Roman", serif;
   font-size: 17px;
   line-height: 1.7;
   margin: 0 28px 28px;

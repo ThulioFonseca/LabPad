@@ -24,8 +24,10 @@ _UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36 HomelabMonitor/1.0")
 _CACHE_TTL = 600    # 10 min
 _CACHE_MAX = 50
+# Padrao em BYTES — trabalhamos com response.content (sem decodificar) para
+# preservar o charset original e deixar o trafilatura detectar via <meta>.
 _META_REFRESH = re.compile(
-    r'<meta[^>]+http-equiv=["\']refresh["\'][^>]+url=([^"\'>\s]+)',
+    rb'<meta[^>]+http-equiv=["\']refresh["\'][^>]+url=([^"\'>\s]+)',
     re.IGNORECASE)
 
 _cache = {}
@@ -46,24 +48,26 @@ def _cache_get(url):
 
 
 def _fetch(url):
-    """GET com redirects HTTP. Se o destino final ainda for news.google.com
-    (interstitial), tenta seguir o meta-refresh uma vez (handles RSS do
-    Google News que aponta para um wrapper antes do publisher real)."""
+    """GET com redirects HTTP. Devolve bytes (NAO str) — sites pt-BR muitas
+    vezes omitem o charset no header, e o requests cai em ISO-8859-1 por
+    padrao, quebrando 'ç', 'ã', etc. O trafilatura detecta o charset via
+    <meta charset> / sniffing quando recebe bytes. Se o destino final for
+    news.google.com (interstitial), tenta seguir um meta-refresh."""
     response = requests.get(url, timeout=_TIMEOUT,
                             headers={"User-Agent": _UA})
     response.raise_for_status()
-    html = response.text
+    content = response.content
     final_url = response.url
     if "news.google.com" in final_url:
-        match = _META_REFRESH.search(html[:8192])
+        match = _META_REFRESH.search(content[:8192])
         if match:
-            target = match.group(1)
+            target = match.group(1).decode('ascii', errors='replace')
             response = requests.get(target, timeout=_TIMEOUT,
                                     headers={"User-Agent": _UA})
             response.raise_for_status()
-            html = response.text
+            content = response.content
             final_url = response.url
-    return html, final_url
+    return content, final_url
 
 
 def get(url):
@@ -74,11 +78,11 @@ def get(url):
     if not _HAS_TRAFILATURA:
         return {"error": "trafilatura nao instalado no container"}
     try:
-        html, final_url = _fetch(url)
+        content, final_url = _fetch(url)
     except requests.RequestException as exc:
         return {"error": "Falha ao baixar: " + str(exc)}
 
-    body = extract(html, url=final_url, output_format='html',
+    body = extract(content, url=final_url, output_format='html',
                    include_images=False, include_links=False,
                    favor_recall=True)
     if not body:
@@ -86,7 +90,7 @@ def get(url):
 
     meta = None
     try:
-        meta = extract_metadata(html, default_url=final_url)
+        meta = extract_metadata(content, default_url=final_url)
     except Exception:
         pass
 
