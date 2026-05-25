@@ -449,12 +449,12 @@ main {
   overflow: hidden;
 }
 
-/* Agenda + Noticias: Didact Gothic (Google Fonts) — humanist sans com
-   x-height alto e tracking suave, otima legibilidade a distancia. Fallbacks
-   garantem visual decente se o load do Google Fonts falhar (offline). */
+/* Agenda + Noticias: Montserrat (Google Fonts) — sans geometrica moderna,
+   x-height alto e formas escaneaveis para titulos de cards (NYT/Medium-style).
+   Fallback em system sans mantem o visual se o Google Fonts nao carregar. */
 #section-calendar, #section-calendar *,
 #section-news, #section-news * {
-  font-family: "Didact Gothic", Verdana, "DejaVu Sans", Geneva, sans-serif;
+  font-family: "Montserrat", -apple-system, "Helvetica Neue", Arial, sans-serif;
 }
 
 /* --- Telas estreitas (celular em retrato) --------------------------------- */
@@ -1100,27 +1100,40 @@ main {
   margin: 0 auto 4px;
 }
 
+/* Titulo, meta e conteudo do reader compartilham a MESMA coluna centralizada
+   (max-width: 65ch — regra de 60-75 caracteres por linha do guia). Imagem
+   hero fica full-bleed pra impacto visual; o resto centra. */
 .article-title {
   font-size: 26px;
   font-weight: 600;
   line-height: 1.25;
-  margin: 22px 28px 8px;
+  max-width: 65ch;
+  margin: 22px auto 8px;
+  padding: 0 28px;
+  box-sizing: border-box;
 }
 .article-meta {
   font-size: 12px;
   opacity: 0.65;
   letter-spacing: 0.04em;
-  margin: 0 28px 18px;
+  max-width: 65ch;
+  margin: 0 auto 18px;
+  padding: 0 28px;
+  box-sizing: border-box;
 }
 
 /* Reader mode: Merriweather — desenhada especificamente para leitura
-   prolongada em telas (x-height alto, contraste moderado). Fallback em
-   Georgia mantem a estetica serif se o Google Fonts nao carregar. */
+   prolongada em telas (x-height alto, contraste moderado). Line-height 1.7
+   e max-width 65ch seguem as regras de ouro do guia tipografico. Fallback
+   em Georgia mantem a estetica serif se o Google Fonts nao carregar. */
 .article-content {
   font-family: "Merriweather", Georgia, "Times New Roman", serif;
   font-size: 17px;
   line-height: 1.7;
-  margin: 0 28px 28px;
+  max-width: 65ch;
+  margin: 0 auto 28px;
+  padding: 0 28px;
+  box-sizing: border-box;
 }
 .article-content p { margin: 0 0 14px; }
 .article-content h2 { font-size: 20px; margin: 22px 0 10px; font-weight: 600; }
@@ -1149,8 +1162,8 @@ main {
 .article-error { color: #f85149; opacity: 1; }
 
 @media (max-width: 600px) {
-  .article-title   { font-size: 21px; margin: 16px 16px 6px; }
-  .article-meta    { margin: 0 16px 14px; }
-  .article-content { margin: 0 16px 22px; font-size: 16px; }
+  .article-title   { font-size: 21px; margin: 16px auto 6px; padding: 0 16px; }
+  .article-meta    { margin: 0 auto 14px; padding: 0 16px; }
+  .article-content { margin: 0 auto 22px; padding: 0 16px; font-size: 16px; }
   .article-hero-img { max-height: 220px; }
 }
