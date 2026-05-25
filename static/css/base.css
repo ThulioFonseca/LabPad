@@ -984,8 +984,9 @@ main {
 .wx-temprow-bar svg { display: block; width: 100%; height: 10px; }
 .wx-temprow-max  { -webkit-flex: 0 0 40px; flex: 0 0 40px; font-size: 12px; }
 
-/* Grafico de precipitacao (SVG ocupa o container) */
-.wx-precip svg { display: block; width: 100%; height: 110px; }
+/* Grafico de precipitacao — SVG escala uniformemente pelo viewBox.
+   width:100% + height:auto preserva proporcoes (texto nao distorce). */
+.wx-precip svg { display: block; width: 100%; height: auto; }
 
 /* Lista diaria (dia + icone + prob + range bar) */
 .wx-day-name { -webkit-flex: 0 0 60px; flex: 0 0 60px; font-size: 13px; }

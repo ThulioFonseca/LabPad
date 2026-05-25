@@ -716,18 +716,20 @@ Widgets._wxPrecipChart = function (p) {
   }
   if (maxMm < 1) { maxMm = 1; }   /* escala minima para nao ficar gigante */
 
-  var W = 100;  /* viewBox horizontal % */
-  var H = 100;  /* viewBox vertical */
+  /* viewBox com proporcao real do container (~720x140) e escala uniforme
+     (preserveAspectRatio default = 'xMidYMid meet') — sem esticar texto. */
+  var W = 720;
+  var H = 140;
   var n = days.length;
   var slot = W / n;
-  var barW = slot * 0.6;
+  var barW = slot * 0.55;
   var pad = (slot - barW) / 2;
-  var topPad = 10;     /* espaco para os rotulos de mm */
-  var bottomPad = 14;  /* espaco para os rotulos de dia */
+  var topPad = 18;     /* espaco para os rotulos de mm */
+  var bottomPad = 22;  /* espaco para os rotulos de dia */
   var chartH = H - topPad - bottomPad;
 
   var wrap = el('div', 'wx-precip');
-  var s = _svg('svg', { viewBox: '0 0 ' + W + ' ' + H, preserveAspectRatio: 'none' });
+  var s = _svg('svg', { viewBox: '0 0 ' + W + ' ' + H });
 
   for (var k = 0; k < n; k++) {
     var d = days[k];
@@ -735,18 +737,20 @@ Widgets._wxPrecipChart = function (p) {
     var bh = (v2 / maxMm) * chartH;
     var x = k * slot + pad;
     var y = topPad + (chartH - bh);
+    /* Barra com altura minima visivel quando ha qualquer chuva. */
+    if (v2 > 0 && bh < 3) { bh = 3; y = topPad + (chartH - bh); }
     s.appendChild(_svg('rect', { x: x, y: y, width: barW, height: bh,
-                                  rx: 1.5, fill: '#42a5f5' }));
+                                  rx: 3, fill: '#42a5f5' }));
     if (v2 > 0) {
-      var label = _svg('text', { x: x + barW / 2, y: y - 1,
-                                  'text-anchor': 'middle', 'font-size': 5,
-                                  fill: 'currentColor', 'fill-opacity': 0.7 });
-      label.textContent = v2.toFixed(v2 < 10 ? 1 : 0);
+      var label = _svg('text', { x: x + barW / 2, y: y - 5,
+                                  'text-anchor': 'middle', 'font-size': 12,
+                                  fill: 'currentColor', 'fill-opacity': 0.75 });
+      label.textContent = v2.toFixed(v2 < 10 ? 1 : 0) + 'mm';
       s.appendChild(label);
     }
-    var dayText = _svg('text', { x: x + barW / 2, y: H - 3,
-                                  'text-anchor': 'middle', 'font-size': 5,
-                                  fill: 'currentColor', 'fill-opacity': 0.6 });
+    var dayText = _svg('text', { x: x + barW / 2, y: H - 6,
+                                  'text-anchor': 'middle', 'font-size': 12,
+                                  fill: 'currentColor', 'fill-opacity': 0.65 });
     dayText.textContent = _dayLabel(d.date, 0, k);
     s.appendChild(dayText);
   }
