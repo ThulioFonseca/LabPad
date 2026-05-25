@@ -339,16 +339,6 @@ main {
   font-size: 14px;
 }
 
-/* --- Rodape ----------------------------------------------------------------*/
-.footer {
-  display: -webkit-flex;
-  display: flex;
-  -webkit-justify-content: space-between;
-  justify-content: space-between;
-  padding: 14px 24px 22px;
-  font-size: 12px;
-}
-
 /* --- Feeds: Agenda e Noticias ---------------------------------------------*/
 .feeds-row {
   display: -webkit-flex;
@@ -477,7 +467,7 @@ main {
   .weather-day { margin: 0 4px; }
   .weather-sep { margin: 0 7px; }
 
-  main, .footer { padding-left: 14px; padding-right: 14px; }
+  main { padding-left: 14px; padding-right: 14px; }
 
   /* Lista de containers: aperta espacamento e esconde o mini-grafico. */
   .cmini { display: none; }
@@ -1256,9 +1246,8 @@ main {
             flex-direction: column;
   }
 
-  /* Cabecalho e rodape: altura natural, nao encolhem nem crescem. */
-  .topbar,
-  .footer {
+  /* Cabecalho: altura natural, nao encolhe nem cresce. */
+  .topbar {
     -webkit-flex: 0 0 auto;
             flex: 0 0 auto;
   }
@@ -1284,23 +1273,34 @@ main {
             flex: 0 0 auto;
   }
 
-  /* Linha dos feeds: ocupa o resto da viewport. */
+  /* Linha dos feeds: ocupa o resto da viewport.
+     flex-wrap: nowrap aqui e CRITICO — com wrap, Safari/Webkit nao
+     propaga corretamente a altura da unica linha para os filhos via
+     align-items: stretch, e a feed-list nunca recebe overflow util. */
   .feeds-row {
     -webkit-flex: 1 1 auto;
             flex: 1 1 auto;
     min-height: 0;
+    -webkit-flex-wrap: nowrap;
+            flex-wrap: nowrap;
     -webkit-align-items: stretch;
             align-items: stretch;
   }
 
   /* Cada painel de feed (Agenda / Noticias): coluna flex com titulo
-     fixo no topo e a lista scrollavel ocupando o resto. */
+     fixo no topo e a lista scrollavel ocupando o resto.
+     height:100% + overflow:hidden sao explicitos (em vez de depender
+     so do align-items: stretch do pai) para garantir altura definida
+     em Safari 9 — assim o min-height:0 da feed-list realmente permite
+     overflow-y rolar. */
   .panel--feed {
     display: -webkit-flex;
     display: flex;
     -webkit-flex-direction: column;
             flex-direction: column;
+    height: 100%;
     min-height: 0;
+    overflow: hidden;
   }
   .panel--feed > .panel-title {
     -webkit-flex: 0 0 auto;

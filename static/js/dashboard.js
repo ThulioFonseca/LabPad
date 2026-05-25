@@ -124,8 +124,6 @@
 
     Widgets.renderContainers(byId('section-containers'), data.containers);
     updateContainerCount(data.containers);
-
-    setText(byId('last-update'), 'atualizado as ' + clockText(new Date()));
   }
 
   function updateContainerCount(payload) {
