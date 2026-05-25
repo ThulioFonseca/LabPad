@@ -1235,3 +1235,85 @@ main {
 .feed-skeleton .skeleton-line:nth-child(2) {
   width: 40%; height: 10px; margin-top: 8px; opacity: 0.7;
 }
+
+/* =========================================================================
+   Viewport-fit: dashboard ocupa exatamente a tela; feeds rolam internamente.
+   So aplica a partir de 601 px (iPad portrait/landscape, desktop) — abaixo
+   disso o layout volta ao empilhamento vertical com scroll global (regra
+   existente em @media (max-width: 600px) e o fluxo normal do body).
+   ========================================================================= */
+@media (min-width: 601px) {
+
+  /* Sem scroll na pagina; o body vira contenedor flex em coluna. */
+  html, body {
+    height: 100%;
+    overflow: hidden;
+  }
+  body {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+            flex-direction: column;
+  }
+
+  /* Cabecalho e rodape: altura natural, nao encolhem nem crescem. */
+  .topbar,
+  .footer {
+    -webkit-flex: 0 0 auto;
+            flex: 0 0 auto;
+  }
+
+  /* <main>: ocupa todo o espaco vertical restante e e o ponto de corte
+     do overflow. min-height: 0 e CRITICO para Safari 9 permitir que os
+     filhos flex (em particular .feeds-row) recebam altura calculada
+     menor que o conteudo intrinseco — sem isso a feed-list nao rola. */
+  main {
+    -webkit-flex: 1 1 auto;
+            flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+            flex-direction: column;
+  }
+
+  /* Painel de host (cards + double-row): altura natural. */
+  main > .panel:first-child {
+    -webkit-flex: 0 0 auto;
+            flex: 0 0 auto;
+  }
+
+  /* Linha dos feeds: ocupa o resto da viewport. */
+  .feeds-row {
+    -webkit-flex: 1 1 auto;
+            flex: 1 1 auto;
+    min-height: 0;
+    -webkit-align-items: stretch;
+            align-items: stretch;
+  }
+
+  /* Cada painel de feed (Agenda / Noticias): coluna flex com titulo
+     fixo no topo e a lista scrollavel ocupando o resto. */
+  .panel--feed {
+    display: -webkit-flex;
+    display: flex;
+    -webkit-flex-direction: column;
+            flex-direction: column;
+    min-height: 0;
+  }
+  .panel--feed > .panel-title {
+    -webkit-flex: 0 0 auto;
+            flex: 0 0 auto;
+  }
+
+  /* A lista que pode crescer indefinidamente — recebe o scroll proprio.
+     -webkit-overflow-scrolling:touch garante momentum no Safari 9/iPad 2. */
+  .feed-list {
+    -webkit-flex: 1 1 auto;
+            flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
