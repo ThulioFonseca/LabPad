@@ -1273,56 +1273,36 @@ main {
             flex: 0 0 auto;
   }
 
-  /* Linha dos feeds: ocupa o resto da viewport.
-     flex-wrap: nowrap aqui e CRITICO — com wrap, Safari/Webkit nao
-     propaga corretamente a altura da unica linha para os filhos via
-     align-items: stretch, e a feed-list nunca recebe overflow util. */
+  /* Linha dos feeds: ocupa o resto da viewport. nowrap garante uma
+     unica linha e evita bugs de wrap+stretch no Webkit. overflow:hidden
+     impede que conteudo escapar visualmente caso o JS de sizing demore. */
   .feeds-row {
     -webkit-flex: 1 1 auto;
             flex: 1 1 auto;
     min-height: 0;
+    overflow: hidden;
     -webkit-flex-wrap: nowrap;
             flex-wrap: nowrap;
     -webkit-align-items: stretch;
             align-items: stretch;
   }
 
-  /* Cada painel de feed (Agenda / Noticias): contexto de posicionamento
-     para a feed-list (que vai absolute). Mantemos display:flex column
-     porque os navegadores modernos continuam usando-o; em Safari 9 a
-     posicao absoluta da feed-list bypassa o calculo de flex e funciona. */
+  /* Cada painel de feed: stretch vem do parent (align-items:stretch).
+     SEM display:flex/height:100% aqui — em Safari 9 height:100% nao
+     resolve contra parent flex e o painel colapsa pra altura do titulo.
+     overflow:hidden so como rede de seguranca. */
   .panel--feed {
-    position: relative;            /* anchor p/ .feed-list absolute */
-    display: -webkit-flex;
-    display: flex;
-    -webkit-flex-direction: column;
-            flex-direction: column;
-    height: 100%;
     min-height: 0;
     overflow: hidden;
   }
-  /* Titulo com altura fixa: 18px de linha + 14px de margem = 32px.
-     Necessario para a feed-list absolute saber onde comecar (top: 32px). */
-  .panel--feed > .panel-title {
-    -webkit-flex: 0 0 auto;
-            flex: 0 0 auto;
-    line-height: 18px;
-    height: 18px;
-    margin: 0 0 14px 2px;
-  }
 
-  /* Safari 9 / iPad 2 bug: flex:1+min-height:0+overflow-y:auto em flex
-     aninhado NAO produz altura definida em pixels — iOS entao trata o
-     elemento como nao-rolavel e ignora o touch. Bypass: position:absolute
-     com top/bottom/left/right — a altura vem direto das coordenadas, sem
-     depender da spec moderna de flex. overflow-y:scroll (em vez de auto)
-     garante que iOS sempre considere a area como rolavel. */
+  /* A altura desta lista e setada em PIXELS pelo JS (sizeFeedLists em
+     dashboard.js) — necessario pra iOS Safari 9 reconhecer overflow como
+     rolavel. flex:1+min-height:0+overflow-y:auto NAO funciona em Safari
+     9 (e tambem nao funcionou com position:absolute, que colapsa quando
+     o pai nao tem height:100% resolvido). overflow-y:scroll (em vez de
+     auto) garante que iOS sempre trate como rolavel. */
   .feed-list {
-    position: absolute;
-    top: 32px;                     /* abaixo do .panel-title (18+14) */
-    left: 0;
-    right: 0;
-    bottom: 0;
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;
   }

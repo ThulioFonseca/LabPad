@@ -124,6 +124,10 @@
 
     Widgets.renderContainers(byId('section-containers'), data.containers);
     updateContainerCount(data.containers);
+
+    /* Recomputa altura dos feeds: docker top-3 ou subs podem ter mudado
+       a altura do painel host, alterando o espaco disponivel pras listas. */
+    sizeFeedLists();
   }
 
   function updateContainerCount(payload) {
@@ -441,6 +445,44 @@
     }
   }
 
+  /* --- Sizing dos feed-lists em PIXELS (necessario para Safari 9 / iPad 2) -
+     iOS Safari 9 nao trata altura flex-calculada como "definida" para
+     overflow-y rolar, e position:absolute colapsa quando o pai nao tem
+     height:100% resolvido contra parent flex. A solucao bulletproof: medir
+     a viewport e descontar topbar+host+titulo+padings, depois setar
+     .feed-list.style.height em pixels diretos. iOS aceita sem questionar
+     e ativa o momentum touch. */
+  function sizeFeedLists() {
+    var lists = document.getElementsByClassName('feed-list');
+    if (!lists || !lists.length) { return; }
+    /* Mobile (< 601 px): empilhamento vertical com scroll global — limpa
+       qualquer altura que tenhamos setado em sessoes anteriores. */
+    if (window.innerWidth < 601) {
+      for (var i = 0; i < lists.length; i++) { lists[i].style.height = ''; }
+      return;
+    }
+    var viewportH = document.documentElement.clientHeight || window.innerHeight;
+    var topbarEl  = document.getElementsByClassName('topbar')[0];
+    var hostEl    = document.getElementsByClassName('panel')[0]; // 1a .panel = host
+    var titleEl   = document.getElementsByClassName('panel-title')[0];
+    var topbarH = topbarEl ? topbarEl.offsetHeight : 0;
+    var hostH   = hostEl   ? hostEl.offsetHeight   : 0;
+    var titleH  = titleEl  ? titleEl.offsetHeight  : 16;
+    var titleMb = 12; /* default .panel-title margin-bottom (base.css) */
+    if (titleEl && window.getComputedStyle) {
+      try {
+        var parsed = parseInt(window.getComputedStyle(titleEl).marginBottom, 10);
+        if (!isNaN(parsed)) { titleMb = parsed; }
+      } catch (e) { /* ignore */ }
+    }
+    /* main padding 8/24 + .panel margin-bottom 20 (espaco entre host e feeds). */
+    var avail = viewportH - topbarH - 8 - 24 - hostH - 20 - titleH - titleMb;
+    if (avail < 80) { avail = 80; }
+    for (var j = 0; j < lists.length; j++) {
+      lists[j].style.height = avail + 'px';
+    }
+  }
+
   /* --- Tick da agenda: re-renderiza para atualizar cores de urgencia ------*/
   function calendarTick() {
     if (lastCalendar) {
@@ -566,9 +608,16 @@
       pollFeeds();
     });
   }
-  window.onresize = resizeAllCanvases;
+  window.onresize = function () {
+    resizeAllCanvases();
+    sizeFeedLists();
+  };
   showFeedSkeleton('section-calendar', 4);
   showFeedSkeleton('section-news', 4);
+  /* Primeira medicao: depois do paint inicial dos skeletons, pra
+     offsetHeight da topbar/host ja estar disponivel. setTimeout(0)
+     enfileira no proximo tick — Safari 9 nao tem rAF prefixado. */
+  setTimeout(sizeFeedLists, 0);
   tickClock();
   poll();
   pollFeeds();
