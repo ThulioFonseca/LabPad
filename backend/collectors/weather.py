@@ -1,10 +1,52 @@
-"""Coletor de clima via Open-Meteo (gratis, sem chave) e fase lunar local."""
+"""Coletor de clima via Open-Meteo (primario) com fallback para met.no.
+
+Open-Meteo: gratis, sem chave, 7 dias de previsao.
+met.no (Norwegian Meteorological Institute): gratis, sem chave, cobertura global,
+  usado automaticamente se Open-Meteo falhar.
+Fase lunar calculada localmente (sem API).
+"""
+import logging
 import time
+from collections import defaultdict
 
 from collectors.http_log import fetch as _http_fetch
 import settings
 
 _TIMEOUT = 8
+
+_METNO_UA = "HomelabMonitor/1.0 thulio50@hotmail.com"
+
+# met.no symbol_code -> WMO weather code (aproximacao)
+_METNO_TO_WMO = {
+    "clearsky":             0,
+    "fair":                 1,
+    "partlycloudy":         2,
+    "cloudy":               3,
+    "fog":                  45,
+    "lightrain":            61,
+    "rain":                 63,
+    "heavyrain":            65,
+    "lightrainshowers":     80,
+    "rainshowers":          81,
+    "heavyrainshowers":     82,
+    "lightsleet":           68,
+    "sleet":                69,
+    "lightsnow":            71,
+    "snow":                 73,
+    "heavysnow":            75,
+    "lightsnowshowers":     85,
+    "snowshowers":          86,
+    "lightrainandthunder":  95,
+    "rainandthunder":       96,
+    "heavyrainandthunder":  99,
+    "snowandthunder":       99,
+}
+
+
+def _metno_wmo(symbol_code):
+    """'lightrainshowers_day' -> WMO int. Desconhecido -> 3 (nublado)."""
+    base = (symbol_code or "").split("_")[0]
+    return _METNO_TO_WMO.get(base, 3)
 
 
 def _at(arr, i, default=None):
@@ -28,6 +70,7 @@ def _hhmm(iso_dt):
     if not iso_dt or "T" not in iso_dt:
         return None
     return iso_dt.split("T", 1)[1][:5]
+
 
 # Coordenadas resolvidas em cache — so chama geocoding uma vez por processo.
 _geo_cache = {"city": None, "lat": None, "lon": None}
@@ -80,13 +123,8 @@ def _resolve_city(city):
     return lat, lon
 
 
-def collect():
-    city = settings.get("weather", "city", "")
-    if not city:
-        return {"configured": False}
-
-    lat, lon = _resolve_city(city)
-
+def _fetch_openmeteo(lat, lon):
+    """Busca clima no Open-Meteo. Retorna dict estruturado."""
     url = (
         "https://api.open-meteo.com/v1/forecast"
         "?latitude={lat}&longitude={lon}"
@@ -141,7 +179,7 @@ def collect():
 
     return {
         "configured": True,
-        "city": city,
+        "city": settings.get("weather", "city", ""),
         "current": {
             "temp":       round(cur.get("temperature_2m", 0), 1),
             "humidity":   cur.get("relative_humidity_2m"),
@@ -157,3 +195,115 @@ def collect():
         "daily":  daily_out,
         "moon":   _moon(),
     }
+
+
+def _fetch_metno(lat, lon):
+    """Fallback: Norwegian Meteorological Institute (met.no). Sem chave de API."""
+    url = (
+        "https://api.met.no/weatherapi/locationforecast/2.0/compact"
+        "?lat={lat:.4f}&lon={lon:.4f}"
+    ).format(lat=lat, lon=lon)
+
+    data = _http_fetch(url, headers={"User-Agent": _METNO_UA}, timeout=_TIMEOUT).json()
+    ts = data["properties"]["timeseries"]
+
+    # --- current: primeira entrada ---
+    first = ts[0]
+    inst  = first["data"]["instant"]["details"]
+    nxt1  = first["data"].get("next_1_hours") or {}
+    sym   = (nxt1.get("summary") or {}).get("symbol_code", "")
+    nxt1d = nxt1.get("details") or {}
+
+    current = {
+        "temp":       _round_v(inst.get("air_temperature")),
+        "humidity":   inst.get("relative_humidity"),
+        "feels_like": None,
+        "is_day":     "_day" in sym if sym else True,
+        "code":       _metno_wmo(sym),
+        "wind_speed": _round_v(inst.get("wind_speed")),
+        "wind_dir":   inst.get("wind_from_direction"),
+        "precip":     _round_v(nxt1d.get("precipitation_amount")),
+        "uv":         _round_v(inst.get("ultraviolet_index_clear_sky")),
+    }
+
+    # --- hourly: proximas 24 entradas com next_1_hours ---
+    hourly_out = []
+    for entry in ts[:48]:
+        if len(hourly_out) >= 24:
+            break
+        h1 = entry["data"].get("next_1_hours")
+        if h1 is None:
+            continue
+        hi    = entry["data"]["instant"]["details"]
+        h1d   = h1.get("details") or {}
+        sym_h = (h1.get("summary") or {}).get("symbol_code", "")
+        hourly_out.append({
+            "time":   entry["time"],
+            "temp":   _round_v(hi.get("air_temperature")),
+            "precip": _round_v(h1d.get("precipitation_amount")),
+            "prob":   h1d.get("probability_of_precipitation"),
+            "code":   _metno_wmo(sym_h),
+        })
+
+    # --- daily: agregar por dia (max/min temp, precip acumulada, symbol) ---
+    day_buckets = defaultdict(lambda: {
+        "temps": [], "precip": 0.0, "prob": 0, "sym": None
+    })
+    for entry in ts:
+        day = entry["time"][:10]
+        hi  = entry["data"]["instant"]["details"]
+        t   = hi.get("air_temperature")
+        if t is not None:
+            day_buckets[day]["temps"].append(t)
+        n6  = entry["data"].get("next_6_hours") or {}
+        n6d = n6.get("details") or {}
+        day_buckets[day]["precip"] += n6d.get("precipitation_amount", 0.0)
+        p = n6d.get("probability_of_precipitation")
+        if p is not None:
+            day_buckets[day]["prob"] = max(day_buckets[day]["prob"], p)
+        if day_buckets[day]["sym"] is None:
+            sym_6 = (n6.get("summary") or {}).get("symbol_code")
+            if sym_6:
+                day_buckets[day]["sym"] = sym_6
+
+    daily_out = []
+    for day in sorted(day_buckets)[:7]:
+        b = day_buckets[day]
+        temps = b["temps"]
+        daily_out.append({
+            "date":        day,
+            "code":        _metno_wmo(b["sym"]) if b["sym"] else 3,
+            "high":        _round_v(max(temps)) if temps else None,
+            "low":         _round_v(min(temps)) if temps else None,
+            "precip_sum":  _round_v(b["precip"]),
+            "precip_prob": b["prob"] or None,
+            "sunrise":     None,
+            "sunset":      None,
+            "uv_max":      None,
+            "wind_max":    None,
+            "wind_dir":    None,
+        })
+
+    return {
+        "configured": True,
+        "city":    settings.get("weather", "city", ""),
+        "current": current,
+        "hourly":  hourly_out,
+        "daily":   daily_out,
+        "moon":    _moon(),
+        "_source": "met.no",
+    }
+
+
+def collect():
+    city = settings.get("weather", "city", "")
+    if not city:
+        return {"configured": False}
+
+    lat, lon = _resolve_city(city)
+
+    try:
+        return _fetch_openmeteo(lat, lon)
+    except Exception as exc:
+        logging.warning("Open-Meteo falhou (%s), tentando met.no como fallback", exc)
+        return _fetch_metno(lat, lon)
