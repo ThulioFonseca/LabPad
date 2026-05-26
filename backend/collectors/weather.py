@@ -1,13 +1,7 @@
 """Coletor de clima via Open-Meteo (gratis, sem chave) e fase lunar local."""
-import json
 import time
 
-try:
-    from urllib.request import urlopen, Request
-    from urllib.error import URLError
-except ImportError:
-    from urllib2 import urlopen, Request, URLError
-
+from collectors.http_log import fetch as _http_fetch
 import settings
 
 _TIMEOUT = 8
@@ -55,9 +49,7 @@ def _moon():
 
 
 def _fetch(url):
-    req = Request(url, headers={"User-Agent": "Homelab-Monitor/1.0"})
-    with urlopen(req, timeout=_TIMEOUT) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    return _http_fetch(url, headers={"User-Agent": "Homelab-Monitor/1.0"}, timeout=_TIMEOUT).json()
 
 
 def _resolve_city(city):

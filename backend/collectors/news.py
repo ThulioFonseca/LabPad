@@ -4,8 +4,8 @@ import datetime
 import re
 
 import feedparser
-import requests
 
+from collectors.http_log import fetch as _http_fetch
 import settings
 
 _TIMEOUT = 12
@@ -66,8 +66,7 @@ def collect():
     if not url:
         return {"items": [], "configured": False}
 
-    response = requests.get(url, timeout=_TIMEOUT, headers={"User-Agent": _UA})
-    response.raise_for_status()
+    response = _http_fetch(url, headers={"User-Agent": _UA}, timeout=_TIMEOUT)
     parsed = feedparser.parse(response.content)
 
     limit = settings.get("news", "limit", 5)

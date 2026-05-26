@@ -7,8 +7,8 @@ import datetime
 
 import icalendar
 import recurring_ical_events
-import requests
 
+from collectors.http_log import fetch as _http_fetch
 import config
 import settings
 
@@ -64,8 +64,7 @@ def collect():
     if not url:
         return {"events": [], "configured": False}
 
-    response = requests.get(url, timeout=_TIMEOUT, headers={"User-Agent": _UA})
-    response.raise_for_status()
+    response = _http_fetch(url, headers={"User-Agent": _UA}, timeout=_TIMEOUT)
     calendar = icalendar.Calendar.from_ical(response.content)
 
     tz = _tz()

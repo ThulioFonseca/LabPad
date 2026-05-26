@@ -10,7 +10,7 @@ import logging
 import re
 import time
 
-import requests
+from collectors.http_log import fetch as _http_fetch
 
 try:
     from trafilatura import extract, extract_metadata
@@ -53,18 +53,14 @@ def _fetch(url):
     padrao, quebrando 'ç', 'ã', etc. O trafilatura detecta o charset via
     <meta charset> / sniffing quando recebe bytes. Se o destino final for
     news.google.com (interstitial), tenta seguir um meta-refresh."""
-    response = requests.get(url, timeout=_TIMEOUT,
-                            headers={"User-Agent": _UA})
-    response.raise_for_status()
+    response = _http_fetch(url, headers={"User-Agent": _UA}, timeout=_TIMEOUT)
     content = response.content
     final_url = response.url
     if "news.google.com" in final_url:
         match = _META_REFRESH.search(content[:8192])
         if match:
             target = match.group(1).decode('ascii', errors='replace')
-            response = requests.get(target, timeout=_TIMEOUT,
-                                    headers={"User-Agent": _UA})
-            response.raise_for_status()
+            response = _http_fetch(target, headers={"User-Agent": _UA}, timeout=_TIMEOUT)
             content = response.content
             final_url = response.url
     return content, final_url
@@ -79,7 +75,7 @@ def get(url):
         return {"error": "trafilatura nao instalado no container"}
     try:
         content, final_url = _fetch(url)
-    except requests.RequestException as exc:
+    except Exception as exc:
         return {"error": "Falha ao baixar: " + str(exc)}
 
     body = extract(content, url=final_url, output_format='html',
