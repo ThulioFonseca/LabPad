@@ -295,6 +295,13 @@ def _fetch_metno(lat, lon):
     }
 
 
+def invalidate_cache():
+    """Limpa o cache de geocoding (ex: ao trocar de cidade nas settings)."""
+    _geo_cache["city"] = None
+    _geo_cache["lat"] = None
+    _geo_cache["lon"] = None
+
+
 def collect():
     city = settings.get("weather", "city", "")
     if not city:

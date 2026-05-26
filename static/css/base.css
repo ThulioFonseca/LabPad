@@ -91,11 +91,6 @@ body.scroll-locked {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
-.brand-sub {
-  margin-left: 10px;
-  font-size: 13px;
-}
-
 .status {
   -webkit-flex: 1 1 0;
   flex: 1 1 0;

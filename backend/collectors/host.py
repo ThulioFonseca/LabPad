@@ -3,6 +3,7 @@ import os
 import platform
 import socket
 import sys
+import threading
 import time
 
 import psutil
@@ -25,6 +26,7 @@ _SKIP_MOUNTS = (
 
 # Estado para calcular a taxa de rede entre duas coletas consecutivas.
 _net_prev = {"time": None, "recv": 0, "sent": 0}
+_net_lock = threading.Lock()
 
 # Inicializa o contador de CPU; a primeira leitura com interval=None retorna 0.0
 # (sem referencia anterior) — descartamos esse valor aqui para que a primeira
@@ -184,14 +186,15 @@ def _net_rates():
         counters = psutil.net_io_counters()
     now = time.time()
     recv_rate = sent_rate = 0.0
-    if _net_prev["time"] is not None:
-        dt = now - _net_prev["time"]
-        if dt > 0:
-            recv_rate = max(counters.bytes_recv - _net_prev["recv"], 0) / dt
-            sent_rate = max(counters.bytes_sent - _net_prev["sent"], 0) / dt
-    _net_prev["time"] = now
-    _net_prev["recv"] = counters.bytes_recv
-    _net_prev["sent"] = counters.bytes_sent
+    with _net_lock:
+        if _net_prev["time"] is not None:
+            dt = now - _net_prev["time"]
+            if dt > 0:
+                recv_rate = max(counters.bytes_recv - _net_prev["recv"], 0) / dt
+                sent_rate = max(counters.bytes_sent - _net_prev["sent"], 0) / dt
+        _net_prev["time"] = now
+        _net_prev["recv"] = counters.bytes_recv
+        _net_prev["sent"] = counters.bytes_sent
     return recv_rate, sent_rate
 
 

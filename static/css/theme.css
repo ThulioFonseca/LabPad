@@ -19,7 +19,6 @@ body {
 /* --- Topo ------------------------------------------------------------------*/
 .topbar      { border-bottom: 1px solid #23262e; }
 .brand-name  { color: #e6e8ec; }
-.brand-sub   { color: #8b909c; }
 .status      { color: #8b909c; }
 .weather-clock { color: #c8ccd4; }
 
@@ -124,12 +123,6 @@ body {
 .news-title { color: #e6e8ec; }
 .news-age   { color: #6a7080; }
 .news-thumb { background-color: #2a2e37; }
-
-/* --- Rodape ----------------------------------------------------------------*/
-.footer {
-  color: #6a7080;
-  border-top: 1px solid #23262e;
-}
 
 /* --- Meta-line ------------------------------------------------------------ */
 .panel-meta { color: #6a7080; }

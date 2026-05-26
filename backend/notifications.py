@@ -26,14 +26,10 @@ def add(severity, source, title, detail=""):
     key = (source, severity)
     with _lock:
         last_id = _last_key.get(key)
-        if last_id is not None:
-            # Procura a ultima no topo da lista (mais recentes primeiro).
-            for n in _items:
-                if n["id"] == last_id:
-                    if n["read_at"] is None:
-                        return None
-                    break  # ja foi lida — pode emitir nova
-                break       # so checa a primeira (que e a mais recente)
+        if (last_id is not None and _items
+                and _items[0]["id"] == last_id
+                and _items[0]["read_at"] is None):
+            return None
         nid = next(_seq)
         _items.insert(0, {
             "id":         nid,

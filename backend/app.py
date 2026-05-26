@@ -3,8 +3,11 @@
 Serve o dashboard estatico e a API de metricas. Roda dentro de um container;
 ver Dockerfile / docker-compose.yml.
 """
+import ipaddress
 import logging
 import os
+import re
+import socket
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -196,6 +199,28 @@ def feeds():
     return response
 
 
+def _is_private_url(url):
+    """Verifica se a URL aponta para um endereco privado/loopback/link-local.
+
+    Resolve o hostname apos parsear a URL para bloquear SSRF. Retorna True se
+    o destino for um IP privado, loopback, link-local ou nao-global.
+    """
+    try:
+        from urllib.parse import urlparse
+    except ImportError:
+        from urlparse import urlparse
+    try:
+        host = urlparse(url).hostname or ""
+        # Resolve o nome para o IP de destino real.
+        ip_str = socket.gethostbyname(host)
+        addr = ipaddress.ip_address(ip_str)
+        return (addr.is_private or addr.is_loopback
+                or addr.is_link_local or not addr.is_global)
+    except Exception:
+        # Nao conseguiu resolver → bloqueia por precaucao.
+        return True
+
+
 @app.route("/api/article")
 def article_route():
     """Modo leitura: baixa a URL e devolve o conteudo principal limpo."""
@@ -204,6 +229,8 @@ def article_route():
         return jsonify({"error": "url invalida"}), 400
     if not (url.startswith("http://") or url.startswith("https://")):
         return jsonify({"error": "url precisa comecar com http(s)://"}), 400
+    if _is_private_url(url):
+        return jsonify({"error": "url nao permitida"}), 400
     data = article.get(url)
     status = 502 if "error" in data else 200
     response = jsonify(data)
@@ -211,9 +238,14 @@ def article_route():
     return response, status
 
 
+_CONTAINER_ID_RE = re.compile(r'^[a-zA-Z0-9_.\-]{1,64}$')
+
+
 @app.route("/api/containers/<container_id>/logs")
 def container_logs(container_id):
     """Devolve as ultimas N linhas de log de um container Docker."""
+    if not _CONTAINER_ID_RE.match(container_id):
+        return jsonify({"error": "container_id invalido"}), 400
     tail = request.args.get("tail", default=200, type=int)
     tail = max(10, min(tail, 1000))
     data = containers.get_logs(container_id, tail=tail)
@@ -323,7 +355,7 @@ def _invalidate_settings_caches(prev, new):
     agenda re-coleta imediata do(s) feed(s) afetado(s)."""
     affected = set()
     if prev["weather"]["city"] != new["weather"]["city"]:
-        weather._geo_cache.clear()
+        weather.invalidate_cache()
         affected.add("weather")
     if prev["calendar"]["url"] != new["calendar"]["url"]:
         affected.add("calendar")

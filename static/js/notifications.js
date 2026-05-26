@@ -21,11 +21,8 @@
     if (!btn) { return; }
     btn.innerHTML = ICONS.bell;
     if (unread.length > 0) {
-      var b = document.createElement('span');
-      b.className = 'notif-badge';
-      b.appendChild(document.createTextNode(
+      btn.appendChild(el('span', 'notif-badge',
           unread.length > 99 ? '99+' : String(unread.length)));
-      btn.appendChild(b);
     }
   }
 
@@ -46,28 +43,17 @@
   }
 
   function buildItem(n) {
-    var row = document.createElement('div');
-    row.className = 'notif-item';
+    var row = el('div', 'notif-item');
 
-    var bar = document.createElement('span');
-    bar.className = 'notif-bar notif-bar--' + n.severity;
-    row.appendChild(bar);
+    row.appendChild(el('span', 'notif-bar notif-bar--' + n.severity));
 
-    var mid = document.createElement('div');
-    mid.className = 'notif-mid';
-    var t = document.createElement('div');
-    t.className = 'notif-row-title';
-    t.appendChild(document.createTextNode(n.title));
-    var s = document.createElement('div');
-    s.className = 'notif-row-sub';
-    s.appendChild(document.createTextNode(
+    var mid = el('div', 'notif-mid');
+    mid.appendChild(el('div', 'notif-row-title', n.title));
+    mid.appendChild(el('div', 'notif-row-sub',
         n.source + '  ·  ' + ageLabel(n.created_at)));
-    mid.appendChild(t);
-    mid.appendChild(s);
     row.appendChild(mid);
 
-    var trash = document.createElement('button');
-    trash.className = 'notif-trash';
+    var trash = el('button', 'notif-trash');
     trash.setAttribute('type', 'button');
     trash.setAttribute('aria-label', 'Marcar como lida');
     trash.innerHTML = ICONS.trash;
@@ -96,20 +82,12 @@
     var trash   = document.getElementById('notification-modal-trash');
     if (!titleEl || !body || !trash) { return; }
 
-    titleEl.innerHTML = '';
-    titleEl.appendChild(document.createTextNode(n.title));
+    setText(titleEl, n.title);
 
     body.innerHTML = '';
-    var meta = document.createElement('div');
-    meta.className = 'notif-meta';
-    meta.appendChild(document.createTextNode(
+    body.appendChild(el('div', 'notif-meta',
         n.source + '  ·  ' + (new Date(n.created_at * 1000)).toLocaleString()));
-    body.appendChild(meta);
-
-    var pre = document.createElement('pre');
-    pre.className = 'notif-detail';
-    pre.appendChild(document.createTextNode(n.detail || '(sem detalhes)'));
-    body.appendChild(pre);
+    body.appendChild(el('pre', 'notif-detail', n.detail || '(sem detalhes)'));
 
     trash.innerHTML = ICONS.trash;
     trash.onclick = function () {
