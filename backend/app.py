@@ -33,7 +33,7 @@ _cache = {"time": 0.0, "data": None}
 _cache_lock = threading.Lock()
 
 # Cache longo dos feeds externos (agenda + noticias): mudam pouco e sao lentos.
-_feeds_cache = {"time": 0.0, "data": None}
+_feeds_cache = {"time": 0.0, "data": None, "ttl": 0.0}
 _feeds_lock = threading.Lock()
 
 # Ultimo dado bom por componente de feed — serve dado stale se fetch falhar.
@@ -128,8 +128,9 @@ def metrics():
 def feeds():
     with _feeds_lock:
         now = time.time()
+        cached_ttl = _feeds_cache["ttl"] or config.FEEDS_CACHE_TTL
         if (_feeds_cache["data"] is not None
-                and (now - _feeds_cache["time"]) < config.FEEDS_CACHE_TTL):
+                and (now - _feeds_cache["time"]) < cached_ttl):
             response = jsonify(_feeds_cache["data"])
             response.headers["Cache-Control"] = "no-store"
             return response
@@ -137,10 +138,16 @@ def feeds():
     data = _build_feeds()
 
     with _feeds_lock:
+        cached_ttl = _feeds_cache["ttl"] or config.FEEDS_CACHE_TTL
         if (_feeds_cache["data"] is None
-                or (time.time() - _feeds_cache["time"]) >= config.FEEDS_CACHE_TTL):
+                or (time.time() - _feeds_cache["time"]) >= cached_ttl):
+            has_error = any(
+                isinstance(v, dict) and "error" in v
+                for k, v in data.items() if k != "meta"
+            )
             _feeds_cache["data"] = data
             _feeds_cache["time"] = time.time()
+            _feeds_cache["ttl"] = config.FEEDS_ERROR_TTL if has_error else config.FEEDS_CACHE_TTL
         data = _feeds_cache["data"]
 
     response = jsonify(data)
