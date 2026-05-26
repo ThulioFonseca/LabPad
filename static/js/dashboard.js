@@ -642,6 +642,7 @@
   /* --- Inicializacao ------------------------------------------------------*/
   buildWidgets();
   wireBrandRefresh();
+  if (window.Notifications) { Notifications.start(); }
   wireContainersModal();
   wireDiskModal();
   wireSystemModal();

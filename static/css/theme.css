@@ -31,6 +31,24 @@ body {
 }
 .status-dot--off { background-color: #f85149; }
 
+/* --- Sino + sidebar de notificacoes ---------------------------------------*/
+.notif-btn         { color: #c8ccd4; }
+.notif-btn:hover   { color: #ffffff; }
+.notif-sidebar {
+  background-color: #1a1d23;
+  color: #e6e8ec;
+  border-left: 1px solid #2a2e37;
+}
+.notif-head        { border-bottom-color: #23262e; }
+.notif-title       { color: #e6e8ec; }
+.notif-item        { border-bottom-color: #23262e; }
+.notif-item:hover  { background-color: #1e2128; }
+.notif-row-title   { color: #e6e8ec; }
+.notif-row-sub     { color: #8b909c; }
+.notif-empty       { color: #6a7080; }
+.notif-meta        { color: #8b909c; }
+.notif-detail      { background-color: #14161a; color: #c8ccd4; }
+
 /* --- Titulos de painel -----------------------------------------------------*/
 .panel-title { color: #6a7080; }
 .panel-count { color: #8b909c; }

@@ -57,9 +57,36 @@
       <!-- preenchido por dashboard.js -->
     </div>
     <div class="status">
+      <button class="notif-btn" id="notif-btn" type="button" aria-label="Notificacoes">
+        <!-- preenchido por notifications.js (sino + badge) -->
+      </button>
       <span class="theme-control" id="theme-control"><!-- engrenagem: settings.js --></span>
     </div>
   </header>
+
+  <aside class="notif-sidebar" id="notif-sidebar" aria-hidden="true">
+    <div class="notif-head">
+      <h2 class="notif-title">Notificacoes</h2>
+      <button class="modal-close" id="notif-sidebar-close" type="button" aria-label="Fechar">&times;</button>
+    </div>
+    <div class="notif-list" id="notif-list"></div>
+    <div class="notif-empty" id="notif-empty">Nenhuma notificacao nao lida.</div>
+  </aside>
+
+  <div class="modal-backdrop" id="notification-modal">
+    <div class="modal" id="notification-modal-box">
+      <div class="modal-head">
+        <h2 class="modal-title" id="notification-modal-title">Notificacao</h2>
+        <div class="modal-head-actions">
+          <button class="modal-action" id="notification-modal-trash" type="button"
+                  aria-label="Marcar como lida"></button>
+          <button class="modal-close" id="notification-modal-close" type="button"
+                  aria-label="Fechar">&times;</button>
+        </div>
+      </div>
+      <div class="modal-body" id="notification-modal-body"></div>
+    </div>
+  </div>
 
   <main>
     <section class="panel">
@@ -194,6 +221,7 @@
   <script src="js/sparkline.js"></script>
   <script src="js/widgets.js"></script>
   <script src="js/settings.js"></script>
+  <script src="js/notifications.js"></script>
   <script src="js/dashboard.js"></script>
 </body>
 </html>

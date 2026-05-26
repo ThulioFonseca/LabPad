@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, jsonify, request, send_from_directory
 
 import config
+import notifications
 import settings
 from collectors import article, calendar_feed, containers, host, news, sensors, weather
 
@@ -112,11 +113,25 @@ def _scheduler_loop():
             fn, fallback = _FEED_JOBS[key]
             data = _safe(fn, fallback)
             with _feeds_lock:
+                prev_failures = _feeds_failures[key]
                 _feeds_last[key] = data
                 if "error" not in data:
                     _last_good_feeds[key] = data
                     _feeds_failures[key] = 0
                     delay = config.FEEDS_CACHE_TTL
+                    # Recuperacao apos pelo menos uma falha → notifica.
+                    if prev_failures > 0:
+                        notifications.add(
+                            "info", key,
+                            "Feed [%s] recuperado" % key,
+                            "Coleta voltou ao normal apos %d falha(s) consecutiva(s)."
+                            % prev_failures)
+                    # Clima servido pelo fallback met.no → degradacao (warning).
+                    elif key == "weather" and data.get("_source") == "met.no":
+                        notifications.add(
+                            "warning", "weather",
+                            "Clima em modo degradado (met.no)",
+                            "Open-Meteo indisponivel; usando met.no como fonte secundaria.")
                 else:
                     _feeds_failures[key] += 1
                     delay = min(
@@ -125,6 +140,13 @@ def _scheduler_loop():
                     )
                     logging.info("Feed [%s] retry #%d agendado em %.0fs",
                                  key, _feeds_failures[key], delay)
+                    # So notifica na PRIMEIRA falha da serie — backoff cuida
+                    # do resto sem encher a fila.
+                    if prev_failures == 0:
+                        notifications.add(
+                            "error", key,
+                            "Falha na integracao: %s" % key,
+                            data.get("error", "?"))
                 _feeds_next_run[key] = time.time() + delay
         # Acorda no proximo vencimento (ou imediatamente via _scheduler_wakeup).
         sleep_s = max(1.0, min(_feeds_next_run.values()) - time.time())
@@ -198,6 +220,23 @@ def container_logs(container_id):
     response = jsonify(data)
     response.headers["Cache-Control"] = "no-store"
     return response
+
+
+@app.route("/api/notifications")
+def get_notifications():
+    """Lista de notificacoes nao lidas (mais recentes primeiro)."""
+    items = notifications.list_unread()
+    response = jsonify({"items": items, "unread_count": len(items)})
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/api/notifications/<int:nid>/read", methods=["POST"])
+def read_notification(nid):
+    """Marca uma notificacao como lida (remove da sidebar)."""
+    if not notifications.mark_read(nid):
+        return jsonify({"error": "not found"}), 404
+    return jsonify({"ok": True, "unread_count": notifications.unread_count()})
 
 
 @app.route("/api/client-error", methods=["POST"])

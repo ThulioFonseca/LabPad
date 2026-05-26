@@ -520,3 +520,23 @@
 }
 .mode-dark  .modal-head { border-bottom-color: #2a2e37; }
 .mode-light .modal-head { border-bottom-color: #e2e5ea; }
+
+/* Sino + sidebar: variantes light (dark ja vive em theme.css). */
+.mode-light .notif-btn        { color: #4a4f59; }
+.mode-light .notif-btn:hover  { color: #1c2026; }
+.mode-light .notif-sidebar {
+  background-color: #ffffff;
+  color: #1c2026;
+  border-left: 1px solid #e2e5ea;
+  -webkit-box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
+  box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
+}
+.mode-light .notif-head       { border-bottom-color: #e2e5ea; }
+.mode-light .notif-title      { color: #1c2026; }
+.mode-light .notif-item       { border-bottom-color: #eef0f3; }
+.mode-light .notif-item:hover { background-color: #f5f6f8; }
+.mode-light .notif-row-title  { color: #1c2026; }
+.mode-light .notif-row-sub    { color: #6a7080; }
+.mode-light .notif-empty      { color: #8b909c; }
+.mode-light .notif-meta       { color: #6a7080; }
+.mode-light .notif-detail     { background-color: #f0f2f5; color: #1c2026; }
