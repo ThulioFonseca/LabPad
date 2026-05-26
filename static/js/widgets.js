@@ -549,9 +549,7 @@ Widgets.renderWeatherSlide = function (panel, payload, slideId) {
       var ic = el('span', 'weather-icon');
       ic.innerHTML = _wmoIcon(f.code || 0);
       dayEl.appendChild(ic);
-      var hi = (f.high !== null && f.high !== undefined) ? Math.round(f.high) : DASH;
-      var lo = (f.low  !== null && f.low  !== undefined) ? Math.round(f.low)  : DASH;
-      dayEl.appendChild(el('span', 'weather-day-temp', hi + '/' + lo));
+      dayEl.appendChild(el('span', 'weather-day-temp', _fmtTemp(f.high) + '/' + _fmtTemp(f.low)));
       return dayEl;
     }
 
@@ -950,4 +948,39 @@ Widgets.renderWeatherDetail = function (node, payload) {
     node.appendChild(Widgets._wxDailyList(payload));
   }
   node.appendChild(Widgets._wxMetrics(payload));
+};
+
+
+/* --- Modal de particoes de disco ------------------------------------------ */
+Widgets.renderDiskModal = function (container, disks) {
+  if (!container) { return; }
+  container.innerHTML = '';
+  if (!disks || !disks.length) {
+    container.appendChild(document.createTextNode('Sem dados de disco.'));
+    return;
+  }
+  for (var i = 0; i < disks.length; i++) {
+    var d = disks[i];
+    var pct = (typeof d.percent === 'number') ? d.percent : 0;
+    var level = pct >= 90 ? 'crit' : pct >= 75 ? 'warn' : 'ok';
+
+    var row = el('div', 'disk-part card--' + level);
+
+    var header = el('div', 'disk-part-head');
+    header.appendChild(el('span', 'disk-part-label', d.label || '?'));
+    header.appendChild(el('span', 'disk-part-pct',
+      (typeof d.percent === 'number') ? d.percent + '%' : DASH));
+    row.appendChild(header);
+
+    var bar = el('div', 'bar');
+    var fill = el('div', 'bar-fill');
+    fill.style.width = pct + '%';
+    bar.appendChild(fill);
+    row.appendChild(bar);
+
+    row.appendChild(el('div', 'disk-part-sub',
+      fmtBytes(d.used) + ' / ' + fmtBytes(d.total)));
+
+    container.appendChild(row);
+  }
 };

@@ -128,6 +128,7 @@
     /* Recomputa altura dos feeds: docker top-3 ou subs podem ter mudado
        a altura do painel host, alterando o espaco disponivel pras listas. */
     sizeFeedLists();
+    Widgets.renderDiskModal(byId('disk-modal-body'), hostData.disk);
   }
 
   function updateContainerCount(payload) {
@@ -140,6 +141,30 @@
       if (list[i].status === 'running') { up = up + 1; }
     }
     setText(node, '(' + up + ' / ' + list.length + ' ativos)');
+  }
+
+  /* --- Menu de status (dropdown "Full refresh") ---------------------------*/
+  function wireStatusMenu() {
+    var btn = byId('status-btn');
+    var menu = byId('status-menu');
+    var refreshBtn = byId('status-refresh-btn');
+    if (!btn || !menu) { return; }
+
+    btn.onclick = function (e) {
+      e.stopPropagation();
+      var open = menu.className.indexOf('status-menu--open') >= 0;
+      menu.className = open ? 'status-menu' : 'status-menu status-menu--open';
+    };
+
+    if (refreshBtn) {
+      refreshBtn.onclick = function () {
+        location.reload(true);
+      };
+    }
+
+    document.addEventListener('click', function () {
+      menu.className = 'status-menu';
+    });
   }
 
   /* --- Modal da lista de containers --------------------------------------*/
@@ -161,6 +186,24 @@
 
     var closeBtn = byId('containers-modal-close');
     if (closeBtn) { closeBtn.onclick = closeContainersModal; }
+  }
+
+  /* --- Modal de particoes de disco ----------------------------------------*/
+  function openDiskModal()  { Modals.open('disk-modal');  }
+  function closeDiskModal() { Modals.close('disk-modal'); }
+
+  function wireDiskModal() {
+    var diskCard = refs['disk'] && refs['disk'].root;
+    if (diskCard) { diskCard.onclick = openDiskModal; }
+
+    var backdrop = byId('disk-modal');
+    if (backdrop) { backdrop.onclick = closeDiskModal; }
+
+    var box = byId('disk-modal-box');
+    if (box) { box.onclick = function (e) { e.stopPropagation(); }; }
+
+    var closeBtn = byId('disk-modal-close');
+    if (closeBtn) { closeBtn.onclick = closeDiskModal; }
   }
 
   /* --- Modal "Sistema" (botao (i) no titulo do painel Host) --------------*/
@@ -587,7 +630,9 @@
 
   /* --- Inicializacao ------------------------------------------------------*/
   buildWidgets();
+  wireStatusMenu();
   wireContainersModal();
+  wireDiskModal();
   wireSystemModal();
   wireLogsModal();
   wireWeatherModal();

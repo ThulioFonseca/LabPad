@@ -55,8 +55,13 @@
       <!-- preenchido por dashboard.js -->
     </div>
     <div class="status">
-      <span class="status-dot" id="status-dot"></span>
-      <span id="status-text">conectando&hellip;</span>
+      <button class="status-btn" id="status-btn" type="button" aria-label="Menu de conexao">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-text">conectando&hellip;</span>
+      </button>
+      <div class="status-menu" id="status-menu">
+        <button class="status-menu-item" id="status-refresh-btn" type="button">Full refresh</button>
+      </div>
       <span class="clock" id="clock">--:--:--</span>
       <span class="theme-control" id="theme-control"><!-- engrenagem: settings.js --></span>
     </div>
@@ -145,6 +150,17 @@
         </div>
       </div>
       <div class="modal-body modal-body--article" id="article-modal-body"></div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="disk-modal">
+    <div class="modal" id="disk-modal-box">
+      <div class="modal-head">
+        <h2 class="modal-title">Disco</h2>
+        <button class="modal-close" id="disk-modal-close" type="button"
+                aria-label="Fechar">&times;</button>
+      </div>
+      <div class="modal-body" id="disk-modal-body"></div>
     </div>
   </div>
 

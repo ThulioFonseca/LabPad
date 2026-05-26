@@ -99,6 +99,7 @@ body.scroll-locked {
   -webkit-justify-content: flex-end;
   justify-content: flex-end;
   font-size: 13px;
+  position: relative;
 }
 .status-dot {
   width: 9px;
@@ -107,6 +108,48 @@ body.scroll-locked {
   margin-right: 8px;
   display: inline-block;
 }
+/* --- Status dropdown ------------------------------------------------------- */
+.status-btn {
+  display: -webkit-inline-flex;
+  display: inline-flex;
+  -webkit-align-items: center;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  color: inherit;
+  line-height: 1;
+}
+.status-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  min-width: 140px;
+  border-radius: 6px;
+  padding: 4px 0;
+  z-index: 200;
+  -webkit-box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.status-menu--open { display: block; }
+.status-menu-item {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 10px 16px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+}
+.status-menu-item:hover { opacity: 0.8; }
+
 .clock {
   margin-left: 16px;
   font-size: 14px;
@@ -790,6 +833,23 @@ main {
 /* --- Linha de container clicavel (abre modal de logs) ------------------- */
 .crow { cursor: pointer; }
 .crow:active { opacity: 0.85; }
+
+/* --- Modal de disco (particoes) ------------------------------------------ */
+.disk-part {
+  padding: 10px 0;
+  border-bottom: 1px solid transparent;
+}
+.disk-part:last-child { border-bottom: none; }
+.disk-part-head {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.disk-part-label { font-size: 13px; }
+.disk-part-pct   { font-size: 13px; }
+.disk-part-sub   { font-size: 11px; margin-top: 4px; }
 
 /* --- Modal de logs (sobreposto ao modal de containers) ------------------ */
 #logs-modal { z-index: 200; }      /* sobrepoe o modal de containers (100) */
