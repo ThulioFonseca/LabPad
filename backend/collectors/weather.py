@@ -300,10 +300,17 @@ def collect():
     if not city:
         return {"configured": False}
 
-    lat, lon = _resolve_city(city)
-
+    # _resolve_city tambem pode falhar (Geocoding Open-Meteo fora do ar). Por
+    # isso fica DENTRO do try: se o geocoding cair mas met.no estiver no ar e
+    # ja tivermos lat/lon cacheado de uma execucao anterior, ainda da pra
+    # servir clima.
     try:
+        lat, lon = _resolve_city(city)
         return _fetch_openmeteo(lat, lon)
     except Exception as exc:
         logging.warning("Open-Meteo falhou (%s), tentando met.no como fallback", exc)
-        return _fetch_metno(lat, lon)
+        if _geo_cache["city"] != city or _geo_cache["lat"] is None:
+            # Sem lat/lon nao da pra chamar met.no — re-levanta para o
+            # scheduler retentar com backoff exponencial.
+            raise
+        return _fetch_metno(_geo_cache["lat"], _geo_cache["lon"])

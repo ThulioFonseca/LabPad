@@ -57,8 +57,14 @@ NEWS_LIMIT = int(_env("NEWS_LIMIT", "5"))
 
 # Feeds externos sao lentos e mudam pouco: cache longo (segundos).
 FEEDS_CACHE_TTL = float(_env("FEEDS_CACHE_TTL", "900"))
-# TTL curto quando algum feed falhou — retentar apos 60 s em vez de 15 min.
+# Obsoleto: substituido pelo backoff exponencial do scheduler (ver abaixo).
+# Mantido apenas para nao quebrar overrides existentes no docker-compose.
 FEEDS_ERROR_TTL = float(_env("FEEDS_ERROR_TTL", "60"))
+# Backoff exponencial quando um feed falha (segundos): inicia em MIN, dobra a
+# cada falha consecutiva, limita em MAX. Sucesso volta ao intervalo normal
+# FEEDS_CACHE_TTL. Serie default: 60, 120, 240, 480, 600, 600, ...
+FEEDS_RETRY_MIN_S = float(_env("FEEDS_RETRY_MIN_S", "60"))
+FEEDS_RETRY_MAX_S = float(_env("FEEDS_RETRY_MAX_S", "600"))
 
 # Interface de rede a monitorar. Vazio = soma de todas as interfaces.
 NETWORK_IFACE = _env("MONITOR_NETWORK_IFACE", "")

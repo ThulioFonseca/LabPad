@@ -583,10 +583,17 @@
               Widgets.renderWeatherDetail(byId('weather-modal-body'), lastWeather);
             }
           } catch (e) { reportError('weather-render', e); }
-        } else if (data.weather && !data.weather.configured && weatherRefs) {
-          /* API de clima indisponivel ou nao configurada: remove o skeleton
-             para nao ficar em loading infinito. */
+        } else if (data.weather && weatherRefs && !data.weather.configured) {
+          /* Nao configurado OU erro sem cache previo: pilula discreta
+             sinalizando que o backend continua tentando. Some sozinho quando
+             a proxima resposta vier com configured:true (firstTime=true,
+             startWeatherRotation() reescreve o painel). */
           weatherRefs.panel.innerHTML = '';
+          var pill = el('span', 'weather-val weather-retry');
+          pill.appendChild(document.createTextNode(
+              data.weather.error ? 'Clima indisponível, tentando…'
+                                 : 'Clima não configurado'));
+          weatherRefs.panel.appendChild(pill);
         }
       } catch (e) { reportError('pollFeeds', e); }
       feedsTimer = setTimeout(pollFeeds, CONFIG.feedsRefreshMs);
