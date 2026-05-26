@@ -567,20 +567,26 @@
         feedsLoaded = true;
 
         if (data.weather && data.weather.configured) {
-          var prevCity = lastWeather ? lastWeather.city : null;
-          var firstTime = !lastWeather;
-          lastWeather = data.weather;
-          /* Cidade nova (ou primeira carga): reinicia rotacao — o slide
-             'city' reaparece confirmando visualmente a mudanca. */
-          if (firstTime || data.weather.city !== prevCity) {
-            startWeatherRotation();
-          } else {
-            renderWeatherCurrent();
-          }
-          /* Atualiza o modal de detalhes se estiver aberto. */
-          if (window.Modals && Modals.isOpen('weather-modal')) {
-            Widgets.renderWeatherDetail(byId('weather-modal-body'), lastWeather);
-          }
+          try {
+            var prevCity = lastWeather ? lastWeather.city : null;
+            var firstTime = !lastWeather;
+            lastWeather = data.weather;
+            /* Cidade nova (ou primeira carga): reinicia rotacao — o slide
+               'city' reaparece confirmando visualmente a mudanca. */
+            if (firstTime || data.weather.city !== prevCity) {
+              startWeatherRotation();
+            } else {
+              renderWeatherCurrent();
+            }
+            /* Atualiza o modal de detalhes se estiver aberto. */
+            if (window.Modals && Modals.isOpen('weather-modal')) {
+              Widgets.renderWeatherDetail(byId('weather-modal-body'), lastWeather);
+            }
+          } catch (e) { reportError('weather-render', e); }
+        } else if (data.weather && !data.weather.configured && weatherRefs) {
+          /* API de clima indisponivel ou nao configurada: remove o skeleton
+             para nao ficar em loading infinito. */
+          weatherRefs.panel.innerHTML = '';
         }
       } catch (e) { reportError('pollFeeds', e); }
       feedsTimer = setTimeout(pollFeeds, CONFIG.feedsRefreshMs);
