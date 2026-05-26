@@ -18,7 +18,7 @@
   var weatherRefs = null;
   var lastWeather = null;
   var weatherCurrentId = 'city';
-  var weatherGeneration = 0;     /* invalida setTimeouts antigos ao reiniciar */
+  var weatherTimer = null;       /* handle do setTimeout ativo do carrossel */
   var WEATHER_SHOW_MS = 10000;
   var WEATHER_FADE_MS = 800;
 
@@ -428,15 +428,13 @@
     Widgets.renderWeatherSlide(weatherRefs.panel, lastWeather, weatherCurrentId);
   }
 
-  function weatherStep(gen) {
-    if (gen !== weatherGeneration) { return; }
+  function weatherStep() {
     if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
 
     var panel = weatherRefs.panel;
     panel.className = 'weather-panel weather-hidden';
 
-    setTimeout(function () {
-      if (gen !== weatherGeneration) { return; }
+    weatherTimer = setTimeout(function () {
       var enabled = enabledWeatherSlides();
       var nextId;
       if (weatherCurrentId === 'city') {
@@ -451,20 +449,20 @@
       panel.className = 'weather-panel';
       /* So continua girando se ha >1 slides habilitados (city ja saiu). */
       if (enabled.length > 1) {
-        setTimeout(function () { weatherStep(gen); }, WEATHER_SHOW_MS);
+        weatherTimer = setTimeout(weatherStep, WEATHER_SHOW_MS);
       }
     }, WEATHER_FADE_MS);
   }
 
   function startWeatherRotation() {
     if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
-    weatherGeneration += 1;
-    var gen = weatherGeneration;
+    /* Cancela qualquer ciclo anterior antes de comecar um novo. */
+    clearTimeout(weatherTimer);
     /* Sempre comeca pelo slide 'city' (intro, exibido uma vez). */
     weatherCurrentId = 'city';
     renderWeatherCurrent();
     weatherRefs.panel.className = 'weather-panel';
-    setTimeout(function () { weatherStep(gen); }, WEATHER_SHOW_MS);
+    weatherTimer = setTimeout(weatherStep, WEATHER_SHOW_MS);
   }
 
   /* Mostra/esconde sparklines conforme Settings.spark(id). */
@@ -634,6 +632,8 @@
   }
 
   function tickClock() {
+    /* Aba em background: evita wake de 1s desnecessario em iPad 2. */
+    if (document.hidden) { setTimeout(tickClock, 5000); return; }
     var node = byId('weather-clock');
     if (node) { setText(node, clockText(new Date())); }
     setTimeout(tickClock, 1000);

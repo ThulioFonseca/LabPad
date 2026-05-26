@@ -315,7 +315,7 @@ def collect():
         lat, lon = _resolve_city(city)
         return _fetch_openmeteo(lat, lon)
     except Exception as exc:
-        logging.warning("Open-Meteo falhou (%s), tentando met.no como fallback", exc)
+        logging.warning("[weather] Open-Meteo falhou: %s — tentando met.no como fallback", exc)
         if _geo_cache["city"] != city or _geo_cache["lat"] is None:
             # Sem lat/lon nao da pra chamar met.no — re-levanta para o
             # scheduler retentar com backoff exponencial.

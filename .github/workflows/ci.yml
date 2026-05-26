@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: "Ipad Homelab Monitor"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install \
+            flask \
+            psutil \
+            requests \
+            icalendar \
+            recurring-ical-events \
+            feedparser \
+            responses \
+            pytest \
+            pytest-cov
+
+      - name: Run tests
+        run: |
+          pytest tests/ -v --tb=short \
+            --cov=backend \
+            --cov-report=term-missing \
+            --ignore=tests/test_settings_validation.py
+        # test_settings_validation.py requer flask instalado como modulo —
+        # incluido abaixo em passo separado para isolar o import do app.py
+
+      - name: Run settings validation tests
+        run: |
+          PYTHONPATH=backend pytest tests/test_settings_validation.py -v --tb=short

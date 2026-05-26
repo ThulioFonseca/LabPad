@@ -1,0 +1,122 @@
+/* =============================================================================
+ * weather.css — widget de clima na topbar e estado de retry  —  parte de base.css extraida para reducao de tamanho do arquivo.
+ * Estrutura e layout sem cores (cores em theme.css / themes.css).
+ * Compativel com Safari 9 / iOS 9.3.5.
+ * ===========================================================================*/
+
+/* --- Widget de clima no centro do cabecalho ------------------------------- */
+.weather-panel {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  -webkit-justify-content: center;
+  justify-content: center;
+  font-size: 13px;
+  white-space: nowrap;
+  -webkit-transition: opacity 0.8s ease;
+  transition: opacity 0.8s ease;
+}
+.weather-panel.weather-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.weather-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+  line-height: 1;
+}
+.weather-icon svg {
+  display: block;
+}
+.weather-sep {
+  margin: 0 10px;
+}
+.weather-day {
+  display: -webkit-inline-flex;
+  display: inline-flex;
+  -webkit-align-items: center;
+  align-items: center;
+  margin: 0 7px;
+}
+.weather-day-name {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+.weather-day-temp {
+  font-size: 12px;
+}
+
+/* --- Slide forecast: marquee no mobile ---------------------------------- */
+/* Contem o track no espaco disponivel — desktop mostra os 5 dias estaticos;
+   mobile aplica @keyframes wxmarquee fazendo o conjunto rolar e voltar
+   seamlessly (graficamente o track tem o conteudo duplicado e move 50%). */
+.weather-forecast {
+  display: inline-block;
+  vertical-align: middle;
+  overflow: hidden;
+  max-width: 100%;
+}
+.weather-forecast-track {
+  display: -webkit-inline-flex;
+  display: inline-flex;
+}
+/* Desktop: esconde a duplicata (a 6a..10a 'weather-day' do track). */
+@media (min-width: 601px) {
+  .weather-forecast-track > .weather-day:nth-child(n+6) { display: none; }
+}
+/* Mobile: marquee continuo. */
+@media (max-width: 600px) {
+  .weather-forecast { display: block; width: 100%; }
+  .weather-forecast-track {
+    -webkit-animation: wxmarquee 18s linear infinite;
+    animation: wxmarquee 18s linear infinite;
+    will-change: transform;
+  }
+  @-webkit-keyframes wxmarquee {
+    0%   { -webkit-transform: translateX(0); }
+    100% { -webkit-transform: translateX(-50%); }
+  }
+  @keyframes wxmarquee {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+}
+
+/* --- Eventos da agenda: cor por urgencia ---------------------------------- */
+.cal-event--soon {
+  border-left: 3px solid #d29922;
+  padding-left: 11px;
+}
+.cal-event--active {
+  border-left: 3px solid #f85149;
+  padding-left: 11px;
+}
+
+/* --- Seletor de tema (engrenagem) ----------------------------------------- */
+/* Estrutura apenas; as cores vivem em themes.css (por modo). */
+.theme-control {
+  position: relative;
+  display: inline-block;
+  margin-left: 14px;
+}
+.theme-gear {
+  background: none;
+  border: none;
+  padding: 4px;
+  margin: 0;
+  cursor: pointer;
+  color: inherit;
+  line-height: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.theme-gear svg { display: block; }
+
+/* --- Card Docker: gatilho do modal de containers ------------------------- */
+#section-docker-summary { cursor: pointer; }
+#section-docker-summary:active { opacity: 0.75; }
+

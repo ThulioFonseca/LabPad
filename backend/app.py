@@ -141,7 +141,7 @@ def _scheduler_loop():
                         config.FEEDS_RETRY_MIN_S * (2 ** (_feeds_failures[key] - 1)),
                         config.FEEDS_RETRY_MAX_S,
                     )
-                    logging.info("Feed [%s] retry #%d agendado em %.0fs",
+                    logging.info("[%s] retry #%d: aguardando %.0fs",
                                  key, _feeds_failures[key], delay)
                     # So notifica na PRIMEIRA falha da serie — backoff cuida
                     # do resto sem encher a fila.

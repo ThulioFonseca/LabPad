@@ -87,8 +87,8 @@ def get(url):
     meta = None
     try:
         meta = extract_metadata(content, default_url=final_url)
-    except Exception:
-        pass
+    except Exception as exc:
+        logging.debug("[article] extract_metadata falhou: %s", exc)
 
     out = {
         "title":  (getattr(meta, "title", None) or "") if meta else "",

@@ -1,0 +1,445 @@
+/* =============================================================================
+ * cards.css — area principal, cards, containers, feeds e double-row  —  parte de base.css extraida para reducao de tamanho do arquivo.
+ * Estrutura e layout sem cores (cores em theme.css / themes.css).
+ * Compativel com Safari 9 / iOS 9.3.5.
+ * ===========================================================================*/
+
+/* --- Conteudo --------------------------------------------------------------*/
+main {
+  padding: 8px 24px 24px;
+}
+
+.panel {
+  margin-bottom: 20px;
+}
+.panel-title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin: 0 0 12px 2px;
+}
+.panel-count {
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+/* --- Grade de cards --------------------------------------------------------*/
+/* margens negativas dao espacamento uniforme sem depender de flex `gap`. */
+.card-grid,
+.info-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: -7px;
+}
+
+.card {
+  -webkit-flex: 1 1 220px;
+  flex: 1 1 220px;
+  min-width: 200px;
+  margin: 7px;
+  padding: 13px 18px;
+  border-radius: 10px;
+}
+
+.card-head {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  -webkit-align-items: baseline;
+  align-items: baseline;
+}
+.card-title {
+  font-size: 13px;
+  letter-spacing: 0.02em;
+}
+.card-value .num {
+  font-size: 26px;
+  font-weight: 600;
+}
+.card-value .unit {
+  font-size: 14px;
+  margin-left: 2px;
+}
+
+.bar {
+  height: 5px;
+  border-radius: 3px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 3px;
+  -webkit-transition: width 0.45s ease;
+  transition: width 0.45s ease;
+}
+
+.card-sub {
+  margin-top: 6px;
+  font-size: 12px;
+  min-height: 14px;
+}
+
+.spark {
+  display: block;
+  width: 100%;
+  height: 28px;
+  margin-top: 8px;
+}
+
+/* card de taxa (rede) */
+.rate-row {
+  display: -webkit-flex;
+  display: flex;
+  margin-top: 12px;
+}
+.rate {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  font-size: 15px;
+}
+.rate--up {
+  margin-left: 22px;
+}
+.rate-arrow {
+  margin-right: 5px;
+  font-size: 13px;
+}
+
+/* --- Painel Sistema (cards de texto) --------------------------------------*/
+.info-item {
+  -webkit-flex: 1 1 200px;
+  flex: 1 1 200px;
+  min-width: 180px;
+  margin: 7px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+.info-label {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.info-value {
+  margin-top: 6px;
+  font-size: 17px;
+  word-break: break-word;
+}
+
+/* --- Lista de containers ---------------------------------------------------*/
+.container-list {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+.crow {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 9px;
+  margin-bottom: 6px;
+}
+.cdot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 14px;
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+}
+.cmain {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.cname {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cimage {
+  font-size: 12px;
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cstat {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  margin-left: 22px;
+  text-align: right;
+}
+.cstat-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+.cstat-val {
+  font-size: 15px;
+}
+.cmini {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  width: 84px;
+  height: 6px;
+  border-radius: 3px;
+  margin-left: 22px;
+  overflow: hidden;
+}
+.cmini-fill {
+  height: 100%;
+  width: 0;
+  -webkit-transition: width 0.45s ease;
+  transition: width 0.45s ease;
+}
+.cstatus {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  margin-left: 22px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.empty {
+  padding: 20px;
+  text-align: center;
+  font-size: 14px;
+}
+
+/* --- Feeds: Agenda e Noticias ---------------------------------------------*/
+.feeds-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: 0 -11px;
+}
+.panel--feed {
+  -webkit-flex: 1 1 380px;
+  flex: 1 1 380px;
+  min-width: 300px;
+  margin: 0 11px;
+}
+
+.feed-day {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 16px 2px 7px;
+}
+.feed-list > .feed-day:first-child {
+  margin-top: 0;
+}
+
+.cal-event {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: baseline;
+  align-items: baseline;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+.cal-time {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  width: 98px;
+  font-size: 13px;
+}
+.cal-body {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.cal-title {
+  font-size: 14px;
+}
+.cal-loc {
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+.news-item {
+  padding: 11px 14px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+}
+.news-title {
+  font-size: 14px;
+  line-height: 1.4;
+}
+.news-age {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+/* Noticia com miniatura: imagem quadrada + texto ao lado. */
+.news-item--media {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.news-thumb {
+  -webkit-flex: 0 0 auto;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+  border-radius: 6px;
+  margin-right: 12px;
+  background-size: cover;          /* Safari 9 ok; object-fit nao seria */
+  background-position: center;
+  background-repeat: no-repeat;
+}
+.news-text {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.news-item--media .news-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;           /* ate 2 linhas, depois reticencias */
+  overflow: hidden;
+}
+
+/* Agenda + Noticias: Montserrat (Google Fonts) — sans geometrica moderna,
+   x-height alto e formas escaneaveis para titulos de cards (NYT/Medium-style).
+   Fallback em system sans mantem o visual se o Google Fonts nao carregar. */
+#section-calendar, #section-calendar *,
+#section-news, #section-news * {
+  font-family: "Montserrat", -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* --- Telas estreitas (celular em retrato) --------------------------------- */
+@media (max-width: 600px) {
+  /* Cabecalho: marca + status na 1a linha, clima ocupa a 2a linha inteira. */
+  .topbar {
+    -webkit-flex-wrap: wrap;
+    flex-wrap: wrap;
+    padding: 10px 14px;
+  }
+  .brand  { -webkit-flex: 1 1 auto; flex: 1 1 auto; }
+  .status { -webkit-flex: 1 1 auto; flex: 1 1 auto; }
+  .topbar-center {
+    -webkit-order: 3;
+    order: 3;
+    -webkit-flex: 1 1 100%;
+    flex: 1 1 100%;
+    margin-top: 8px;
+  }
+  .weather-day { margin: 0 4px; }
+  .weather-sep { margin: 0 7px; }
+
+  main { padding-left: 14px; padding-right: 14px; }
+
+  /* Lista de containers: aperta espacamento e esconde o mini-grafico. */
+  .cmini { display: none; }
+  .crow  { padding: 9px 12px; }
+  .cdot  { margin-right: 10px; }
+  .cstat, .cstatus { margin-left: 12px; }
+}
+
+/* --- Meta-line abaixo do titulo Host -------------------------------------- */
+.panel-meta {
+  font-size: 11px;
+  margin: -6px 2px 14px;
+  letter-spacing: 0.03em;
+}
+
+/* --- Linha larga: Rede + Docker Summary (dobro da largura normal) --------- */
+.double-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin: 10px -7px 0;
+}
+.double-row > .card {
+  -webkit-flex: 1 1 440px;
+  flex: 1 1 440px;
+  min-width: 300px;
+  margin: 7px;
+}
+
+/* Card de rede: vira coluna flex e o grafico cresce p/ preencher a altura. */
+#section-network {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
+.spark--fill {
+  /* base = os 28px de .spark (NAO usar height:auto: canvas cai p/ 150px).
+     Cresce para preencher a altura sobrando do card, sem forca-lo a esticar. */
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+}
+
+/* --- Docker Summary ------------------------------------------------------- */
+.docker-count {
+  font-size: 22px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+.docker-top {
+  margin-top: 12px;
+  border-top: 1px solid transparent;
+  padding-top: 10px;
+}
+.docker-top-item {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  padding: 3px 0;
+  font-size: 12px;
+}
+.docker-top-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 60%;
+}
+
+/* --- Icone SVG inline nos card-title -------------------------------------- */
+.card-icon {
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 5px;
+  line-height: 1;
+  position: relative;
+  top: -1px;
+}
+.card-icon svg {
+  display: block;
+}
+
