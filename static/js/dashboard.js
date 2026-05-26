@@ -98,7 +98,6 @@
   function setOnline(ok) {
     var dot = byId('status-dot');
     if (dot) { dot.className = 'status-dot status-dot--' + (ok ? 'on' : 'off'); }
-    setText(byId('status-text'), ok ? 'online' : 'sem conexao');
   }
 
   /* --- Render de um ciclo -------------------------------------------------*/
@@ -143,28 +142,22 @@
     setText(node, '(' + up + ' / ' + list.length + ' ativos)');
   }
 
-  /* --- Menu de status (dropdown "Full refresh") ---------------------------*/
-  function wireStatusMenu() {
-    var btn = byId('status-btn');
-    var menu = byId('status-menu');
-    var refreshBtn = byId('status-refresh-btn');
-    if (!btn || !menu) { return; }
-
-    btn.onclick = function (e) {
-      e.stopPropagation();
-      var open = menu.className.indexOf('status-menu--open') >= 0;
-      menu.className = open ? 'status-menu' : 'status-menu status-menu--open';
+  /* --- Brand como atalho de Full refresh ----------------------------------*/
+  /* O titulo "Homelab" no topo virou o gatilho do reload completo: um clique
+     na area do brand recarrega tudo. Ignoramos cliques no botao de info do
+     host embutido no proprio brand para nao colidir com aquela acao. */
+  function wireBrandRefresh() {
+    var brand = byId('brand-refresh');
+    if (!brand) { return; }
+    function go() { location.reload(true); }
+    brand.onclick = function (e) {
+      var t = e.target;
+      if (t && t.id === 'host-info-btn') { return; }
+      go();
     };
-
-    if (refreshBtn) {
-      refreshBtn.onclick = function () {
-        location.reload(true);
-      };
-    }
-
-    document.addEventListener('click', function () {
-      menu.className = 'status-menu';
-    });
+    brand.onkeydown = function (e) {
+      if (e.keyCode === 13 || e.keyCode === 32) { e.preventDefault(); go(); }
+    };
   }
 
   /* --- Modal da lista de containers --------------------------------------*/
@@ -631,19 +624,24 @@
   }
 
   /* --- Relogio ------------------------------------------------------------*/
+  /* O relogio agora vive dentro do slide 'city' do carrossel de clima
+     (renderizado por widgets.js). Aqui so atualizamos o span quando ele
+     existe no DOM — fora do slide 'city' o byId devolve null e o tick vira
+     no-op. Sem segundos: HH:MMh, como pedido pelo usuario. */
   function clockText(d) {
     function pad(n) { return (n < 10 ? '0' : '') + n; }
-    return pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+    return pad(d.getHours()) + ':' + pad(d.getMinutes()) + 'h';
   }
 
   function tickClock() {
-    setText(byId('clock'), clockText(new Date()));
+    var node = byId('weather-clock');
+    if (node) { setText(node, clockText(new Date())); }
     setTimeout(tickClock, 1000);
   }
 
   /* --- Inicializacao ------------------------------------------------------*/
   buildWidgets();
-  wireStatusMenu();
+  wireBrandRefresh();
   wireContainersModal();
   wireDiskModal();
   wireSystemModal();

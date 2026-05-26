@@ -58,7 +58,7 @@
 .theme-minimal.mode-light .cname, .theme-minimal.mode-light .cal-title,
 .theme-minimal.mode-light .news-title, .theme-minimal.mode-light .docker-count,
 .theme-minimal.mode-light .weather-val { color: #1c2026; }
-.theme-minimal.mode-light .status, .theme-minimal.mode-light .clock,
+.theme-minimal.mode-light .status, .theme-minimal.mode-light .weather-clock,
 .theme-minimal.mode-light .panel-count, .theme-minimal.mode-light .card-title,
 .theme-minimal.mode-light .cstat-val, .theme-minimal.mode-light .docker-top-name,
 .theme-minimal.mode-light .weather-day-temp,
@@ -103,7 +103,7 @@
 .theme-neu.mode-dark .cname, .theme-neu.mode-dark .cal-title,
 .theme-neu.mode-dark .news-title, .theme-neu.mode-dark .docker-count,
 .theme-neu.mode-dark .weather-val { color: #d6dae2; }
-.theme-neu.mode-dark .status, .theme-neu.mode-dark .clock,
+.theme-neu.mode-dark .status, .theme-neu.mode-dark .weather-clock,
 .theme-neu.mode-dark .panel-count, .theme-neu.mode-dark .card-title,
 .theme-neu.mode-dark .cstat-val, .theme-neu.mode-dark .docker-top-name,
 .theme-neu.mode-dark .weather-day-temp, .theme-neu.mode-dark .topbar-center,
@@ -144,7 +144,7 @@
 .theme-neu.mode-light .cname, .theme-neu.mode-light .cal-title,
 .theme-neu.mode-light .news-title, .theme-neu.mode-light .docker-count,
 .theme-neu.mode-light .weather-val { color: #404757; }
-.theme-neu.mode-light .status, .theme-neu.mode-light .clock,
+.theme-neu.mode-light .status, .theme-neu.mode-light .weather-clock,
 .theme-neu.mode-light .panel-count, .theme-neu.mode-light .card-title,
 .theme-neu.mode-light .cstat-val, .theme-neu.mode-light .docker-top-name,
 .theme-neu.mode-light .weather-day-temp, .theme-neu.mode-light .topbar-center,
@@ -180,7 +180,7 @@
 .theme-elevated.mode-dark .cname, .theme-elevated.mode-dark .cal-title,
 .theme-elevated.mode-dark .news-title, .theme-elevated.mode-dark .docker-count,
 .theme-elevated.mode-dark .weather-val { color: #eceef3; }
-.theme-elevated.mode-dark .status, .theme-elevated.mode-dark .clock,
+.theme-elevated.mode-dark .status, .theme-elevated.mode-dark .weather-clock,
 .theme-elevated.mode-dark .panel-count, .theme-elevated.mode-dark .card-title,
 .theme-elevated.mode-dark .cstat-val, .theme-elevated.mode-dark .docker-top-name,
 .theme-elevated.mode-dark .weather-day-temp,
@@ -220,7 +220,7 @@
 .theme-elevated.mode-light .cname, .theme-elevated.mode-light .cal-title,
 .theme-elevated.mode-light .news-title, .theme-elevated.mode-light .docker-count,
 .theme-elevated.mode-light .weather-val { color: #181b21; }
-.theme-elevated.mode-light .status, .theme-elevated.mode-light .clock,
+.theme-elevated.mode-light .status, .theme-elevated.mode-light .weather-clock,
 .theme-elevated.mode-light .panel-count, .theme-elevated.mode-light .card-title,
 .theme-elevated.mode-light .cstat-val,
 .theme-elevated.mode-light .docker-top-name,
@@ -261,7 +261,7 @@
 .theme-outline.mode-dark .cname, .theme-outline.mode-dark .cal-title,
 .theme-outline.mode-dark .news-title, .theme-outline.mode-dark .docker-count,
 .theme-outline.mode-dark .weather-val { color: #e3e7eb; }
-.theme-outline.mode-dark .status, .theme-outline.mode-dark .clock,
+.theme-outline.mode-dark .status, .theme-outline.mode-dark .weather-clock,
 .theme-outline.mode-dark .panel-count, .theme-outline.mode-dark .card-title,
 .theme-outline.mode-dark .cstat-val, .theme-outline.mode-dark .docker-top-name,
 .theme-outline.mode-dark .weather-day-temp,
@@ -301,7 +301,7 @@
 .theme-outline.mode-light .cname, .theme-outline.mode-light .cal-title,
 .theme-outline.mode-light .news-title, .theme-outline.mode-light .docker-count,
 .theme-outline.mode-light .weather-val { color: #14171c; }
-.theme-outline.mode-light .status, .theme-outline.mode-light .clock,
+.theme-outline.mode-light .status, .theme-outline.mode-light .weather-clock,
 .theme-outline.mode-light .panel-count, .theme-outline.mode-light .card-title,
 .theme-outline.mode-light .cstat-val, .theme-outline.mode-light .docker-top-name,
 .theme-outline.mode-light .weather-day-temp,
@@ -346,7 +346,7 @@
 .theme-glass.mode-dark .cname, .theme-glass.mode-dark .cal-title,
 .theme-glass.mode-dark .news-title, .theme-glass.mode-dark .docker-count,
 .theme-glass.mode-dark .weather-val { color: #eef0f5; }
-.theme-glass.mode-dark .status, .theme-glass.mode-dark .clock,
+.theme-glass.mode-dark .status, .theme-glass.mode-dark .weather-clock,
 .theme-glass.mode-dark .panel-count, .theme-glass.mode-dark .card-title,
 .theme-glass.mode-dark .cstat-val, .theme-glass.mode-dark .docker-top-name,
 .theme-glass.mode-dark .weather-day-temp, .theme-glass.mode-dark .topbar-center,
@@ -389,7 +389,7 @@
 .theme-glass.mode-light .cname, .theme-glass.mode-light .cal-title,
 .theme-glass.mode-light .news-title, .theme-glass.mode-light .docker-count,
 .theme-glass.mode-light .weather-val { color: #1e2430; }
-.theme-glass.mode-light .status, .theme-glass.mode-light .clock,
+.theme-glass.mode-light .status, .theme-glass.mode-light .weather-clock,
 .theme-glass.mode-light .panel-count, .theme-glass.mode-light .card-title,
 .theme-glass.mode-light .cstat-val, .theme-glass.mode-light .docker-top-name,
 .theme-glass.mode-light .weather-day-temp, .theme-glass.mode-light .topbar-center,

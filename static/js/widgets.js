@@ -493,6 +493,19 @@ Widgets.renderDockerSummary = function (cardEl, payload) {
 
 /* --- Widget de clima (topbar center) ------------------------------------- */
 
+/* Helpers do slide 'city': hora curta (HH:MMh) e data abreviada (Dow DD/MM).
+   Reavaliados a cada vez que o carrossel volta para 'city'; o relogio em si
+   continua sendo atualizado por tickClock() em dashboard.js via o span
+   #weather-clock inserido abaixo. */
+var WX_WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+function _wxPad2(n) { return (n < 10 ? '0' : '') + n; }
+function _wxDateLabel(d) {
+  return WX_WEEKDAYS[d.getDay()] + ' ' + _wxPad2(d.getDate()) + '/' + _wxPad2(d.getMonth() + 1);
+}
+function _wxClockLabel(d) {
+  return _wxPad2(d.getHours()) + ':' + _wxPad2(d.getMinutes()) + 'h';
+}
+
 Widgets.initWeather = function (containerEl) {
   if (!containerEl) { return null; }
   /* Um unico painel: troca de conteudo enquanto esta invisivel (opacity:0).
@@ -517,8 +530,18 @@ Widgets.renderWeatherSlide = function (panel, payload, slideId) {
   else if (id === 2) { id = 'moon'; }
 
   if (id === 'city') {
-    /* Slide de intro: nome da cidade monitorada. */
-    panel.appendChild(el('span', 'weather-val', payload.city || DASH));
+    /* Slide de intro: hora atual  -  Dow DD/MM  -  cidade. O relogio recebe
+       id #weather-clock para tickClock() (dashboard.js) atualizar a cada 1s
+       enquanto este slide estiver visivel. */
+    var now = new Date();
+    var line = el('span', 'weather-val');
+    var clock = el('span', 'weather-clock');
+    clock.id = 'weather-clock';
+    clock.appendChild(document.createTextNode(_wxClockLabel(now)));
+    line.appendChild(clock);
+    line.appendChild(document.createTextNode(
+        '  -  ' + _wxDateLabel(now) + '  -  ' + (payload.city || DASH)));
+    panel.appendChild(line);
     return;
   }
 

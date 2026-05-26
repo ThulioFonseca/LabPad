@@ -21,7 +21,7 @@ body {
 .brand-name  { color: #e6e8ec; }
 .brand-sub   { color: #8b909c; }
 .status      { color: #8b909c; }
-.clock       { color: #c8ccd4; }
+.weather-clock { color: #c8ccd4; }
 
 .status-dot      { background-color: #8b909c; }
 .status-dot--on  {
@@ -30,8 +30,6 @@ body {
   box-shadow: 0 0 7px rgba(63, 185, 80, 0.7);
 }
 .status-dot--off { background-color: #f85149; }
-.status-menu      { background-color: #1e2128; border: 1px solid #2a2e37; }
-.status-menu-item { color: #e6e8ec; }
 
 /* --- Titulos de painel -----------------------------------------------------*/
 .panel-title { color: #6a7080; }
