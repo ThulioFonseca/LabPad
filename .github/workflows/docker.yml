@@ -24,4 +24,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/thuliofonseca/ipad-homelab-monitor:latest
+          tags: ghcr.io/thuliofonseca/labpad:latest
