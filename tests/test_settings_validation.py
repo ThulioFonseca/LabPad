@@ -1,13 +1,13 @@
-"""Testes de validacao do PUT /api/settings.
+"""Tests for PUT /api/settings validation.
 
-Valida a funcao _validate_settings() de app.py de forma isolada — sem subir o
-servidor Flask. Cobre os campos aceitos e as regras de rejeicao.
+Validates _validate_settings() from app.py in isolation — without starting the
+Flask server. Covers accepted fields and rejection rules.
 """
 import sys
 import os
 import types
 
-# Stub dos modulos que app.py importa mas nao sao necessarios para o teste.
+# Stub modules that app.py imports but are not needed for this test.
 for _mod in ("notifications", "settings", "config",
              "collectors.article", "collectors.calendar_feed",
              "collectors.containers", "collectors.host",
@@ -15,10 +15,16 @@ for _mod in ("notifications", "settings", "config",
     if _mod not in sys.modules:
         sys.modules[_mod] = types.ModuleType(_mod)
 
+# app.py accesses these at module level when building _FEED_JOBS dict.
+# Stubs must expose a callable `collect` before exec_module runs.
+for _coll in ("collectors.calendar_feed", "collectors.news", "collectors.weather"):
+    if not hasattr(sys.modules[_coll], "collect"):
+        sys.modules[_coll].collect = lambda: {}
+
 import importlib
 import flask
 
-# Carrega apenas a funcao sem iniciar o servidor.
+# Load only the validation function without starting the server.
 _app_path = os.path.join(os.path.dirname(__file__), "..", "backend", "app.py")
 _spec = importlib.util.spec_from_file_location("app", _app_path)
 _app_mod = importlib.util.module_from_spec(_spec)
