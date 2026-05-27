@@ -9,9 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: "Ipad Homelab Monitor"
 
     steps:
       - uses: actions/checkout@v4
@@ -25,16 +22,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install \
-            flask \
-            psutil \
-            requests \
-            icalendar \
-            recurring-ical-events \
-            feedparser \
-            responses \
-            pytest \
-            pytest-cov
+          pip install -r requirements.txt
+          pip install pytest pytest-cov responses
 
       - name: Run tests
         run: |
@@ -42,8 +31,8 @@ jobs:
             --cov=backend \
             --cov-report=term-missing \
             --ignore=tests/test_settings_validation.py
-        # test_settings_validation.py requer flask instalado como modulo —
-        # incluido abaixo em passo separado para isolar o import do app.py
+        # test_settings_validation.py requires flask installed as module —
+        # run in a separate step to isolate app.py import path
 
       - name: Run settings validation tests
         run: |
