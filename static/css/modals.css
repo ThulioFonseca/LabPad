@@ -362,7 +362,7 @@
 .wx-hour-temp { font-size: 13px; }
 .wx-hour-prob { font-size: 10px; opacity: 0.6; margin-top: 2px; color: #42a5f5; }
 
-/* Range bar (mín-max) por dia */
+/* Range bar (min-max) per day */
 .wx-tempchart, .wx-daily { line-height: 1.4; }
 .wx-temprow, .wx-day-row {
   display: -webkit-flex;

@@ -1,50 +1,50 @@
 /* =============================================================================
- * settings.js  —  painel de configuracoes (engrenagem -> modal).
+ * settings.js  —  settings panel (gear icon -> modal).
  *
- * Substitui o antigo theme.js. Concentra:
- *   - catalogo de temas/acentos (era theme.js)
- *   - defaults e persistencia de configuracoes do frontend (localStorage)
- *   - sincronia com o backend via GET/PUT /api/settings
- *   - construcao do botao da engrenagem na topbar
- *   - construcao do modal de configuracoes com 5 secoes
- *   - aplicacao das classes em <html> (theme, mode, cards, news)
+ * Replaces old theme.js. Concentrates:
+ *   - catalog of themes/accents (was theme.js)
+ *   - frontend settings defaults and persistence (localStorage)
+ *   - sync with backend via GET/PUT /api/settings
+ *   - gear button construction in topbar
+ *   - settings modal construction with 6 sections
+ *   - applying classes to <html> (theme, mode, cards, news)
  *
- * Depende de el()/setText() (format.js), LEVEL_COLOR (widgets.js) e Modals (modals.js).
- * ES5 puro / Safari 9.
+ * Depends on el()/setText() (format.js), LEVEL_COLOR (widgets.js), Modals (modals.js).
+ * Pure ES5 / Safari 9.
  * ===========================================================================*/
 (function () {
 
-  /* === Catalogos =========================================================*/
+  /* === Catalogs ========================================================*/
   var THEMES = [
     { id: 'minimal',  name: 'Minimal' },
-    { id: 'neu',      name: 'Neumorfismo' },
-    { id: 'elevated', name: 'Elevado' },
-    { id: 'outline',  name: 'Contorno' },
-    { id: 'glass',    name: 'Vidro Fosco' }
+    { id: 'neu',      name: 'Neumorphic' },
+    { id: 'elevated', name: 'Elevated' },
+    { id: 'outline',  name: 'Outline' },
+    { id: 'glass',    name: 'Frosted Glass' }
   ];
   var MODES = [
-    { id: 'dark',  name: 'Escuro' },
-    { id: 'light', name: 'Claro' }
+    { id: 'dark',  name: 'Dark' },
+    { id: 'light', name: 'Light' }
   ];
   var HEIGHT_PRESETS = [
-    { id: 'compact', name: 'Compacto' },
+    { id: 'compact', name: 'Compact' },
     { id: 'normal',  name: 'Normal' },
-    { id: 'roomy',   name: 'Folgado' }
+    { id: 'roomy',   name: 'Spacious' }
   ];
   var SPARK_WIDGETS = [
     { id: 'cpu',  name: 'CPU' },
-    { id: 'mem',  name: 'Memoria' },
-    { id: 'disk', name: 'Disco' },
-    { id: 'temp', name: 'Temp CPU' },
-    { id: 'net',  name: 'Rede' }
+    { id: 'mem',  name: 'Memory' },
+    { id: 'disk', name: 'Disk' },
+    { id: 'temp', name: 'CPU Temp' },
+    { id: 'net',  name: 'Network' }
   ];
   var WEATHER_SLIDES = [
-    { id: 'current',  name: 'Atual (temp + umidade)' },
-    { id: 'forecast', name: 'Previsao 5 dias' },
-    { id: 'moon',     name: 'Fase da lua' }
+    { id: 'current',  name: 'Current (temp + humidity)' },
+    { id: 'forecast', name: '5-day forecast' },
+    { id: 'moon',     name: 'Moon phase' }
   ];
 
-  /* Acento por (tema, modo) — alimenta o sparkline (LEVEL_COLOR.ok). */
+  /* Accent per (theme, mode) — feeds sparkline (LEVEL_COLOR.ok). */
   var ACCENTS = {
     minimal:  { dark: '#4f8cff', light: '#2563eb' },
     neu:      { dark: '#8b93f8', light: '#6a74d8' },
@@ -64,14 +64,14 @@
     weatherSlides: ['current', 'forecast', 'moon']
   };
 
-  var SK = 'homelab.settings';  /* unica chave no localStorage */
+  var SK = 'homelab.settings';  /* Single key in localStorage */
 
-  /* === Estado ============================================================ */
+  /* === State ============================================================= */
   var fe = clone(FE_DEFAULTS);
-  var be = null;                /* preenchido pelo GET /api/settings */
-  var listeners = [];           /* Settings.onChange (qualquer mudanca) */
-  var beListeners = [];         /* Settings.onBackendSave (so apos PUT 200) */
-  var menuEl = null;            /* nao usado mais (legado removido) */
+  var be = null;                /* Populated by GET /api/settings */
+  var listeners = [];           /* Settings.onChange (any change) */
+  var beListeners = [];         /* Settings.onBackendSave (only after PUT 200) */
+  var menuEl = null;            /* Not used anymore (legacy removed) */
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
@@ -87,7 +87,7 @@
     return a;
   }
 
-  /* === Persistencia frontend ============================================ */
+  /* === Frontend persistence ============================================== */
   function loadFE() {
     try {
       var raw = localStorage.getItem(SK);
@@ -95,12 +95,12 @@
         var parsed = JSON.parse(raw);
         fe = mergeDeep(clone(FE_DEFAULTS), parsed);
       }
-      /* Migracao das chaves antigas (theme.js v1). */
+      /* Migration of old keys (theme.js v1). */
       var oldT = localStorage.getItem('homelab.theme');
       var oldM = localStorage.getItem('homelab.mode');
       if (oldT) { fe.theme = oldT; }
       if (oldM) { fe.mode = oldM; }
-    } catch (e) { /* localStorage indisponivel */ }
+    } catch (e) { /* localStorage unavailable */ }
   }
   function saveFE() {
     try {
@@ -110,7 +110,7 @@
     } catch (e) {}
   }
 
-  /* === Aplicacao no DOM ================================================== */
+  /* === DOM application =================================================== */
   function applyHtmlClasses() {
     document.documentElement.className =
       'theme-' + fe.theme + ' mode-' + fe.mode +
@@ -132,18 +132,18 @@
     }
   }
 
-  /* === API publica (consumida por widgets.js / dashboard.js) ============= */
+  /* === Public API (consumed by widgets.js / dashboard.js) ================= */
   window.Settings = {
     spark: function (id) { return fe.sparks[id] !== false; },
     weatherSlides: function () { return fe.weatherSlides.slice(); },
     onChange: function (cb) { if (typeof cb === 'function') { listeners.push(cb); } },
-    /* Dispara SO depois de um PUT /api/settings retornar 200 — sinal claro
-       de que dados do servidor mudaram (cidade/URL/limite). dashboard.js usa
-       para refazer o pollFeeds imediato em vez de esperar o ciclo de 10 min. */
+    /* Fires only after a PUT /api/settings returns 200 — clear signal that
+       server data changed (city/URL/limit). dashboard.js uses this to refetch
+       feeds immediately instead of waiting for the 10-min cycle. */
     onBackendSave: function (cb) { if (typeof cb === 'function') { beListeners.push(cb); } }
   };
 
-  /* === Helpers de formulario ============================================ */
+  /* === Form helpers ==================================================== */
   function section(title) {
     var s = el('section', 'settings-section');
     s.appendChild(el('h3', 'settings-section-title', title));
@@ -204,7 +204,7 @@
     return wrap;
   }
 
-  /* === Construcao das secoes ============================================ */
+  /* === Building sections ================================================= */
   function buildModalBody() {
     var body = document.getElementById('settings-modal-body');
     if (!body) { return; }
@@ -219,82 +219,82 @@
   }
 
   function buildThemeSection() {
-    var s = section('Tema');
-    s.appendChild(formRow('Tema',
+    var s = section('Theme');
+    s.appendChild(formRow('Theme',
       selectInput('theme', THEMES, fe.theme)));
-    s.appendChild(formRow('Aparencia',
+    s.appendChild(formRow('Appearance',
       selectInput('mode', MODES, fe.mode)));
     return s;
   }
   function buildCardsSection() {
     var s = section('Cards');
-    s.appendChild(formRow('Altura',
+    s.appendChild(formRow('Density',
       selectInput('cardHeight', HEIGHT_PRESETS, fe.cardHeight)));
-    s.appendChild(formRow('Mostrar grafico em:',
+    s.appendChild(formRow('Show sparklines in:',
       checkboxList('sparks', SPARK_WIDGETS, fe.sparks),
-      'Sparkline (mini-grafico) abaixo do card.'));
+      'Sparkline (mini-chart) below the card.'));
     return s;
   }
   function buildWeatherSection() {
-    var s = section('Clima');
+    var s = section('Weather');
     var city = be && be.weather ? be.weather.city : '';
-    s.appendChild(formRow('Cidade',
-      textInput('weather.city', city, 'ex.: Sao Paulo'),
-      'Vazio desativa o widget de clima.'));
+    s.appendChild(formRow('City',
+      textInput('weather.city', city, 'e.g. New York'),
+      'Empty disables the weather widget.'));
     var slidesMap = {};
     for (var i = 0; i < fe.weatherSlides.length; i++) {
       slidesMap[fe.weatherSlides[i]] = true;
     }
-    s.appendChild(formRow('Slides no cabecalho',
+    s.appendChild(formRow('Slides in topbar',
       checkboxList('weatherSlides', WEATHER_SLIDES, slidesMap),
-      'Quais informacoes alternar (de 10 em 10s) no clima do topo.'));
+      'Which info to cycle (every 10s) in topbar weather.'));
     return s;
   }
   function buildCalendarSection() {
-    var s = section('Agenda');
+    var s = section('Calendar');
     var url = be && be.calendar ? be.calendar.url : '';
     var days = be && be.calendar ? be.calendar.days : 3;
-    s.appendChild(formRow('URL do calendario (.ics)',
+    s.appendChild(formRow('Calendar URL (.ics)',
       textInput('calendar.url', url, 'https://outlook.office365.com/.../calendar.ics'),
-      'Link-capacidade (privado). Vazio desativa a agenda.'));
-    s.appendChild(formRow('Dias a frente (1-30)',
+      'Capability link (private). Empty disables calendar.'));
+    s.appendChild(formRow('Days ahead (1-30)',
       numberInput('calendar.days', days, 1, 30)));
     return s;
   }
   function buildNewsSection() {
-    var s = section('Noticias');
+    var s = section('News');
     var url = be && be.news ? be.news.url : '';
     var limit = be && be.news ? be.news.limit : 5;
-    s.appendChild(formRow('URL do feed RSS/Atom',
-      textInput('news.url', url, 'https://g1.globo.com/rss/g1/'),
-      'Vazio desativa o feed de noticias.'));
-    s.appendChild(formRow('Quantas exibir (1-50)',
+    s.appendChild(formRow('RSS/Atom feed URL',
+      textInput('news.url', url, 'https://feeds.example.com/news.xml'),
+      'Empty disables the news feed.'));
+    s.appendChild(formRow('Items to show (1-50)',
       numberInput('news.limit', limit, 1, 50)));
-    s.appendChild(formRow('Altura do card',
+    s.appendChild(formRow('Card density',
       selectInput('newsCardHeight', HEIGHT_PRESETS, fe.newsCardHeight)));
     return s;
   }
   function buildSystemSection() {
-    var s = section('Sistema');
+    var s = section('System');
     var tz = be && be.system ? be.system.timezone : '';
-    s.appendChild(formRow('Fuso horario',
-      textInput('system.timezone', tz, 'ex.: America/Sao_Paulo'),
-      'Formato IANA — usado para os horarios da agenda.'));
+    s.appendChild(formRow('Timezone',
+      textInput('system.timezone', tz, 'e.g. America/New_York'),
+      'IANA format — used for calendar times.'));
     return s;
   }
   function buildActions() {
     var row = el('div', 'settings-actions');
-    var reset = el('button', 'btn-secondary', 'Restaurar padroes');
+    var reset = el('button', 'btn-secondary', 'Reset to defaults');
     reset.type = 'button';
     reset.onclick = function () {
       fe = clone(FE_DEFAULTS);
       saveFE();
       applyHtmlClasses();
-      buildModalBody();   /* re-render dos inputs */
+      buildModalBody();   /* re-render inputs */
       notify();
-      toast('Padroes restaurados (apenas frontend).');
+      toast('Defaults reset (frontend only).');
     };
-    var save = el('button', 'btn-save', 'Salvar');
+    var save = el('button', 'btn-save', 'Save');
     save.type = 'button';
     save.onclick = doSave;
     row.appendChild(reset);
@@ -302,7 +302,7 @@
     return row;
   }
 
-  /* === Leitura do formulario + save ====================================== */
+  /* === Form reading + save =============================================== */
   function gatherFromForm() {
     var body = document.getElementById('settings-modal-body');
     var feNext = clone(fe);
@@ -328,7 +328,7 @@
       if (slideBoxes[j].checked) { feNext.weatherSlides.push(slideBoxes[j].value); }
     }
 
-    /* Backend (somente fields que existem no formulario) */
+    /* Backend (only fields present in form) */
     var city = body.querySelector('input[name="weather.city"]');
     if (city) {
       bePartial.weather = { city: city.value };
@@ -366,20 +366,20 @@
       if (xhr.status === 200) {
         try { be = JSON.parse(xhr.responseText); } catch (e) {}
         notify();
-        notifyBackend();   /* dashboard refaz pollFeeds imediato */
-        toast('Salvo.');
+        notifyBackend();   /* dashboard refetches feeds immediately */
+        toast('Saved.');
         closeSettingsModal();
       } else {
-        var msg = 'Erro ao salvar.';
+        var msg = 'Error saving.';
         try { msg = (JSON.parse(xhr.responseText).error) || msg; } catch (e) {}
         toast(msg);
       }
     };
-    xhr.onerror = function () { toast('Sem conexao com o servidor.'); };
+    xhr.onerror = function () { toast('No connection to server.'); };
     xhr.send(JSON.stringify(picked.be));
   }
 
-  /* === Toast (feedback rapido) =========================================== */
+  /* === Toast (quick feedback) ============================================ */
   var toastTimer = null;
   function toast(msg) {
     var t = document.getElementById('settings-toast');
@@ -394,7 +394,7 @@
     toastTimer = setTimeout(function () { t.className = 'toast'; }, 2400);
   }
 
-  /* === Modal abrir/fechar ================================================ */
+  /* === Modal open/close =================================================== */
   function openSettingsModal() { Modals.open('settings-modal'); }
   function closeSettingsModal() { Modals.close('settings-modal'); }
 

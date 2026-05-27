@@ -757,13 +757,13 @@ Widgets._wxHourly = function (p) {
 };
 
 
-/* --- Grafico mín/max por dia (range bar SVG) ----------------------------- */
+/* --- Min/max chart per day (range bar SVG) ------------------------------- */
 Widgets._wxTempChart = function (p) {
-  var sec = _wxSection('Temperatura (proximos dias)');
+  var sec = _wxSection('Temperature (next days)');
   var days = p.daily || [];
   if (!days.length) { return sec; }
 
-  /* eixo absoluto: pega min/max global dos 7 dias */
+  /* Absolute axis: get global min/max across 7 days */
   var gMin = Infinity, gMax = -Infinity;
   for (var i = 0; i < days.length; i++) {
     if (days[i].low !== null && days[i].low < gMin)  { gMin = days[i].low; }
@@ -779,13 +779,13 @@ Widgets._wxTempChart = function (p) {
     row.appendChild(el('div', 'wx-temprow-day', _dayLabel(d.date, 0, j)));
     row.appendChild(el('div', 'wx-temprow-min', _fmtTemp(d.low)));
 
-    /* barra range em SVG, posicionada por % no eixo [gMin..gMax] */
+    /* Range bar in SVG, positioned by % on axis [gMin..gMax] */
     var barWrap = el('div', 'wx-temprow-bar');
     var s = _svg('svg', { viewBox: '0 0 100 10', preserveAspectRatio: 'none' });
-    /* trilho */
+    /* Track */
     s.appendChild(_svg('rect', { x: 0, y: 4, width: 100, height: 2,
                                   rx: 1, fill: 'currentColor', 'fill-opacity': 0.18 }));
-    /* range mín-max */
+    /* Min-max range */
     var x1 = ((d.low - gMin) / span) * 100;
     var x2 = ((d.high - gMin) / span) * 100;
     s.appendChild(_svg('rect', { x: x1, y: 2, width: Math.max(x2 - x1, 1),

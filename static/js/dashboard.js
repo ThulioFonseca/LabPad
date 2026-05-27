@@ -582,8 +582,8 @@
           weatherRefs.panel.innerHTML = '';
           var pill = el('span', 'weather-val weather-retry');
           pill.appendChild(document.createTextNode(
-              data.weather.error ? 'Clima indisponível, tentando…'
-                                 : 'Clima não configurado'));
+              data.weather.error ? 'Weather unavailable, retrying…'
+                                 : 'Weather not configured'));
           weatherRefs.panel.appendChild(pill);
         }
       } catch (e) { reportError('pollFeeds', e); }
