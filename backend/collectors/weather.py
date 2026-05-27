@@ -113,7 +113,7 @@ def _resolve_city(city):
     data = _fetch(url)
     results = data.get("results")
     if not results:
-        raise ValueError("Cidade nao encontrada: " + city)
+        raise ValueError("City not found: " + city)
 
     lat = results[0]["latitude"]
     lon = results[0]["longitude"]

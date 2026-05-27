@@ -1,9 +1,8 @@
-"""Testes do coletor de clima.
+"""Tests for the weather collector.
 
-Usa responses para interceptar as chamadas HTTP — sem acesso real a APIs.
-Cobre: cidade nao configurada, fallback met.no, erro de geocoding.
+Uses responses to intercept HTTP calls — no real API access.
+Covers: city not configured, met.no fallback, geocoding error.
 """
-import json
 import pytest
 
 try:
@@ -13,7 +12,7 @@ except ImportError:
     HAS_RESPONSES = False
 
 pytestmark = pytest.mark.skipif(not HAS_RESPONSES,
-                                reason="biblioteca 'responses' nao instalada")
+                                reason="'responses' library not installed")
 
 
 GEOCODING_OK = {
@@ -69,11 +68,13 @@ def patch_settings(monkeypatch):
     import sys, types
     if "settings" not in sys.modules:
         sys.modules["settings"] = types.ModuleType("settings")
-    monkeypatch.setattr("settings.get", lambda *a, **kw: a[2] if len(a) > 2 else "")
+    monkeypatch.setattr("settings.get",
+                        lambda *a, **kw: a[2] if len(a) > 2 else "",
+                        raising=False)
 
 
 def test_cidade_nao_configurada_retorna_configured_false(monkeypatch):
-    monkeypatch.setattr("settings.get", lambda *a, **kw: "")
+    monkeypatch.setattr("settings.get", lambda *a, **kw: "", raising=False)
     from collectors import weather
     result = weather.collect()
     assert result == {"configured": False}
@@ -84,7 +85,8 @@ def test_coleta_openmeteo_com_mocks(monkeypatch):
     import responses
 
     monkeypatch.setattr("settings.get",
-                        lambda sec, key, default="": "Carandai" if key == "city" else default)
+                        lambda sec, key, default="": "Carandai" if key == "city" else default,
+                        raising=False)
     _reset_cache()
 
     with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
@@ -111,7 +113,8 @@ def test_geocoding_falha_levanta_excecao(monkeypatch):
     import responses
 
     monkeypatch.setattr("settings.get",
-                        lambda sec, key, default="": "CidadeInexistente" if key == "city" else default)
+                        lambda sec, key, default="": "CidadeInexistente" if key == "city" else default,
+                        raising=False)
     _reset_cache()
 
     with responses.RequestsMock(assert_all_requests_are_fired=False) as rsps:
@@ -120,7 +123,7 @@ def test_geocoding_falha_levanta_excecao(monkeypatch):
                  json={"results": []})
 
         from collectors import weather
-        with pytest.raises(ValueError, match="Cidade nao encontrada"):
+        with pytest.raises(ValueError, match="City not found"):
             weather.collect()
 
 
