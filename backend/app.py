@@ -227,11 +227,11 @@ def article_route():
     """Reader mode: fetch URL and return cleaned main content."""
     url = (request.args.get("url") or "").strip()
     if not url or len(url) > 1000:
-        return jsonify({"error": "url invalida"}), 400
+        return jsonify({"error": "invalid url"}), 400
     if not (url.startswith("http://") or url.startswith("https://")):
-        return jsonify({"error": "url precisa comecar com http(s)://"}), 400
+        return jsonify({"error": "url must start with http(s)://"}), 400
     if _is_private_url(url):
-        return jsonify({"error": "url nao permitida"}), 400
+        return jsonify({"error": "url not allowed"}), 400
     data = article.get(url)
     status = 502 if "error" in data else 200
     response = jsonify(data)
@@ -246,7 +246,7 @@ _CONTAINER_ID_RE = re.compile(r'^[a-zA-Z0-9_.\-]{1,64}$')
 def container_logs(container_id):
     """Return the last N lines of logs from a Docker container."""
     if not _CONTAINER_ID_RE.match(container_id):
-        return jsonify({"error": "container_id invalido"}), 400
+        return jsonify({"error": "invalid container_id"}), 400
     tail = request.args.get("tail", default=200, type=int)
     tail = max(10, min(tail, 1000))
     data = containers.get_logs(container_id, tail=tail)
@@ -300,7 +300,7 @@ def _validate_settings(body):
     from the payload. On validation error, returns {"error": ...}.
     """
     if not isinstance(body, dict):
-        return {"error": "payload invalido"}
+        return {"error": "invalid payload"}
     clean = {}
 
     w = body.get("weather") or {}
@@ -311,30 +311,30 @@ def _validate_settings(body):
     if "url" in c:
         u = str(c["url"]).strip()[:500]
         if u and not (u.startswith("http://") or u.startswith("https://")):
-            return {"error": "calendar.url precisa comecar com http(s)://"}
+            return {"error": "calendar.url must start with http(s)://"}
         clean.setdefault("calendar", {})["url"] = u
     if "days" in c:
         try:
             d = int(c["days"])
         except (TypeError, ValueError):
-            return {"error": "calendar.days deve ser inteiro"}
+            return {"error": "calendar.days must be an integer"}
         if d < 1 or d > 30:
-            return {"error": "calendar.days fora do intervalo 1..30"}
+            return {"error": "calendar.days out of range 1..30"}
         clean.setdefault("calendar", {})["days"] = d
 
     n = body.get("news") or {}
     if "url" in n:
         u = str(n["url"]).strip()[:500]
         if u and not (u.startswith("http://") or u.startswith("https://")):
-            return {"error": "news.url precisa comecar com http(s)://"}
+            return {"error": "news.url must start with http(s)://"}
         clean.setdefault("news", {})["url"] = u
     if "limit" in n:
         try:
             lim = int(n["limit"])
         except (TypeError, ValueError):
-            return {"error": "news.limit deve ser inteiro"}
+            return {"error": "news.limit must be an integer"}
         if lim < 1 or lim > 50:
-            return {"error": "news.limit fora do intervalo 1..50"}
+            return {"error": "news.limit out of range 1..50"}
         clean.setdefault("news", {})["limit"] = lim
 
     sy = body.get("system") or {}
@@ -345,7 +345,7 @@ def _validate_settings(body):
                 from zoneinfo import ZoneInfo
                 ZoneInfo(tz)
             except Exception:
-                return {"error": "system.timezone invalido (use IANA, ex: America/Sao_Paulo)"}
+                return {"error": "invalid system.timezone (use IANA, e.g. America/New_York)"}
         clean.setdefault("system", {})["timezone"] = tz
 
     return clean
