@@ -1,11 +1,11 @@
-"""Store mutavel de configuracoes: defaults do .env + overrides em JSON.
+"""Mutable settings store: .env defaults + JSON overrides.
 
-Os defaults sao lidos de `config.py` (variaveis de ambiente). Overrides ficam
-em `/data/settings.json` (volume), gravados pelo painel da engrenagem (PUT
-/api/settings) e persistem entre restarts. Operacoes sao thread-safe.
+Defaults are read from `config.py` (environment variables). Overrides live in
+`/data/settings.json` (mounted volume), written by the settings panel (PUT
+/api/settings), and persist across restarts. Operations are thread-safe.
 
-Para campos novos, basta acrescentar uma chave em `_DEFAULTS` e expor no
-endpoint de settings + na validacao em `app.py`.
+For new fields, just add a key to `_DEFAULTS` and expose it in the settings
+endpoint + validation in `app.py`.
 """
 import json
 import logging
@@ -18,9 +18,9 @@ _SETTINGS_PATH = os.environ.get("SETTINGS_PATH", "/data/settings.json")
 _lock = threading.Lock()
 _overrides = {}
 
-# Defaults vindos de config.py (que la lê do .env, mas com fallbacks
-# hardcoded). config.py serve apenas como bootstrap — o usuario edita tudo
-# pelo painel da engrenagem, e os overrides ficam em /data/settings.json.
+# Defaults from config.py (which reads from .env with hardcoded fallbacks).
+# config.py is just bootstrap — users edit everything via the settings panel,
+# and overrides are stored in /data/settings.json.
 _DEFAULTS = {
     "weather":  {"city": config.WEATHER_CITY},
     "calendar": {"url": config.CALENDAR_ICS_URL, "days": config.CALENDAR_DAYS},
@@ -30,7 +30,7 @@ _DEFAULTS = {
 
 
 def _load():
-    """Le o JSON do disco. Silencioso em caso de arquivo ausente/invalido."""
+    """Read JSON from disk. Silent if file is missing or invalid."""
     global _overrides
     try:
         with open(_SETTINGS_PATH, "r") as fh:
@@ -41,7 +41,7 @@ def _load():
 
 
 def _save():
-    """Persiste o estado atual no disco (escrita atomica via .tmp + rename)."""
+    """Persist current state to disk (atomic write via .tmp + rename)."""
     try:
         directory = os.path.dirname(_SETTINGS_PATH) or "."
         os.makedirs(directory, exist_ok=True)
@@ -50,12 +50,12 @@ def _save():
             json.dump(_overrides, fh, indent=2, ensure_ascii=False)
         os.replace(tmp, _SETTINGS_PATH)
     except OSError as exc:
-        logging.warning("Nao foi possivel persistir settings.json (%s): %s",
+        logging.warning("Failed to persist settings.json (%s): %s",
                         _SETTINGS_PATH, exc)
 
 
 def _merge(defaults, overrides):
-    """Merge raso por secao (weather/calendar/news)."""
+    """Shallow merge per section (weather/calendar/news)."""
     out = {}
     for section_key, section in defaults.items():
         merged = dict(section)
@@ -66,20 +66,20 @@ def _merge(defaults, overrides):
 
 
 def get_effective():
-    """Estado efetivo (defaults + overrides), thread-safe."""
+    """Effective state (defaults + overrides), thread-safe."""
     with _lock:
         return _merge(_DEFAULTS, _overrides)
 
 
 def get(section, key, default=None):
-    """Atalho: get('weather', 'city', '')."""
+    """Shortcut: get('weather', 'city', '')."""
     eff = get_effective()
     return eff.get(section, {}).get(key, default)
 
 
 def update(partial):
-    """Aplica/persiste overrides parciais. Devolve (prev, new) para que o
-    caller possa invalidar caches afetados (cidade nova, URL diferente etc.)."""
+    """Apply/persist partial overrides. Return (prev, new) so caller can
+    invalidate affected caches (new city, different URL, etc.)."""
     if not isinstance(partial, dict):
         return get_effective(), get_effective()
     with _lock:

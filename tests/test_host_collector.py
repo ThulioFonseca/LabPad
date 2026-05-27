@@ -1,8 +1,8 @@
-"""Testes de fumaça do coletor de host.
+"""Smoke tests for the host collector.
 
-Verifica que collect() retorna a estrutura esperada sem depender de estado
-real do hardware — so garante que os campos existem e tem tipos corretos.
-O modulo usa psutil, que funciona em qualquer ambiente Linux/macOS.
+Verifies that collect() returns the expected structure without depending on
+real hardware state — just ensures fields exist and have correct types.
+The module uses psutil, which works on any Linux/macOS environment.
 """
 import pytest
 

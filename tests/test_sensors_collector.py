@@ -1,8 +1,8 @@
-"""Testes de fumaça do coletor de sensores.
+"""Smoke tests for the sensors collector.
 
-sensors.collect() degrada graciosamente quando /sys nao expoe temperaturas
-(VM, CI sem hardware real). O teste verifica que a estrutura esta correta
-independente do ambiente.
+sensors.collect() degrades gracefully when /sys doesn't expose temperatures
+(VMs, CI without real hardware). The test verifies structure is correct
+regardless of environment.
 """
 
 

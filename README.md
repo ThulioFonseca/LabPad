@@ -1,221 +1,216 @@
 # Homelab Monitor
 
-Dashboard de monitoramento do homelab pensado para rodar num **iPad 2 (iOS 9.3.5)**
-como monitor de parede sempre ligado.
+A monitoring dashboard for your homelab, designed to run on an **iPad 2 (iOS 9.3.5)**
+as an always-on wall display.
 
-Mostra, em tempo quase real, os recursos do **host Ubuntu** e dos **containers
-Docker**, além de **agenda**, **notícias** e **clima**. Roda como um único
-container e serve uma página feita sob medida para o Safari 9 — sem CSS Grid,
-sem `fetch`, sem frameworks, sem build. Bonito, leve e fácil de alterar.
+Shows near real-time **Ubuntu host** and **Docker container** metrics, plus
+**calendar**, **news**, and **weather**. Runs as a single container and serves
+a hand-crafted page for Safari 9 — no CSS Grid, no `fetch`, no frameworks, no build.
+Beautiful, lightweight, and easy to customize.
 
 ```
 ┌───────────────────────────────────────────────┐
 │ Homelab        ☀ 24°C · 60%       ● online 14:22│
 ├───────────────────────────────────────────────┤
-│ HOST   ubuntu · up 6d · load 0.4 · 8 nucleos    │
-│ ┌ CPU ┐ ┌ Memoria ┐ ┌ Disco ┐ ┌ Temp ┐         │
-│ ┌ Rede ──────────┐ ┌ Docker ─────────┐         │
-│ AGENDA              NOTICIAS                    │
-│ Hoje 14:00 Reuniao  ▦ Titulo da noticia 1       │
-│ CONTAINERS  (3 / 4 ativos)                      │
-│ ● nginx     CPU 0.4%  RAM 28 MB   up            │
-│ ● postgres  CPU 2.1%  RAM 310 MB  up            │
+│ HOST   ubuntu · up 6d · load 0.4 · 8 cores     │
+│ ┌ CPU ┐ ┌ Memory ┐ ┌ Disk ┐ ┌ Temp ┐         │
+│ ┌ Network ──────────┐ ┌ Docker ────────┐      │
+│ CALENDAR            NEWS                      │
+│ Today 14:00 Meeting ▦ News headline 1         │
+│ CONTAINERS  (3 / 4 running)                   │
+│ ● nginx     CPU 0.4%  RAM 28 MB   up         │
+│ ● postgres  CPU 2.1%  RAM 310 MB  up         │
 └───────────────────────────────────────────────┘
 ```
 
-## Como subir
+## Getting Started
 
 ```bash
-docker compose up -d --build      # Docker moderno
-# ou:  docker-compose up -d --build   (versao antiga)
+docker compose up -d --build      # Modern Docker
+# or:  docker-compose up -d --build   (older version)
 ```
 
-Não precisa de `.env`. Tudo (cidade do clima, URL da agenda, URL do RSS,
-limites, dias, fuso horário, tema, layout) é configurado pelo **botão de
-engrenagem** no canto superior direito do dashboard. As escolhas persistem em
-`/data/settings.json` num volume Docker nomeado — sobrevivem a rebuilds.
+No `.env` needed. Everything (weather city, calendar URL, RSS URL, limits, days,
+timezone, theme, layout) is configured via the **settings button** (gear icon)
+in the top right of the dashboard. Your choices persist in `/data/settings.json`
+in a named Docker volume — they survive rebuilds.
 
-Acesse de qualquer aparelho na rede local, **inclusive do iPad 2**:
+Access from any device on your local network, **including an iPad 2**:
 
 ```
-http://IP-DO-HOST:8723
+http://HOST-IP:8723
 ```
 
-Para descobrir o IP do host: `ip addr` (procure algo como `192.168.x.x`).
+To find your host IP: `ip addr` (look for something like `192.168.x.x`).
 
-Parar / atualizar:
+Stop / update:
 
 ```bash
 docker compose down
-docker compose up -d --build      # apos editar qualquer arquivo
+docker compose up -d --build      # after editing any file
 ```
 
-> Editou apenas `static/` (HTML/CSS/JS)? Não precisa rebuildar a imagem se você
-> montar a pasta como volume — veja "Desenvolvimento" abaixo. Por padrão, os
-> estáticos vão para dentro da imagem, então rode `up -d --build` de novo.
+> Only editing `static/` (HTML/CSS/JS)? No need to rebuild the image if you mount
+> the folder as a volume — see "Development" below. By default, static files go
+> into the image, so run `up -d --build` again.
 
-## Configurar o iPad como monitor de parede
+## Set Up iPad as a Wall Monitor
 
-1. Abra `http://IP-DO-HOST:8723` no Safari.
-2. **Compartilhar → Adicionar à Tela de Início** — abre em tela cheia, sem barras.
-3. **Ajustes → Tela e Brilho → Bloqueio Automático → Nunca.**
-4. (Opcional) **Ajustes → Geral → Acessibilidade → Acesso Guiado** para travar o
-   iPad nessa tela (modo quiosque).
+1. Open `http://HOST-IP:8723` in Safari.
+2. **Share → Add to Home Screen** — opens fullscreen, no bars.
+3. **Settings → Display & Brightness → Auto-Lock → Never**.
+4. (Optional) **Settings → General → Accessibility → Guided Access** to lock the
+   iPad on this screen (kiosk mode).
 
-## Como funciona
+## How It Works
 
 ```
-Host Ubuntu ── Docker
+Ubuntu Host ── Docker
                 └─ container "homelab-monitor"  (Flask + Python)
                      GET /            -> dashboard (static/)
                      GET /api/metrics -> hardware + containers (5 s)
-                     GET /api/feeds   -> agenda + noticias + clima (10 min)
+                     GET /api/feeds   -> calendar + news + weather (10 min)
 ```
 
-- O container roda com `pid: host` + `network_mode: host` para o `psutil` ler o
-  hardware **real do host** (e não o do container).
-- Todos os volumes são **somente leitura** (`:ro`). O container nunca escreve no host.
-- O dashboard faz polling de `/api/metrics` a cada 5 s via `XMLHttpRequest`.
-- A agenda, as notícias e o clima vêm de `/api/feeds`, atualizado a cada 10 min —
-  o backend busca os feeds externos e os mantém em cache (não sobrecarrega os
-  provedores).
+- Container runs with `pid: host` + `network_mode: host` so `psutil` reads the
+  **actual host hardware** (not the container's).
+- All volumes are **read-only** (`:ro`). Container never writes to the host.
+- Dashboard polls `/api/metrics` every 5 s via `XMLHttpRequest`.
+- Calendar, news, and weather come from `/api/feeds`, updated every 10 min —
+  the backend fetches external feeds and caches them (no overloading providers).
 
-### Segurança
+### Security
 
-A dashboard **não tem autenticação** — pensada para uso só na **rede local**.
-Não exponha a porta 8723 para a internet. O socket do Docker é montado como
-somente leitura, mas ainda assim dá visibilidade dos containers; mantenha na LAN.
+The dashboard **has no authentication** — designed for **local network use only**.
+Do not expose port 8723 to the internet. Docker socket is mounted read-only, but
+it still exposes container visibility; keep it on your LAN.
 
-## Agenda, notícias e clima
+## Calendar, News, and Weather
 
-Tudo é configurado pelo **painel da engrenagem** no canto superior direito do
-dashboard — sem `.env`, sem rebuild. Os valores persistem em
-`/data/settings.json` no volume Docker.
+Configure everything via the **settings panel** (gear icon, top right) — no `.env`,
+no rebuild. Values persist in `/data/settings.json` in the Docker volume.
 
-- **Agenda** — URL `.ics` de um calendário Outlook publicado + quantos dias à
-  frente exibir.
-- **Notícias** — URL de um feed RSS/Atom + quantas exibir.
-- **Clima** — nome da cidade (Open-Meteo, gratuita, sem chave); alterna entre
-  cidade, temperatura/umidade, previsão de 5 dias e fase da lua.
-- **Sistema** — fuso horário (formato IANA, ex.: `America/Sao_Paulo`) usado
-  pelos horários da agenda.
+- **Calendar** — `.ics` URL from a published Outlook calendar + how many days ahead to show.
+- **News** — RSS/Atom feed URL + how many items to display.
+- **Weather** — city name (Open-Meteo, free, no API key); cycles between current
+  temp/humidity, 5-day forecast, and moon phase.
+- **System** — timezone (IANA format, e.g. `America/New_York`) used by calendar times.
 
-**Como obter o link `.ics` do calendário:** no Outlook web, *Configurações →
-Calendário → Calendários compartilhados → Publicar calendário* — copie o link
-**ICS** (termina em `.ics`), **não** o link HTML.
+**How to get your calendar's `.ics` link:** in Outlook web, *Settings → Calendar →
+Shared calendars → Publish calendar* — copy the **ICS** link (ends in `.ics`),
+**not** the HTML link.
 
-> A URL do calendário é um *link-capacidade*: quem tiver o link vê sua agenda.
-> Mantenha o dashboard na LAN (sem auth).
+> The calendar URL is a *capability link*: whoever has it can see your calendar.
+> Keep the dashboard on your LAN (no auth).
 
-Deixar uma URL em branco **desativa** a seção correspondente. Eventos
-recorrentes (reuniões semanais etc.) são expandidos automaticamente.
+Leave a URL blank to **disable** that section. Recurring events (weekly meetings, etc.)
+are automatically expanded.
 
-## Como expandir (o ponto forte do projeto)
+## How to Extend (the project's strongest point)
 
-### Adicionar uma métrica nova
+### Add a New Metric
 
-1. **Backend** — devolva o valor em `/api/metrics`. Edite o coletor adequado em
-   [`backend/collectors/`](backend/collectors/) (ex.: adicione um campo em
-   `host.py`) ou crie um coletor novo e encaixe-o em
-   [`backend/app.py`](backend/app.py).
-2. **Frontend** — abra [`static/config.js`](static/config.js) e adicione **uma
-   linha** ao array `widgets`. Pronto: o card aparece. Não se mexe em HTML/CSS/JS.
+1. **Backend** — return the value in `/api/metrics`. Edit the appropriate collector in
+   [`backend/collectors/`](backend/collectors/) (e.g. add a field to `host.py`)
+   or create a new collector and wire it into [`backend/app.py`](backend/app.py).
+2. **Frontend** — open [`static/config.js`](static/config.js) and add **one line**
+   to the `widgets` array. Done: the card appears. No HTML/CSS/JS editing.
 
-Exemplo — mostrar contagem de processos:
+Example — show process count:
 
 ```js
-{ id:'procs', title:'Processos', kind:'info', section:'system',
+{ id:'procs', title:'Processes', kind:'info', section:'system',
   path:'host.proc_count', fmt:'text' }
 ```
 
-### Painel de configurações
+### Settings Panel
 
-O **botão de engrenagem** no canto superior direito abre um painel completo
-que ajusta o dashboard **ao vivo**. Ele tem 6 seções:
+The **settings button** (gear icon, top right) opens a full panel to adjust your
+dashboard **live**. It has 6 sections:
 
-- **Tema** — 5 estilos (Minimal, Neumorfismo, Elevado, Contorno, Vidro Fosco)
-  e modo claro/escuro.
-- **Cards** — altura (compacto/normal/folgado) e quais cards mostram sparkline.
-- **Clima** — cidade monitorada e quais slides aparecem na topbar.
-- **Agenda** — URL `.ics` e quantos dias à frente exibir.
-- **Notícias** — URL do RSS, quantas exibir e altura do card.
-- **Sistema** — fuso horário (IANA).
+- **Theme** — 5 styles (Minimal, Neumorphic, Elevated, Outline, Frosted Glass)
+  and light/dark mode.
+- **Cards** — density (compact/normal/spacious) and which cards show sparklines.
+- **Weather** — city and which slides appear in the topbar.
+- **Calendar** — `.ics` URL and how many days ahead to show.
+- **News** — RSS feed URL, count, and card height.
+- **System** — timezone (IANA format).
 
-Configurações de **aparência** (tema, modo, alturas, sparklines, slides) ficam
-no `localStorage` do navegador. As de **fonte de dados / sistema** (cidade,
-URLs, limites, dias, fuso) são gravadas em `/data/settings.json` num volume
-Docker nomeado — sobrevivem a rebuilds e valem na próxima coleta. O botão
-"Restaurar padrões" reverte só os ajustes de frontend.
+**Appearance** settings (theme, mode, density, sparklines, slides) go to browser
+`localStorage`. **Data source / system** settings (city, URLs, limits, days, timezone)
+are saved in `/data/settings.json` in a named Docker volume — they survive rebuilds
+and apply to the next collection. The "Reset to defaults" button resets frontend
+settings only.
 
-Cada tema é um *estilo* (sombra, borda, forma), não só uma cor. O Minimal
-escuro vive em [`static/css/theme.css`](static/css/theme.css); os demais e as
-variantes claras ficam em `themes.css`, aplicados por classes em `<html>`
-(`theme-X mode-Y cards-Z news-W`). A estrutura/layout fica em `base.css`.
+Each theme is a *style* (shadow, border, shape), not just color. Minimal dark lives in
+[`static/css/theme.css`](static/css/theme.css); others and light variants live in
+`themes.css`, applied via classes on `<html>` (`theme-X mode-Y cards-Z news-W`).
+Structure and layout live in `base.css`.
 
-### Tipos de widget disponíveis
+### Available Widget Types
 
-| `kind`  | Uso                                            |
+| `kind`  | Use                                            |
 |---------|------------------------------------------------|
-| `gauge` | número + barra 0..max (CPU, RAM, disco, temp)  |
-| `info`  | linha de texto (uptime, SO, load average)      |
+| `gauge` | number + bar 0..max (CPU, RAM, disk, temp)    |
+| `info`  | single line of text (uptime, OS, load avg)    |
 
-Cada campo de widget está documentado dentro do próprio `config.js`.
+Each widget field is documented inside `config.js` itself.
 
-## Estrutura do projeto
+## Project Structure
 
 ```
 backend/
-  app.py                 servidor Flask: rotas + /api/metrics + /api/feeds
-  config.py              porta, caminhos de disco, feeds, TTL de cache
+  app.py                 Flask server: routes + /api/metrics + /api/feeds
+  config.py              port, disk paths, feeds, cache TTLs
   collectors/
-    host.py              CPU, memoria, disco, rede, load, uptime, SO
-    sensors.py           temperatura (degrada se indisponivel)
-    containers.py        status, CPU%, RAM e rede por container
-    calendar_feed.py     agenda: le o .ics do Outlook publicado
-    news.py              noticias: le um feed RSS/Atom
-    weather.py           clima e fase da lua (Open-Meteo, sem chave)
+    host.py              CPU, memory, disk, network, load, uptime, OS
+    sensors.py           temperature (degrades if unavailable)
+    containers.py        status, CPU%, RAM, network per container
+    calendar_feed.py     calendar: reads published Outlook .ics
+    news.py              news: reads RSS/Atom feed
+    weather.py           weather and moon phase (Open-Meteo, no key)
 static/
-  index.html             esqueleto da pagina
-  config.js          ★   widgets e intervalos — edite aqui
-  css/base.css           layout (Flexbox, sem Grid)
-  css/theme.css          tema Minimal escuro (padrao)
-  css/themes.css         demais temas + variantes clara/escura
-  js/xhr.js              requisicoes (XMLHttpRequest, substitui fetch)
-  js/format.js           utilitarios de DOM e formatacao
-  js/icons.js            icones SVG (cards, clima, lua)
-  js/sparkline.js        mini-grafico em <canvas>
-  js/widgets.js          componentes: cards, agenda, noticias, clima
-  js/settings.js         painel de configuracoes (engrenagem -> modal)
+  index.html             page skeleton
+  config.js          ★   widgets and polling intervals — edit here
+  css/base.css           layout (Flexbox, no Grid)
+  css/theme.css          Minimal dark theme (default)
+  css/themes.css         other themes + light/dark variants
+  js/xhr.js              requests (XMLHttpRequest, replaces fetch)
+  js/format.js           DOM and formatting utilities
+  js/icons.js            SVG icons (cards, weather, moon)
+  js/sparkline.js        mini chart in <canvas>
+  js/widgets.js          components: cards, calendar, news, weather
+  js/settings.js         settings panel (gear icon → modal)
   js/dashboard.js        polling + render
-backend/settings.py      store mutavel persistido em /data/settings.json
+backend/settings.py      mutable store persisted in /data/settings.json
 Dockerfile · docker-compose.yml · requirements.txt
 ```
 
-## Desenvolvimento / testar fora do Docker
+## Development / Running Outside Docker
 
-Para rodar direto na máquina (sem container), apontando para a raiz real:
+To run directly on your machine (no container), pointing to real system root:
 
 ```bash
 pip install -r requirements.txt
 HOST_ROOT=/ HOST_HOSTNAME_FILE=/etc/hostname python backend/app.py
 ```
 
-Abra `http://localhost:8723`. Sensores e stats de containers dependem de o
-processo ter acesso a `/sys` e ao socket do Docker.
+Open `http://localhost:8723`. Sensors and container stats require the process
+to have access to `/sys` and the Docker socket.
 
-Para iterar no frontend sem rebuildar a imagem, monte `static/` como volume
-adicionando ao serviço em `docker-compose.yml`:
+To iterate on frontend without rebuilding the image, mount `static/` as a volume
+by adding to the service in `docker-compose.yml`:
 
 ```yaml
     volumes:
       - ./static:/app/static:ro
-      # ... (mantenha os demais volumes)
+      # ... (keep other volumes)
 ```
 
-Os estáticos são servidos com `Cache-Control: no-store`, então basta editar e
-recarregar no navegador.
+Static files are served with `Cache-Control: no-store`, so just edit and refresh
+in the browser.
 
-## Compatibilidade
+## Compatibility
 
-Testado para o alvo **Safari 9 / iOS 9.3.5**: layout só com Flexbox, JavaScript
-ES5, `XMLHttpRequest`, `<canvas>` 2D. Nada de CSS Grid, `fetch`, ES6 ou frameworks.
+Tested for **Safari 9 / iOS 9.3.5**: layout uses Flexbox only, JavaScript ES5,
+`XMLHttpRequest`, 2D `<canvas>`. No CSS Grid, `fetch`, ES6, or frameworks.

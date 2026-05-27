@@ -1,7 +1,7 @@
-"""Homelab Monitor — servidor Flask.
+"""Homelab Monitor — Flask server.
 
-Serve o dashboard estatico e a API de metricas. Roda dentro de um container;
-ver Dockerfile / docker-compose.yml.
+Serves the static dashboard and metrics API. Runs inside a container;
+see Dockerfile / docker-compose.yml.
 """
 import ipaddress
 import logging
@@ -24,63 +24,63 @@ STATIC_DIR = os.path.join(
 )
 
 app = Flask(__name__, static_folder=None)
-# app.logger nao tem handlers no modo dev — usa o root logger diretamente.
+# app.logger has no handlers in dev mode — use root logger directly.
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(message)s",
                     force=True)
-# Propaga logs da app para o root logger onde os handlers estao configurados.
+# Propagate app logs to root logger where handlers are configured.
 app.logger.setLevel(logging.INFO)
 app.logger.propagate = True
 
-# Cache curto: varias aberturas/recargas nao recoletam tudo a cada request.
+# Short cache: repeated reloads don't re-fetch everything on each request.
 _cache = {"time": 0.0, "data": None}
 _cache_lock = threading.Lock()
 
-# Cache de feeds externos (agenda + noticias + clima). Mantido por um thread
-# scheduler que roda independentemente de requests, com backoff por feed em
-# caso de falha — garante "tenta de novo ate voltar" mesmo sem ninguem polando.
+# Cache of external feeds (calendar + news + weather). Maintained by a background
+# scheduler thread that runs independently of requests, with per-feed backoff on
+# failure — ensures "keep trying until recovered" even without client polling.
 _feeds_lock = threading.Lock()
 
-# Ultimo dado bom por feed — servido enquanto a fonte estiver indisponivel.
+# Last good data per feed — served while the source is unavailable.
 _last_good_feeds = {}
 
-# Jobs do scheduler. Cada feed roda independente dos outros, com seu proprio
-# ciclo de retry. Fallback e o dict devolvido por _safe() quando o coletor
-# levanta exception (alem do "error" adicionado).
+# Scheduler jobs. Each feed runs independently with its own retry cycle.
+# Fallback is the dict returned by _safe() when the collector raises an exception
+# (plus the "error" key added by _safe).
 _FEED_JOBS = {
     "calendar": (calendar_feed.collect, {"events": [], "configured": True}),
     "news":     (news.collect,          {"items": [],  "configured": True}),
     "weather":  (weather.collect,       {"configured": False}),
 }
 
-# Estado por feed: epoch do proximo run, contador de falhas consecutivas e
-# ultimo resultado bruto (mesmo com erro, para diagnostico via /api/feeds).
+# State per feed: epoch of next run, consecutive failure count, and last raw
+# result (even if errored, for diagnostics via /api/feeds).
 _feeds_next_run = {k: 0.0 for k in _FEED_JOBS}
 _feeds_failures = {k: 0   for k in _FEED_JOBS}
 _feeds_last     = {k: None for k in _FEED_JOBS}
 
-# Sinaliza o scheduler para acordar imediatamente (settings change etc.).
+# Signal the scheduler to wake immediately (e.g., on settings change).
 _scheduler_wakeup = threading.Event()
 
 
 def _safe(collect_fn, fallback):
-    """Roda um coletor isolando falhas. Loga o erro para aparecer em docker logs."""
+    """Run a collector in isolation, catching and logging failures."""
     try:
         return collect_fn()
     except Exception as exc:
         name = getattr(collect_fn, "__module__", None) or getattr(collect_fn, "__name__", "?")
-        # Usa logging diretamente (root logger) — garantido no docker logs.
-        logging.warning("Coletor [%s] falhou: %s", name, exc)
+        # Use logging directly (root logger) — guaranteed in docker logs.
+        logging.warning("Collector [%s] failed: %s", name, exc)
         result = dict(fallback)
         result["error"] = str(exc)
         return result
 
 
 def _run_parallel(jobs):
-    """jobs: {chave: (collect_fn, fallback)} -> {chave: resultado}.
+    """jobs: {key: (collect_fn, fallback)} -> {key: result}.
 
-    Roda os coletores em paralelo (cada um isolado por _safe): o tempo total
-    passa a ser o do coletor mais lento, nao a soma de todos.
+    Run collectors in parallel (each isolated by _safe): total time is the
+    slowest collector, not the sum of all.
     """
     results = {}
     with ThreadPoolExecutor(max_workers=len(jobs)) as executor:
@@ -102,12 +102,12 @@ def _build_metrics():
 
 
 def _scheduler_loop():
-    """Mantem o cache de feeds quente em background.
+    """Keep the feeds cache warm in the background.
 
-    Cada feed e re-coletado quando vence seu proximo_run. Sucesso volta o
-    intervalo para FEEDS_CACHE_TTL. Falha aplica backoff exponencial limitado:
-    60s, 120s, 240s, ..., teto FEEDS_RETRY_MAX_S. Como a thread e daemon, ela
-    morre junto com o processo — nao precisa de mecanismo de stop explicito.
+    Each feed is re-collected when its next_run epoch expires. Success resets
+    the interval to FEEDS_CACHE_TTL. Failure applies exponential backoff with
+    a cap: 60s, 120s, 240s, ..., max FEEDS_RETRY_MAX_S. Since this is a daemon
+    thread, it dies with the process — no explicit stop mechanism needed.
     """
     while True:
         now = time.time()
@@ -122,36 +122,36 @@ def _scheduler_loop():
                     _last_good_feeds[key] = data
                     _feeds_failures[key] = 0
                     delay = config.FEEDS_CACHE_TTL
-                    # Recuperacao apos pelo menos uma falha → notifica.
+                    # Recovery after at least one failure → notify.
                     if prev_failures > 0:
                         notifications.add(
                             "info", key,
-                            "Feed [%s] recuperado" % key,
-                            "Coleta voltou ao normal apos %d falha(s) consecutiva(s)."
+                            "Feed [%s] recovered" % key,
+                            "Collection returned to normal after %d consecutive failure(s)."
                             % prev_failures)
-                    # Clima servido pelo fallback met.no → degradacao (warning).
+                    # Weather served by met.no fallback → degraded mode (warning).
                     elif key == "weather" and data.get("_source") == "met.no":
                         notifications.add(
                             "warning", "weather",
-                            "Clima em modo degradado (met.no)",
-                            "Open-Meteo indisponivel; usando met.no como fonte secundaria.")
+                            "Weather in degraded mode (met.no)",
+                            "Open-Meteo unavailable; using met.no as fallback source.")
                 else:
                     _feeds_failures[key] += 1
                     delay = min(
                         config.FEEDS_RETRY_MIN_S * (2 ** (_feeds_failures[key] - 1)),
                         config.FEEDS_RETRY_MAX_S,
                     )
-                    logging.info("[%s] retry #%d: aguardando %.0fs",
+                    logging.info("[%s] retry #%d: waiting %.0fs",
                                  key, _feeds_failures[key], delay)
-                    # So notifica na PRIMEIRA falha da serie — backoff cuida
-                    # do resto sem encher a fila.
+                    # Only notify on the FIRST failure in a series — backoff
+                    # handles the rest without cluttering the queue.
                     if prev_failures == 0:
                         notifications.add(
                             "error", key,
-                            "Falha na integracao: %s" % key,
+                            "Integration failure: %s" % key,
                             data.get("error", "?"))
                 _feeds_next_run[key] = time.time() + delay
-        # Acorda no proximo vencimento (ou imediatamente via _scheduler_wakeup).
+        # Sleep until next expiration (or wake immediately via _scheduler_wakeup).
         sleep_s = max(1.0, min(_feeds_next_run.values()) - time.time())
         _scheduler_wakeup.wait(timeout=sleep_s)
         _scheduler_wakeup.clear()
@@ -179,9 +179,9 @@ def metrics():
 
 @app.route("/api/feeds")
 def feeds():
-    # Apenas le o cache mantido pelo scheduler. Para cada feed prefere o
-    # ultimo dado bom; se nunca houve sucesso, serve o ultimo resultado bruto
-    # (com "error") — assim o frontend sabe distinguir cold-fail de stale.
+    # Only read the scheduler's cache. For each feed, prefer the last good
+    # result; if never successful, serve the last raw result (with "error") —
+    # so the frontend can distinguish cold-fail from stale.
     with _feeds_lock:
         result = {}
         for key in _FEED_JOBS:
@@ -200,10 +200,11 @@ def feeds():
 
 
 def _is_private_url(url):
-    """Verifica se a URL aponta para um endereco privado/loopback/link-local.
+    """Check if URL points to a private/loopback/link-local address.
 
-    Resolve o hostname apos parsear a URL para bloquear SSRF. Retorna True se
-    o destino for um IP privado, loopback, link-local ou nao-global.
+    Resolves the hostname after parsing the URL to block SSRF attacks.
+    Returns True if the destination is a private, loopback, link-local, or
+    non-global IP address.
     """
     try:
         from urllib.parse import urlparse
@@ -211,19 +212,19 @@ def _is_private_url(url):
         from urlparse import urlparse
     try:
         host = urlparse(url).hostname or ""
-        # Resolve o nome para o IP de destino real.
+        # Resolve hostname to actual destination IP.
         ip_str = socket.gethostbyname(host)
         addr = ipaddress.ip_address(ip_str)
         return (addr.is_private or addr.is_loopback
                 or addr.is_link_local or not addr.is_global)
     except Exception:
-        # Nao conseguiu resolver → bloqueia por precaucao.
+        # Resolution failed → block as a precaution.
         return True
 
 
 @app.route("/api/article")
 def article_route():
-    """Modo leitura: baixa a URL e devolve o conteudo principal limpo."""
+    """Reader mode: fetch URL and return cleaned main content."""
     url = (request.args.get("url") or "").strip()
     if not url or len(url) > 1000:
         return jsonify({"error": "url invalida"}), 400
@@ -243,7 +244,7 @@ _CONTAINER_ID_RE = re.compile(r'^[a-zA-Z0-9_.\-]{1,64}$')
 
 @app.route("/api/containers/<container_id>/logs")
 def container_logs(container_id):
-    """Devolve as ultimas N linhas de log de um container Docker."""
+    """Return the last N lines of logs from a Docker container."""
     if not _CONTAINER_ID_RE.match(container_id):
         return jsonify({"error": "container_id invalido"}), 400
     tail = request.args.get("tail", default=200, type=int)
@@ -256,7 +257,7 @@ def container_logs(container_id):
 
 @app.route("/api/notifications")
 def get_notifications():
-    """Lista de notificacoes nao lidas (mais recentes primeiro)."""
+    """List of unread notifications (most recent first)."""
     items = notifications.list_unread()
     response = jsonify({"items": items, "unread_count": len(items)})
     response.headers["Cache-Control"] = "no-store"
@@ -265,7 +266,7 @@ def get_notifications():
 
 @app.route("/api/notifications/<int:nid>/read", methods=["POST"])
 def read_notification(nid):
-    """Marca uma notificacao como lida (remove da sidebar)."""
+    """Mark a notification as read (remove from sidebar)."""
     if not notifications.mark_read(nid):
         return jsonify({"error": "not found"}), 404
     return jsonify({"ok": True, "unread_count": notifications.unread_count()})
@@ -273,7 +274,7 @@ def read_notification(nid):
 
 @app.route("/api/client-error", methods=["POST"])
 def client_error():
-    """Recebe erros JavaScript do browser e os loga no docker logs."""
+    """Receive JavaScript errors from the browser and log them to docker logs."""
     try:
         body = request.get_json(force=True, silent=True) or {}
         msg = body.get("message", "?")
@@ -293,10 +294,10 @@ def health():
 
 
 def _validate_settings(body):
-    """Valida e normaliza o payload do PUT /api/settings.
+    """Validate and normalize the PUT /api/settings payload.
 
-    Devolve um dict com {secao: {chave: valor}} contendo SOMENTE os campos
-    validos do payload. Em caso de erro de validacao, devolve {"error": ...}.
+    Returns a dict with {section: {key: value}} containing ONLY valid fields
+    from the payload. On validation error, returns {"error": ...}.
     """
     if not isinstance(body, dict):
         return {"error": "payload invalido"}
@@ -351,8 +352,8 @@ def _validate_settings(body):
 
 
 def _invalidate_settings_caches(prev, new):
-    """Limpa caches afetados quando uma fonte muda (cidade, URL etc.) e
-    agenda re-coleta imediata do(s) feed(s) afetado(s)."""
+    """Clear caches affected when a source changes (city, URL, etc.) and
+    schedule immediate re-collection of affected feed(s)."""
     affected = set()
     if prev["weather"]["city"] != new["weather"]["city"]:
         weather.invalidate_cache()
@@ -362,7 +363,7 @@ def _invalidate_settings_caches(prev, new):
     if prev["news"]["url"] != new["news"]["url"]:
         affected.add("news")
     if prev.get("system", {}).get("timezone") != new.get("system", {}).get("timezone"):
-        # Timezone afeta os horarios apresentados pela agenda.
+        # Timezone affects the times displayed by calendar.
         affected.add("calendar")
 
     if not affected:
@@ -373,7 +374,7 @@ def _invalidate_settings_caches(prev, new):
             _feeds_last[key] = None
             _feeds_failures[key] = 0
             _feeds_next_run[key] = 0.0
-    # Acorda o scheduler para coletar agora, sem esperar o proximo tick.
+    # Wake scheduler to collect now, without waiting for next tick.
     _scheduler_wakeup.set()
 
 
@@ -406,10 +407,9 @@ def static_files(path):
     return send_from_directory(STATIC_DIR, path, max_age=0)
 
 
-# Scheduler de feeds: roda em background, independente de requests. Iniciado
-# ao importar o modulo, vale tanto para `python app.py` quanto para gunicorn
-# (cada worker tera seu proprio scheduler; aceitavel — sao requests externos
-# leves e os caches sao por processo de qualquer forma).
+# Feeds scheduler: runs in background, independent of requests. Started on module
+# import, works for both `python app.py` and gunicorn (each worker gets its own
+# scheduler; acceptable — external requests are light and caches are per-process).
 threading.Thread(target=_scheduler_loop, daemon=True, name="feeds-scheduler").start()
 
 

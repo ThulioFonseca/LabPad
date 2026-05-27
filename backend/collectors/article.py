@@ -1,10 +1,10 @@
-"""Modo leitura: baixa a URL de uma noticia e devolve HTML limpo.
+"""Reader mode: fetch article URL and return cleaned HTML.
 
-Usa trafilatura (estado-da-arte em extracao de conteudo de noticias) para
-remover ads, menus, "leia tambem" etc., preservando paragrafos, subtitulos e
-listas. Devolve tambem metadata (titulo, autor, data, hostname, og:image).
+Uses trafilatura (state-of-the-art news content extraction) to remove ads,
+menus, "also read", etc., while preserving paragraphs, headings, and lists.
+Also returns metadata (title, author, date, hostname, og:image).
 
-Cache em memoria com TTL curto: reabrir a mesma materia nao refaz o fetch.
+In-memory cache with short TTL: reopening the same article skips the fetch.
 """
 import logging
 import re
@@ -17,15 +17,15 @@ try:
     _HAS_TRAFILATURA = True
 except ImportError:
     _HAS_TRAFILATURA = False
-    logging.warning("trafilatura nao instalado — /api/article ficara indisponivel")
+    logging.warning("trafilatura not installed — /api/article will be unavailable")
 
 _TIMEOUT = 10
 _UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36 HomelabMonitor/1.0")
 _CACHE_TTL = 600    # 10 min
 _CACHE_MAX = 50
-# Padrao em BYTES — trabalhamos com response.content (sem decodificar) para
-# preservar o charset original e deixar o trafilatura detectar via <meta>.
+# Pattern in BYTES — work with response.content (not decoded) to preserve
+# original charset and let trafilatura detect via <meta>.
 _META_REFRESH = re.compile(
     rb'<meta[^>]+http-equiv=["\']refresh["\'][^>]+url=([^"\'>\s]+)',
     re.IGNORECASE)
@@ -48,11 +48,11 @@ def _cache_get(url):
 
 
 def _fetch(url):
-    """GET com redirects HTTP. Devolve bytes (NAO str) — sites pt-BR muitas
-    vezes omitem o charset no header, e o requests cai em ISO-8859-1 por
-    padrao, quebrando 'ç', 'ã', etc. O trafilatura detecta o charset via
-    <meta charset> / sniffing quando recebe bytes. Se o destino final for
-    news.google.com (interstitial), tenta seguir um meta-refresh."""
+    """GET with HTTP redirects. Return bytes (NOT str) — sites often omit
+    charset in headers, and requests defaults to ISO-8859-1, breaking special
+    chars. Trafilatura detects charset via <meta charset> / sniffing on bytes.
+    If final destination is news.google.com (interstitial), try to follow
+    meta-refresh."""
     response = _http_fetch(url, headers={"User-Agent": _UA}, timeout=_TIMEOUT)
     content = response.content
     final_url = response.url
@@ -67,7 +67,7 @@ def _fetch(url):
 
 
 def get(url):
-    """Devolve {title, image, html, site, author, date, url} ou {error: ...}."""
+    """Return {title, image, html, site, author, date, url} or {error: ...}."""
     cached = _cache_get(url)
     if cached is not None:
         return cached

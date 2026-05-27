@@ -1,7 +1,7 @@
-"""Configuracao do backend do Homelab Monitor.
+"""Configuration for the Homelab Monitor backend.
 
-Todos os valores podem ser sobrescritos por variaveis de ambiente
-(definidas em docker-compose.yml).
+All values can be overridden by environment variables
+(defined in docker-compose.yml).
 """
 import os
 
@@ -11,61 +11,61 @@ def _env(name, default):
     return value if value not in (None, "") else default
 
 
-# --- Servidor HTTP -----------------------------------------------------------
+# --- HTTP Server -----------------------------------------------------------
 PORT = int(_env("MONITOR_PORT", "8723"))
 HOST_BIND = _env("MONITOR_BIND", "0.0.0.0")
 
-# Intervalo sugerido de atualizacao (ms). Apenas informativo: exposto em
-# /api/metrics; quem manda no polling e o refreshMs do static/config.js.
+# Suggested update interval (ms). Informational only: exposed in /api/metrics;
+# polling is controlled by refreshMs in static/config.js.
 REFRESH_MS = int(_env("MONITOR_REFRESH_MS", "5000"))
 
-# TTL do cache de /api/metrics (segundos). Evita recoletar tudo a cada request.
+# Cache TTL for /api/metrics (seconds). Avoids re-collecting everything on each request.
 CACHE_TTL = float(_env("MONITOR_CACHE_TTL", "2.0"))
 
 
-# --- Acesso ao host ----------------------------------------------------------
-# Raiz do host montada dentro do container (ver volume em docker-compose.yml).
+# --- Host Access -----------------------------------------------------------
+# Host root mounted inside container (see volume in docker-compose.yml).
 HOST_ROOT = _env("HOST_ROOT", "/rootfs")
 
-# Arquivo com o hostname do host (bind-mount em docker-compose.yml).
+# File containing the host hostname (bind-mounted in docker-compose.yml).
 HOST_HOSTNAME_FILE = _env("HOST_HOSTNAME_FILE", "/host-hostname")
 
-# Pontos de montagem exibidos como "disco".
-# Cada item: (rotulo exibido, caminho real dentro do container).
-# Para mostrar tambem /dados do host, adicione:
-#     ("/dados", HOST_ROOT + "/dados")
+# Disk mount points displayed as "disk".
+# Each item: (display label, actual path inside container).
+# To also show /data from the host, add:
+#     ("/data", HOST_ROOT + "/data")
 DISK_PATHS = [
     ("/", HOST_ROOT),
 ]
 
 
-# --- Feeds externos: Agenda e Noticias ---------------------------------------
-# Fuso horario (formato IANA, ex.: America/Sao_Paulo). Usado pela agenda.
+# --- External Feeds: Calendar and News ----------------------------------------
+# Timezone (IANA format, e.g. America/New_York). Used by calendar.
 TIMEZONE = _env("TZ", "America/Sao_Paulo")
 
-# Agenda: URL .ics de um calendario Outlook publicado. Vazio = secao desativada.
+# Calendar: URL of a published Outlook calendar (.ics). Empty = section disabled.
 CALENDAR_ICS_URL = _env("CALENDAR_ICS_URL", "")
-# Quantos dias a frente exibir.
+# How many days ahead to display.
 CALENDAR_DAYS = int(_env("CALENDAR_DAYS", "3"))
-# Teto de eventos exibidos (evita estourar a tela).
+# Maximum events displayed (prevents screen overflow).
 CALENDAR_MAX_EVENTS = int(_env("CALENDAR_MAX_EVENTS", "12"))
 
-# Noticias: URL de um feed RSS/Atom. Vazio = secao desativada.
+# News: URL of an RSS/Atom feed. Empty = section disabled.
 NEWS_RSS_URL = _env("NEWS_RSS_URL", "")
-# Quantas noticias exibir.
+# How many news items to display.
 NEWS_LIMIT = int(_env("NEWS_LIMIT", "5"))
 
-# Feeds externos sao lentos e mudam pouco: cache longo (segundos).
+# External feeds are slow and change infrequently: long cache (seconds).
 FEEDS_CACHE_TTL = float(_env("FEEDS_CACHE_TTL", "900"))
-# Backoff exponencial quando um feed falha (segundos): inicia em MIN, dobra a
-# cada falha consecutiva, limita em MAX. Sucesso volta ao intervalo normal
-# FEEDS_CACHE_TTL. Serie default: 60, 120, 240, 480, 600, 600, ...
+# Exponential backoff when a feed fails (seconds): starts at MIN, doubles on
+# each consecutive failure, capped at MAX. Success resets to normal interval
+# FEEDS_CACHE_TTL. Default series: 60, 120, 240, 480, 600, 600, ...
 FEEDS_RETRY_MIN_S = float(_env("FEEDS_RETRY_MIN_S", "60"))
 FEEDS_RETRY_MAX_S = float(_env("FEEDS_RETRY_MAX_S", "600"))
 
-# Interface de rede a monitorar. Vazio = soma de todas as interfaces.
+# Network interface to monitor. Empty = sum of all interfaces.
 NETWORK_IFACE = _env("MONITOR_NETWORK_IFACE", "")
 
-# Clima: nome da cidade a monitorar (ex: "Sao Paulo", "Rio de Janeiro").
-# Vazio = secao desativada.
+# Weather: city name to monitor (e.g. New York, Tokyo).
+# Empty = section disabled.
 WEATHER_CITY = _env("WEATHER_CITY", "")

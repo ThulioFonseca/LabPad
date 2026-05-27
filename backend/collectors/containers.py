@@ -1,4 +1,4 @@
-"""Coletor de metricas dos containers Docker (via socket montado :ro)."""
+"""Collector for Docker container metrics (via read-only mounted socket)."""
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor
@@ -15,14 +15,14 @@ _runtime_cache = {}
 def _client_get():
     global _client
     if _client is None:
-        # timeout=10 evita que uma chamada travada ao Docker daemon bloqueie o
-        # loop de métricas por 60s (padrão do SDK), o que causaria timeout no XHR.
+        # timeout=10 prevents a hung Docker daemon call from blocking the metrics
+        # loop for 60s (SDK default), which would cause XHR timeout.
         _client = docker.from_env(timeout=10)
     return _client
 
 
 def _runtime():
-    """Versao do Docker daemon — memoizada (nao muda em runtime)."""
+    """Docker daemon version — memoized (doesn't change at runtime)."""
     if not _runtime_cache:
         try:
             v = _client_get().version() or {}
@@ -33,7 +33,7 @@ def _runtime():
 
 
 def _cpu_percent(stats):
-    """CPU% no mesmo criterio do `docker stats` (delta cpu vs delta sistema)."""
+    """CPU% using same criteria as `docker stats` (delta cpu vs delta system)."""
     try:
         cpu = stats["cpu_stats"]
         pre = stats["precpu_stats"]
@@ -50,7 +50,7 @@ def _cpu_percent(stats):
 
 
 def _mem(stats):
-    """Memoria usada (descontando cache), limite e percentual."""
+    """Memory used (excluding cache), limit, and percentage."""
     mem = stats.get("memory_stats", {}) or {}
     usage = mem.get("usage", 0) or 0
     detail = mem.get("stats", {}) or {}
@@ -75,7 +75,7 @@ def _net(stats):
 
 
 def _one(container):
-    """Coleta de um unico container. Roda em paralelo (ver collect())."""
+    """Collect metrics from a single container. Runs in parallel (see collect())."""
     item = {
         "name": container.name,
         "id": container.short_id,
@@ -117,21 +117,21 @@ def collect():
     if not containers:
         return {"list": [], "runtime": _runtime()}
 
-    # `stats(stream=False)` leva ~1s por container; paraleliza para caber no ciclo.
+    # `stats(stream=False)` takes ~1s per container; parallelize to fit the cycle.
     workers = min(8, len(containers))
     with ThreadPoolExecutor(max_workers=workers) as pool:
         items = list(pool.map(_one, containers))
 
-    # Ativos primeiro, depois ordem alfabetica.
+    # Active containers first, then alphabetical order.
     items.sort(key=lambda c: (c["status"] != "running", c["name"].lower()))
     return {"list": items, "runtime": _runtime()}
 
 
 def get_logs(container_id, tail=200):
-    """Devolve as ultimas `tail` linhas de log do container.
+    """Return the last `tail` lines of logs from a container.
 
-    Limpa codigos ANSI (cores) — virariam lixo num <pre>. Erros viram
-    {"error": ...} para o frontend exibir.
+    Clean ANSI codes (colors) — they'd become garbage in a <pre>.
+    Errors become {"error": ...} for the frontend to display.
     """
     try:
         c = _client_get().containers.get(container_id)
