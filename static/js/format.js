@@ -1,13 +1,13 @@
 /* =============================================================================
- * format.js  —  utilitarios genericos: DOM e formatacao de numeros.
+ * format.js  —  generic utilities: DOM helpers and number formatting.
  *
- * Sem dependencias. Carregado antes de widgets.js / dashboard.js, que usam
- * estas funcoes. JavaScript ES5 puro (Safari 9 / iPad 2).
+ * No dependencies. Loaded before widgets.js / dashboard.js, which use
+ * these functions. Pure JavaScript ES5 (Safari 9 / iPad 2).
  * ===========================================================================*/
 
-var DASH = '—'; /* travessao usado quando nao ha valor */
+var DASH = '—'; /* em-dash used when no value is available */
 
-/* Le um valor aninhado pelo caminho 'a.b.0.c' (indices de array sao numeros). */
+/* Read a nested value by path 'a.b.0.c' (array indices are numbers). */
 function getPath(obj, path) {
   if (!obj || !path) { return undefined; }
   var parts = path.split('.');
@@ -19,7 +19,7 @@ function getPath(obj, path) {
   return cur;
 }
 
-/* Define o texto de um elemento de forma segura (cria o no de texto se faltar). */
+/* Safely set the text of an element (creates the text node if missing). */
 function setText(node, text) {
   if (!node) { return; }
   if (node.firstChild && node.firstChild.nodeType === 3) {
@@ -30,7 +30,7 @@ function setText(node, text) {
   }
 }
 
-/* Cria um elemento com classe e (opcionalmente) texto. */
+/* Create an element with a class and optional text content. */
 function el(tag, className, text) {
   var node = document.createElement(tag);
   if (className) { node.className = className; }

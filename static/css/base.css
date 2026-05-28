@@ -23,12 +23,12 @@ body {
   font-size: 15px;
   line-height: 1.4;
   -webkit-text-size-adjust: 100%;
-  background-repeat: no-repeat;     /* evita tile do gradient (tema Vidro) */
+  background-repeat: no-repeat;     /* prevents tiling of the gradient (Glass theme) */
 }
 
-/* Trava o scroll do dash enquanto um modal esta aberto. iOS bulletproof:
-   position:fixed + top negativo; window.Modals (settings.js) restaura a
-   posicao ao fechar o ultimo modal. */
+/* Locks dashboard scroll while a modal is open. iOS bulletproof:
+   position:fixed + negative top; window.Modals (settings.js) restores the
+   position when the last modal closes. */
 body.scroll-locked {
   position: fixed;
   left: 0;
@@ -37,7 +37,7 @@ body.scroll-locked {
   overflow: hidden;
 }
 
-/* fonte monoespacada reaproveitada por varios elementos */
+/* monospace font reused across various elements */
 .mono,
 .weather-clock,
 .card-value,
@@ -55,7 +55,7 @@ body.scroll-locked {
   font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
-/* Pilula exibida quando o clima esta indisponivel mas o scheduler continua
-   tentando — opacidade reduzida sinaliza estado degradado sem chamar atencao. */
+/* Pill shown when weather is unavailable but the scheduler keeps retrying —
+   reduced opacity signals a degraded state without drawing attention. */
 .weather-retry { opacity: 0.65; }
 

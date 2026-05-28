@@ -1,20 +1,20 @@
 /* =============================================================================
- * themes.css  —  SISTEMA DE TEMAS.
+ * themes.css  —  THEME SYSTEM.
  *
- * O tema vive como classe em <html>: 'theme-X mode-Y'.
- *   temas: minimal | neu | elevated | outline | glass
- *   modos: dark | light
+ * The theme lives as a class on <html>: 'theme-X mode-Y'.
+ *   themes: minimal | neu | elevated | outline | glass
+ *   modes:  dark | light
  *
- * base.css = estrutura;  theme.css = Minimal escuro (regras "nuas", o padrao).
- * Este arquivo adiciona apenas os OVERRIDES das outras 9 combinacoes, mais os
- * blocos semanticos (warn/crit/ok) e o estilo do menu da engrenagem.
+ * base.css = structure;  theme.css = Minimal dark (bare rules, the default).
+ * This file adds only the OVERRIDES for the other 9 combinations, plus the
+ * semantic blocks (warn/crit/ok) and the gear menu style.
  *
- * Regras de cor do tema usam o prefixo '.theme-X.mode-Y' (especificidade 0,3,0)
- * sobre seletores de uma classe. Os blocos semanticos usam '.mode-Y' + a classe
- * de estado (mesma especificidade) e vem DEPOIS — por isso vencem o acento.
+ * Theme colour rules use the prefix '.theme-X.mode-Y' (specificity 0,3,0)
+ * over single-class selectors. Semantic blocks use '.mode-Y' + the state class
+ * (same specificity) and come AFTER — so they win the override.
  *
- * Sem variaveis CSS / sem backdrop-filter (Safari 9 / iPad 2). O tema "Vidro"
- * usa translucidez sobre um gradiente — sem blur ao vivo.
+ * No CSS variables / no backdrop-filter (Safari 9 / iPad 2). The "Glass" theme
+ * uses translucency over a gradient — no live blur.
  * ===========================================================================*/
 
 
@@ -390,10 +390,10 @@
 .theme-glass.mode-light .weather-sep { color: rgba(30, 42, 66, 0.2); }
 
 
-/* === Semantica · escuro ===================================================
- * Restaura warn/crit/em-andamento sobre o acento do tema. Mesma
- * especificidade dos blocos acima (0,3,0) — vence por vir depois. Cobre os 4
- * temas escuros (minimal escuro continua usando tambem o theme.css). */
+/* === Semantic · dark ======================================================
+ * Restores warn/crit/in-progress over the theme accent. Same specificity
+ * as the blocks above (0,3,0) — wins by coming after. Covers all 4 dark
+ * themes (minimal dark also uses theme.css). */
 
 .mode-dark .card--warn .bar-fill,
 .mode-dark .crow--warn .cmini-fill { background-color: #d29922; }

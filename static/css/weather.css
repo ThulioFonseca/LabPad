@@ -1,10 +1,10 @@
 /* =============================================================================
- * weather.css — widget de clima na topbar e estado de retry  —  parte de base.css extraida para reducao de tamanho do arquivo.
- * Estrutura e layout sem cores (cores em theme.css / themes.css).
- * Compativel com Safari 9 / iOS 9.3.5.
+ * weather.css — weather widget in the topbar and retry state  —  split from base.css to reduce file size.
+ * Structure and layout without colours (colours live in theme.css / themes.css).
+ * Compatible with Safari 9 / iOS 9.3.5.
  * ===========================================================================*/
 
-/* --- Widget de clima no centro do cabecalho ------------------------------- */
+/* --- Weather widget in the header centre ---------------------------------- */
 .weather-panel {
   display: -webkit-flex;
   display: flex;

@@ -327,13 +327,13 @@ main {
 .news-item--media .news-title {
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;           /* ate 2 linhas, depois reticencias */
+  -webkit-line-clamp: 2;           /* up to 2 lines, then ellipsis */
   overflow: hidden;
 }
 
-/* Agenda + Noticias: Montserrat (Google Fonts) — sans geometrica moderna,
-   x-height alto e formas escaneaveis para titulos de cards (NYT/Medium-style).
-   Fallback em system sans mantem o visual se o Google Fonts nao carregar. */
+/* Calendar + News: Montserrat (Google Fonts) — modern geometric sans,
+   tall x-height and scannable letterforms for card titles (NYT/Medium-style).
+   Fallback to system sans preserves the look when Google Fonts cannot load. */
 #section-calendar, #section-calendar *,
 #section-news, #section-news * {
   font-family: "Montserrat", -apple-system, "Helvetica Neue", Arial, sans-serif;
@@ -341,7 +341,7 @@ main {
 
 /* --- Telas estreitas (celular em retrato) --------------------------------- */
 @media (max-width: 600px) {
-  /* Cabecalho: marca + status na 1a linha, clima ocupa a 2a linha inteira. */
+  /* Header: brand + status on line 1, weather occupies the full 2nd line. */
   .topbar {
     -webkit-flex-wrap: wrap;
     flex-wrap: wrap;
@@ -398,8 +398,8 @@ main {
   flex-direction: column;
 }
 .spark--fill {
-  /* base = os 28px de .spark (NAO usar height:auto: canvas cai p/ 150px).
-     Cresce para preencher a altura sobrando do card, sem forca-lo a esticar. */
+  /* base = the 28px of .spark (do NOT use height:auto: canvas falls back to 150px).
+     Grows to fill remaining card height without forcing the card to stretch. */
   -webkit-flex: 1 1 auto;
   flex: 1 1 auto;
 }

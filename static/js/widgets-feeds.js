@@ -1,27 +1,27 @@
 /* =============================================================================
- * widgets-feeds.js  —  agenda (calendario .ics) e noticias (RSS/Atom).
+ * widgets-feeds.js  —  calendar (.ics) and news (RSS/Atom).
  *
- * Estende o namespace Widgets definido em widgets-host.js.
- * ES5 puro / Safari 9.
+ * Extends the Widgets namespace defined in widgets-host.js.
+ * Pure ES5 / Safari 9.
  * ===========================================================================*/
 
-/* --- Agenda (calendario) --------------------------------------------------*/
+/* --- Calendar -------------------------------------------------------------*/
 
 Widgets.renderCalendar = function (container, payload) {
   container.innerHTML = '';
 
   if (!payload || !payload.configured) {
-    container.appendChild(el('div', 'empty', 'Agenda nao configurada.'));
+    container.appendChild(el('div', 'empty', 'Calendar not configured.'));
     return;
   }
   if (payload.error) {
-    container.appendChild(el('div', 'empty', 'Nao foi possivel ler a agenda.'));
+    container.appendChild(el('div', 'empty', 'Could not read calendar.'));
     return;
   }
 
   var events = payload.events || [];
   if (!events.length) {
-    container.appendChild(el('div', 'empty', 'Nenhum evento nos proximos dias.'));
+    container.appendChild(el('div', 'empty', 'No events in the next few days.'));
     return;
   }
 
@@ -47,30 +47,30 @@ Widgets._calEvent = function (ev) {
   var row = el('div', cls);
   row.appendChild(el('span', 'cal-time', ev.time_label || ''));
   var body = el('div', 'cal-body');
-  body.appendChild(el('div', 'cal-title', ev.title || '(sem titulo)'));
+  body.appendChild(el('div', 'cal-title', ev.title || '(no title)'));
   if (ev.location) { body.appendChild(el('div', 'cal-loc', ev.location)); }
   row.appendChild(body);
   return row;
 };
 
 
-/* --- Noticias (RSS) -------------------------------------------------------*/
+/* --- News (RSS) -----------------------------------------------------------*/
 
 Widgets.renderNews = function (container, payload) {
   container.innerHTML = '';
 
   if (!payload || !payload.configured) {
-    container.appendChild(el('div', 'empty', 'Feed de noticias nao configurado.'));
+    container.appendChild(el('div', 'empty', 'News feed not configured.'));
     return;
   }
   if (payload.error) {
-    container.appendChild(el('div', 'empty', 'Nao foi possivel ler o feed.'));
+    container.appendChild(el('div', 'empty', 'Could not read feed.'));
     return;
   }
 
   var items = payload.items || [];
   if (!items.length) {
-    container.appendChild(el('div', 'empty', 'Sem noticias no momento.'));
+    container.appendChild(el('div', 'empty', 'No news at the moment.'));
     return;
   }
 

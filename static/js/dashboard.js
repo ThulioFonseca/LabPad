@@ -1,8 +1,8 @@
 /* =============================================================================
- * dashboard.js  —  orquestrador.
+ * dashboard.js  —  orchestrator.
  *
- * Monta os widgets a partir de CONFIG, faz polling de /api/metrics e atualiza
- * a tela. JavaScript ES5 puro (Safari 9 / iPad 2).
+ * Builds widgets from CONFIG, polls /api/metrics, and updates the screen.
+ * Pure JavaScript ES5 (Safari 9 / iPad 2).
  * ===========================================================================*/
 
 (function () {
@@ -39,7 +39,7 @@
       xhr.open('POST', '/api/client-error', true);
       xhr.setRequestHeader('Content-Type', 'application/json');
       xhr.send(JSON.stringify({ message: msg, source: 'dashboard.js', lineno: 0, context: context }));
-    } catch (e2) { /* nao pode fazer nada */ }
+    } catch (e2) { /* nothing we can do */ }
   }
 
   /* --- Montagem inicial dos widgets do config.js --------------------------*/
@@ -139,13 +139,13 @@
     for (var i = 0; i < list.length; i++) {
       if (list[i].status === 'running') { up = up + 1; }
     }
-    setText(node, '(' + up + ' / ' + list.length + ' ativos)');
+    setText(node, '(' + up + ' / ' + list.length + ' active)');
   }
 
   /* --- Brand como atalho de Full refresh ----------------------------------*/
   /* O titulo "Homelab" no topo virou o gatilho do reload completo: um clique
      na area do brand recarrega tudo. Ignoramos cliques no botao de info do
-     host embutido no proprio brand para nao colidir com aquela acao. */
+     host info button embedded in the brand itself, to avoid conflicting with that action. */
   function wireBrandRefresh() {
     var brand = byId('brand-refresh');
     if (!brand) { return; }
@@ -173,7 +173,7 @@
     var backdrop = byId('containers-modal');
     if (backdrop) { backdrop.onclick = closeContainersModal; }
 
-    /* Clique dentro da caixa nao chega ao backdrop (que fecha o modal). */
+    /* Clicks inside the box do not reach the backdrop (which closes the modal). */
     var box = byId('containers-modal-box');
     if (box) { box.onclick = function (e) { e.stopPropagation(); }; }
 
@@ -226,7 +226,7 @@
   function openLogsModal(id, name) {
     currentLogId = id;
     setText(byId('logs-modal-name'), name || '?');
-    setText(byId('logs-modal-pre'), 'Carregando...');
+    setText(byId('logs-modal-pre'), 'Loading...');
     Modals.open('logs-modal');
     fetchLogs(id, true);
     if (logsInterval) { clearInterval(logsInterval); }
@@ -249,22 +249,22 @@
       if (currentLogId !== id) { return; }  /* trocou de container */
       var pre = byId('logs-modal-pre');
       var body = byId('logs-modal-body');
-      if (data.error) { setText(pre, 'Erro: ' + data.error); return; }
+      if (data.error) { setText(pre, 'Error: ' + data.error); return; }
       var text = data.logs || '';
-      /* Preserva posicao se o usuario subiu para ler historico. */
+      /* Preserve scroll position if the user has scrolled up to read history. */
       var nearBottom = !body
         || (body.scrollHeight - body.scrollTop - body.clientHeight < 50);
-      setText(pre, text || '(sem logs)');
+      setText(pre, text || '(no logs)');
       if (body && (force || nearBottom)) { body.scrollTop = body.scrollHeight; }
     }, function (err) {
       if (currentLogId !== id) { return; }
-      setText(byId('logs-modal-pre'), 'Erro ao buscar logs: ' + err);
+      setText(byId('logs-modal-pre'), 'Error fetching logs: ' + err);
     });
   }
 
-  /* --- Modal de detalhes do clima (clique no carrossel da topbar) -------*/
+  /* --- Weather detail modal (click on topbar carousel) ------------------*/
   function openWeatherModal() {
-    if (!lastWeather) { return; }   /* sem dados ainda */
+    if (!lastWeather) { return; }   /* no data yet */
     setText(byId('weather-modal-city'),
       lastWeather.city ? ' — ' + lastWeather.city : '');
     Widgets.renderWeatherDetail(byId('weather-modal-body'), lastWeather);
@@ -284,19 +284,19 @@
     if (closeBtn) { closeBtn.onclick = closeWeatherModal; }
   }
 
-  /* --- Modal de leitura (clique no card de noticia) ---------------------- */
+  /* --- Article reader modal (click on news card) ------------------------- */
   function openArticleModal(item) {
     if (!item || !item.link) { return; }
     var srcEl = byId('article-modal-source');
     var bodyEl = byId('article-modal-body');
     var extEl = byId('article-modal-extlink');
 
-    setText(srcEl, 'Carregando...');
+    setText(srcEl, 'Loading...');
     if (extEl) { extEl.href = item.link; }
     bodyEl.innerHTML = '';
     bodyEl.scrollTop = 0;
 
-    /* Pre-renderiza com o que ja temos do RSS (imagem aparece instantanea). */
+    /* Pre-render with what we already have from RSS (image appears instantly). */
     if (item.image) {
       var img = el('img', 'article-hero-img');
       img.src = item.image; img.alt = '';
@@ -305,7 +305,7 @@
     if (item.title) {
       bodyEl.appendChild(el('h1', 'article-title', item.title));
     }
-    var loader = el('div', 'article-loading', 'Carregando o conteudo...');
+    var loader = el('div', 'article-loading', 'Loading content...');
     bodyEl.appendChild(loader);
 
     Modals.open('article-modal');
@@ -316,10 +316,10 @@
       if (!Modals.isOpen('article-modal')) { return; }
       if (data && data.error) {
         loader.className = 'article-error';
-        setText(loader, 'Nao foi possivel extrair: ' + data.error);
+        setText(loader, 'Could not extract: ' + data.error);
         return;
       }
-      setText(srcEl, data.site || data.title || 'Noticia');
+      setText(srcEl, data.site || data.title || 'News');
       bodyEl.innerHTML = '';
       var image = item.image || data.image;
       if (image) {
@@ -341,7 +341,7 @@
     }, function (err) {
       if (!Modals.isOpen('article-modal')) { return; }
       loader.className = 'article-error';
-      setText(loader, 'Erro ao buscar: ' + err);
+      setText(loader, 'Error fetching: ' + err);
     }, 15000);
   }
 
@@ -412,10 +412,10 @@
     }
   }
 
-  /* --- Rotacao do widget de clima (painel unico) -------------------------*/
-  /* Slides ativos vem do Settings (subset de current/forecast/moon). Cada
-     startWeatherRotation gera um novo "token" — setTimeouts antigos viram
-     no-op, evitando rotacoes duplicadas quando o usuario salva configs. */
+  /* --- Weather widget rotation (single panel) ----------------------------*/
+  /* Active slides come from Settings (subset of current/forecast/moon). Each
+     startWeatherRotation generates a new "token" — old setTimeouts become
+     no-ops, preventing duplicate rotations when the user saves settings. */
 
   function enabledWeatherSlides() {
     var s = (window.Settings && Settings.weatherSlides)
@@ -438,7 +438,7 @@
       var enabled = enabledWeatherSlides();
       var nextId;
       if (weatherCurrentId === 'city') {
-        /* Saindo da intro: vai pro primeiro slide habilitado. */
+        /* Leaving intro: go to the first enabled slide. */
         nextId = enabled[0];
       } else {
         var i = enabled.indexOf(weatherCurrentId);
@@ -447,7 +447,7 @@
       weatherCurrentId = nextId;
       renderWeatherCurrent();
       panel.className = 'weather-panel';
-      /* So continua girando se ha >1 slides habilitados (city ja saiu). */
+      /* Only keep rotating if there are >1 enabled slides (city already shown). */
       if (enabled.length > 1) {
         weatherTimer = setTimeout(weatherStep, WEATHER_SHOW_MS);
       }
@@ -456,16 +456,16 @@
 
   function startWeatherRotation() {
     if (!weatherRefs || !lastWeather || !lastWeather.configured) { return; }
-    /* Cancela qualquer ciclo anterior antes de comecar um novo. */
+    /* Cancel any previous cycle before starting a new one. */
     clearTimeout(weatherTimer);
-    /* Sempre comeca pelo slide 'city' (intro, exibido uma vez). */
+    /* Always start with the 'city' slide (intro, shown once). */
     weatherCurrentId = 'city';
     renderWeatherCurrent();
     weatherRefs.panel.className = 'weather-panel';
     weatherTimer = setTimeout(weatherStep, WEATHER_SHOW_MS);
   }
 
-  /* Mostra/esconde sparklines conforme Settings.spark(id). */
+  /* Show/hide sparklines according to Settings.spark(id). */
   function applySparkVisibility() {
     if (!window.Settings) { return; }
     var id;
@@ -479,37 +479,37 @@
     }
   }
 
-  /* --- Sizing dos feed-lists em PIXELS (necessario para Safari 9 / iPad 2) -
-     iOS Safari 9 nao trata altura flex-calculada como "definida" para
-     overflow-y rolar, e position:absolute colapsa quando o pai nao tem
-     height:100% resolvido contra parent flex. A solucao bulletproof: medir
-     a viewport e descontar topbar+host+titulo+padings, depois setar
-     .feed-list.style.height em pixels diretos. iOS aceita sem questionar
-     e ativa o momentum touch. */
+  /* --- Feed-list sizing in PIXELS (required for Safari 9 / iPad 2) -------
+     iOS Safari 9 does not treat flex-calculated height as "defined" for
+     overflow-y scrolling, and position:absolute collapses when the parent
+     has no height:100% resolved against a flex parent. The bulletproof fix:
+     measure the viewport, subtract topbar+host+title+padding, then set
+     .feed-list.style.height in raw pixels. iOS accepts it without question
+     and enables momentum touch scrolling. */
   function sizeFeedLists() {
     var lists = document.getElementsByClassName('feed-list');
     if (!lists || !lists.length) { return; }
-    /* Mobile (< 601 px): empilhamento vertical com scroll global — limpa
-       qualquer altura que tenhamos setado em sessoes anteriores. */
+    /* Mobile (< 601 px): vertical stacking with global scroll — clear
+       any height we set in previous sessions. */
     if (window.innerWidth < 601) {
       for (var i = 0; i < lists.length; i++) { lists[i].style.height = ''; }
       return;
     }
     var viewportH = document.documentElement.clientHeight || window.innerHeight;
     var topbarEl  = document.getElementsByClassName('topbar')[0];
-    var hostEl    = document.getElementsByClassName('panel')[0]; // 1a .panel = host
+    var hostEl    = document.getElementsByClassName('panel')[0]; // first .panel = host
     var titleEl   = document.getElementsByClassName('panel-title')[0];
     var topbarH = topbarEl ? topbarEl.offsetHeight : 0;
     var hostH   = hostEl   ? hostEl.offsetHeight   : 0;
     var titleH  = titleEl  ? titleEl.offsetHeight  : 16;
-    var titleMb = 12; /* default .panel-title margin-bottom (base.css) */
+    var titleMb = 12; /* default .panel-title margin-bottom from base.css */
     if (titleEl && window.getComputedStyle) {
       try {
         var parsed = parseInt(window.getComputedStyle(titleEl).marginBottom, 10);
         if (!isNaN(parsed)) { titleMb = parsed; }
       } catch (e) { /* ignore */ }
     }
-    /* main padding 8/24 + .panel margin-bottom 20 (espaco entre host e feeds). */
+    /* main padding 8/24 + .panel margin-bottom 20 (gap between host and feeds). */
     var avail = viewportH - topbarH - 8 - 24 - hostH - 20 - titleH - titleMb;
     if (avail < 80) { avail = 80; }
     for (var j = 0; j < lists.length; j++) {
@@ -517,7 +517,7 @@
     }
   }
 
-  /* --- Tick da agenda: re-renderiza para atualizar cores de urgencia ------*/
+  /* --- Calendar tick: re-renders to update urgency colours ---------------*/
   function calendarTick() {
     if (lastCalendar) {
       Widgets.renderCalendar(byId('section-calendar'), lastCalendar);
@@ -525,7 +525,7 @@
     setTimeout(calendarTick, 60000);
   }
 
-  /* --- Loop de polling das metricas --------------------------------------*/
+  /* --- Metrics polling loop ----------------------------------------------*/
   function poll() {
     var url = (CONFIG.apiBase || '') + '/api/metrics?_=' + (new Date()).getTime();
     getJSON(url, function (data) {
@@ -542,14 +542,14 @@
     setTimeout(poll, CONFIG.refreshMs);
   }
 
-  /* --- Loop dos feeds (agenda + noticias + clima) -------------------------*/
+  /* --- Feeds polling loop (calendar + news + weather) --------------------*/
   function pollFeeds() {
-    /* Cancela timer pendente — permite refetch imediato (onBackendSave) sem
-       acumular polls em paralelo. */
+    /* Cancel pending timer — allows immediate refetch (onBackendSave) without
+       accumulating parallel polls. */
     if (feedsTimer) { clearTimeout(feedsTimer); feedsTimer = null; }
 
     var url = (CONFIG.apiBase || '') + '/api/feeds?_=' + (new Date()).getTime();
-    /* Timeout de 40s: feeds chamam APIs externas; a agenda pode levar ate ~25s. */
+    /* 40s timeout: feeds call external APIs; calendar can take up to ~25s. */
     getJSON(url, function (data) {
       try {
         lastCalendar = data.calendar;
@@ -562,23 +562,23 @@
             var prevCity = lastWeather ? lastWeather.city : null;
             var firstTime = !lastWeather;
             lastWeather = data.weather;
-            /* Cidade nova (ou primeira carga): reinicia rotacao — o slide
-               'city' reaparece confirmando visualmente a mudanca. */
+            /* New city (or first load): restart rotation — the 'city' slide
+               reappears visually confirming the change. */
             if (firstTime || data.weather.city !== prevCity) {
               startWeatherRotation();
             } else {
               renderWeatherCurrent();
             }
-            /* Atualiza o modal de detalhes se estiver aberto. */
+            /* Update the detail modal if it is open. */
             if (window.Modals && Modals.isOpen('weather-modal')) {
               Widgets.renderWeatherDetail(byId('weather-modal-body'), lastWeather);
             }
           } catch (e) { reportError('weather-render', e); }
         } else if (data.weather && weatherRefs && !data.weather.configured) {
-          /* Nao configurado OU erro sem cache previo: pilula discreta
-             sinalizando que o backend continua tentando. Some sozinho quando
-             a proxima resposta vier com configured:true (firstTime=true,
-             startWeatherRotation() reescreve o painel). */
+          /* Not configured OR error with no cached data: show a subtle pill
+             signalling that the backend is still trying. Disappears on its own
+             when the next response arrives with configured:true (firstTime=true,
+             startWeatherRotation() overwrites the panel). */
           weatherRefs.panel.innerHTML = '';
           var pill = el('span', 'weather-val weather-retry');
           pill.appendChild(document.createTextNode(
@@ -589,8 +589,8 @@
       } catch (e) { reportError('pollFeeds', e); }
       feedsTimer = setTimeout(pollFeeds, CONFIG.feedsRefreshMs);
     }, function () {
-      if (!feedsLoaded) { showFeedMessage('Sem conexao com o servidor.'); }
-      /* Falha de rede: tenta de novo em 30s em vez de esperar 10 min */
+      if (!feedsLoaded) { showFeedMessage('No connection to server.'); }
+      /* Network failure: retry in 30s instead of waiting 10 min. */
       feedsTimer = setTimeout(pollFeeds, 30000);
     }, 40000);
   }
@@ -606,9 +606,9 @@
     }
   }
 
-  /* Placeholder animado para feeds enquanto pollFeeds nao retorna pela 1a vez.
-     Usado SO na carga inicial — refreshes subsequentes escrevem por cima do
-     conteudo real sem piscar skeleton. */
+  /* Animated placeholder for feeds while pollFeeds has not returned for the first time.
+     Used ONLY on initial load — subsequent refreshes overwrite real content
+     without flashing the skeleton. */
   function showFeedSkeleton(sectionId, rows) {
     var node = byId(sectionId);
     if (!node) { return; }
@@ -621,25 +621,25 @@
     }
   }
 
-  /* --- Relogio ------------------------------------------------------------*/
-  /* O relogio agora vive dentro do slide 'city' do carrossel de clima
-     (renderizado por widgets.js). Aqui so atualizamos o span quando ele
-     existe no DOM — fora do slide 'city' o byId devolve null e o tick vira
-     no-op. Sem segundos: HH:MMh, como pedido pelo usuario. */
+  /* --- Clock --------------------------------------------------------------*/
+  /* The clock lives inside the 'city' slide of the weather carousel
+     (rendered by widgets.js). Here we only update the span when it exists
+     in the DOM — outside the 'city' slide byId returns null and the tick
+     becomes a no-op. No seconds: HH:MMh format. */
   function clockText(d) {
     function pad(n) { return (n < 10 ? '0' : '') + n; }
     return pad(d.getHours()) + ':' + pad(d.getMinutes()) + 'h';
   }
 
   function tickClock() {
-    /* Aba em background: evita wake de 1s desnecessario em iPad 2. */
+    /* Background tab: avoid unnecessary 1s wake on iPad 2. */
     if (document.hidden) { setTimeout(tickClock, 5000); return; }
     var node = byId('weather-clock');
     if (node) { setText(node, clockText(new Date())); }
     setTimeout(tickClock, 1000);
   }
 
-  /* --- Inicializacao ------------------------------------------------------*/
+  /* --- Initialization -----------------------------------------------------*/
   buildWidgets();
   wireBrandRefresh();
   if (window.Notifications) { Notifications.start(); }
@@ -653,15 +653,15 @@
   if (window.Settings && Settings.onChange) {
     Settings.onChange(function () {
       applySparkVisibility();
-      /* Slides do clima: weatherStep le enabledWeatherSlides() a cada passo,
-         entao toggles aplicam sozinhos no proximo ciclo (sem restart aqui — evita
-         mostrar a cidade ANTIGA por um instante quando o save inclui troca de cidade). */
+      /* Weather slides: weatherStep reads enabledWeatherSlides() on each step,
+         so toggles apply on the next cycle (no restart here — avoids showing
+         the OLD city for an instant when the save includes a city change). */
     });
   }
   if (window.Settings && Settings.onBackendSave) {
     Settings.onBackendSave(function () {
-      /* Save de fonte de dados (cidade/URL/limite/dias): refaz pollFeeds
-         imediato em vez de esperar o ciclo de 10 min. */
+      /* Data source save (city/URL/limit/days): trigger immediate pollFeeds
+         instead of waiting for the 10-minute cycle. */
       pollFeeds();
     });
   }
@@ -671,9 +671,9 @@
   };
   showFeedSkeleton('section-calendar', 4);
   showFeedSkeleton('section-news', 4);
-  /* Primeira medicao: depois do paint inicial dos skeletons, pra
-     offsetHeight da topbar/host ja estar disponivel. setTimeout(0)
-     enfileira no proximo tick — Safari 9 nao tem rAF prefixado. */
+  /* First measurement: after the initial skeleton paint, so that
+     topbar/host offsetHeight is already available. setTimeout(0)
+     queues on the next tick — Safari 9 has no prefixed rAF. */
   setTimeout(sizeFeedLists, 0);
   tickClock();
   poll();

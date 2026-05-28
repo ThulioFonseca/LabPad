@@ -2,7 +2,7 @@
  * theme.css  —  TODA A PALETA VIVE AQUI.  Edite este arquivo para re-tematizar.
  *
  * Tema: "Dark minimal elegante" (grafite + um acento azul sutil).
- * Nao usa variaveis CSS de proposito (Safari 9 / iPad 2 nao e confiavel com elas).
+ * Intentionally avoids CSS variables (Safari 9 / iPad 2 is unreliable with them).
  *
  * Paleta de referencia:
  *   fundo        #16181d      superficie    #1e2128
@@ -133,7 +133,7 @@ body {
 .docker-top-name { color: #c8ccd4; }
 .docker-top-cpu  { color: #8b909c; }
 
-/* --- Widget de clima ------------------------------------------------------ */
+/* --- Weather widget ------------------------------------------------------- */
 .topbar-center    { color: #c8ccd4; }
 .weather-val      { color: #e6e8ec; }
 .weather-sep      { color: #2a2e37; }

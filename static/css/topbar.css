@@ -56,8 +56,8 @@
 }
 .brand .status-dot { margin-right: 10px; }
 
-/* Relogio do slide 'city' do clima: largura estavel dos digitos para nao
-   "pular" enquanto o minuto vira. */
+/* Clock in the weather 'city' slide: stable digit width so it doesn't
+   "jump" when the minute changes. */
 .weather-clock { font-variant-numeric: tabular-nums; }
 
 /* --- Sino de notificacoes + badge ----------------------------------------- */

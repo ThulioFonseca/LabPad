@@ -1,13 +1,13 @@
 /* =============================================================================
- * modals.js — controle centralizado de modais (window.Modals).
+ * modals.js — centralised modal controller (window.Modals).
  *
- * Mantem o set de modais abertos e aplica `body.scroll-locked` enquanto pelo
- * menos um esta aberto, evitando que o scroll vaze do modal para o dash atras.
- * Suporta empilhamento (logs sobre containers): fechar o de cima nao destranca
- * se o de baixo ainda esta aberto. Bulletproof iOS: position:fixed + top
- * negativo + scrollTo na hora de destrancar.
+ * Tracks the set of open modals and applies `body.scroll-locked` while at
+ * least one is open, preventing scroll from leaking to the dashboard behind.
+ * Supports stacking (logs on top of containers): closing the top one does not
+ * unlock if the one below is still open. iOS bulletproof: position:fixed + negative
+ * top + scrollTo when unlocking.
  *
- * Deve ser carregado ANTES de qualquer script que use window.Modals.
+ * Must be loaded BEFORE any script that uses window.Modals.
  * ES5 puro / Safari 9.
  * ===========================================================================*/
 (function () {

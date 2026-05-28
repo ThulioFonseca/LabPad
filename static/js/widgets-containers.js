@@ -1,8 +1,8 @@
 /* =============================================================================
- * widgets-containers.js  —  lista de containers Docker.
+ * widgets-containers.js  —  Docker container list.
  *
- * Estende o namespace Widgets definido em widgets-host.js.
- * ES5 puro / Safari 9.
+ * Extends the Widgets namespace defined in widgets-host.js.
+ * Pure ES5 / Safari 9.
  * ===========================================================================*/
 
 Widgets.renderContainers = function (container, payload) {
@@ -10,13 +10,13 @@ Widgets.renderContainers = function (container, payload) {
 
   if (payload && payload.error) {
     container.appendChild(
-      el('div', 'empty', 'Erro ao ler containers: ' + payload.error));
+      el('div', 'empty', 'Error reading containers: ' + payload.error));
     return;
   }
 
   var list = (payload && payload.list) ? payload.list : [];
   if (!list.length) {
-    container.appendChild(el('div', 'empty', 'Nenhum container encontrado.'));
+    container.appendChild(el('div', 'empty', 'No containers found.'));
     return;
   }
 

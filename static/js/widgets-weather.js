@@ -1,13 +1,13 @@
 /* =============================================================================
- * widgets-weather.js  —  carrossel de clima na topbar e modal de detalhes.
+ * widgets-weather.js  —  weather carousel in topbar and details modal.
  *
- * Estende o namespace Widgets definido em widgets-host.js.
- * ES5 puro / Safari 9.
+ * Extends the Widgets namespace defined in widgets-host.js.
+ * Pure ES5 / Safari 9.
  * ===========================================================================*/
 
-/* --- Helpers do slide 'city' -----------------------------------------------*/
+/* --- Helpers for the 'city' slide ------------------------------------------*/
 
-var WX_WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+var WX_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 function _wxPad2(n) { return (n < 10 ? '0' : '') + n; }
 
@@ -20,7 +20,7 @@ function _wxClockLabel(d) {
 }
 
 
-/* --- Carrossel na topbar --------------------------------------------------*/
+/* --- Topbar carousel ------------------------------------------------------*/
 
 Widgets.initWeather = function (containerEl) {
   if (!containerEl) { return null; }
@@ -65,7 +65,7 @@ Widgets.renderWeatherSlide = function (panel, payload, slideId) {
 
   } else if (id === 'forecast') {
     var daily = payload.daily || [];
-    var dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+    var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     function buildDay(f) {
       var dayEl = el('span', 'weather-day');
@@ -98,7 +98,7 @@ Widgets.renderWeatherSlide = function (panel, payload, slideId) {
 };
 
 
-/* === Modal de clima detalhado =============================================*/
+/* === Detailed weather modal ===============================================*/
 
 var _SVGNS = 'http://www.w3.org/2000/svg';
 
@@ -120,17 +120,17 @@ function _wxSection(title) {
 
 function _windCardinal(deg) {
   if (deg === undefined || deg === null) { return ''; }
-  var dirs = ['N', 'NE', 'L', 'SE', 'S', 'SO', 'O', 'NO'];
+  var dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   return dirs[Math.round((deg % 360) / 45) % 8];
 }
 
 function _uvLevel(uv) {
   if (uv === null || uv === undefined) { return ''; }
-  if (uv < 3)  { return 'Baixo'; }
-  if (uv < 6)  { return 'Moderado'; }
-  if (uv < 8)  { return 'Alto'; }
-  if (uv < 11) { return 'Muito alto'; }
-  return 'Extremo';
+  if (uv < 3)  { return 'Low'; }
+  if (uv < 6)  { return 'Moderate'; }
+  if (uv < 8)  { return 'High'; }
+  if (uv < 11) { return 'Very high'; }
+  return 'Extreme';
 }
 
 function _fmtTemp(v) {
@@ -143,16 +143,16 @@ function _hourLabel(iso) {
 }
 
 function _dayLabel(iso, todayIdx, i) {
-  if (i === 0) { return 'Hoje'; }
-  if (i === 1) { return 'Amanha'; }
+  if (i === 0) { return 'Today'; }
+  if (i === 1) { return 'Tomorrow'; }
   if (!iso) { return ''; }
   var d = new Date(iso + 'T12:00:00');
-  var names = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+  var names = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   return names[d.getDay()];
 }
 
 
-/* --- Heroi ----------------------------------------------------------------*/
+/* --- Hero -----------------------------------------------------------------*/
 
 Widgets._wxHero = function (p) {
   var s = el('section', 'wx-hero');
@@ -170,7 +170,7 @@ Widgets._wxHero = function (p) {
   extra.push('Min ' + _fmtTemp(today.low));
   extra.push('Max ' + _fmtTemp(today.high));
   if (cur.feels_like !== null && cur.feels_like !== undefined) {
-    extra.push('Sensacao ' + _fmtTemp(cur.feels_like));
+    extra.push('Feels like ' + _fmtTemp(cur.feels_like));
   }
   info.appendChild(el('div', 'wx-hero-extra', extra.join('  \xb7  ')));
   s.appendChild(info);
@@ -178,16 +178,16 @@ Widgets._wxHero = function (p) {
 };
 
 
-/* --- Proximas horas -------------------------------------------------------*/
+/* --- Hourly ---------------------------------------------------------------*/
 
 Widgets._wxHourly = function (p) {
-  var sec = _wxSection('Proximas horas');
+  var sec = _wxSection('Next hours');
   var strip = el('div', 'wx-hourly');
   var hours = p.hourly || [];
   for (var i = 0; i < hours.length; i++) {
     var h = hours[i];
     var cell = el('div', 'wx-hour');
-    cell.appendChild(el('div', 'wx-hour-time', i === 0 ? 'Agora' : _hourLabel(h.time)));
+    cell.appendChild(el('div', 'wx-hour-time', i === 0 ? 'Now' : _hourLabel(h.time)));
     var icon = el('div', 'wx-hour-icon');
     icon.innerHTML = _wmoIcon(h.code || 0);
     cell.appendChild(icon);
@@ -202,10 +202,10 @@ Widgets._wxHourly = function (p) {
 };
 
 
-/* --- Grafico min/max por dia (range bar SVG) ------------------------------*/
+/* --- Min/max temperature chart (range bar SVG) ----------------------------*/
 
 Widgets._wxTempChart = function (p) {
-  var sec = _wxSection('Temperatura (proximos dias)');
+  var sec = _wxSection('Temperature (next days)');
   var days = p.daily || [];
   if (!days.length) { return sec; }
 
@@ -244,10 +244,10 @@ Widgets._wxTempChart = function (p) {
 };
 
 
-/* --- Grafico de precipitacao (bar chart SVG) ------------------------------*/
+/* --- Precipitation chart (bar chart SVG) ----------------------------------*/
 
 Widgets._wxPrecipChart = function (p) {
-  var sec = _wxSection('Precipitacao (mm por dia)');
+  var sec = _wxSection('Precipitation (mm/day)');
   var days = p.daily || [];
   if (!days.length) { return sec; }
 
@@ -299,10 +299,10 @@ Widgets._wxPrecipChart = function (p) {
 };
 
 
-/* --- Lista diaria (dia · icone · range · %) --------------------------------*/
+/* --- Daily list (day · icon · range · %) ----------------------------------*/
 
 Widgets._wxDailyList = function (p) {
-  var sec = _wxSection('Previsao');
+  var sec = _wxSection('Forecast');
   var days = p.daily || [];
   if (!days.length) { return sec; }
 
@@ -350,10 +350,10 @@ Widgets._wxDailyList = function (p) {
 };
 
 
-/* --- Grid de metricas (sol, vento, UV, umidade, sensacao, chuva) ----------*/
+/* --- Metrics grid (sun, wind, UV, humidity, feels-like, rain) -------------*/
 
 Widgets._wxMetrics = function (p) {
-  var sec = _wxSection('Detalhes');
+  var sec = _wxSection('Details');
   var grid = el('div', 'wx-metrics');
   var cur = p.current || {};
   var today = (p.daily && p.daily[0]) || {};
@@ -366,22 +366,22 @@ Widgets._wxMetrics = function (p) {
     return c;
   }
 
-  grid.appendChild(card('Sol',
+  grid.appendChild(card('Sun',
     (today.sunrise || DASH) + ' ↑',
     (today.sunset  || DASH) + ' ↓'));
-  grid.appendChild(card('Vento',
+  grid.appendChild(card('Wind',
     (cur.wind_speed !== null && cur.wind_speed !== undefined ? cur.wind_speed + ' km/h' : DASH),
     _windCardinal(cur.wind_dir)));
   grid.appendChild(card('UV',
     (cur.uv !== null && cur.uv !== undefined ? String(Math.round(cur.uv)) : DASH),
     _uvLevel(cur.uv)));
-  grid.appendChild(card('Umidade',
+  grid.appendChild(card('Humidity',
     (cur.humidity !== null && cur.humidity !== undefined ? cur.humidity + '%' : DASH),
     ''));
-  grid.appendChild(card('Sensacao',
+  grid.appendChild(card('Feels like',
     _fmtTemp(cur.feels_like) + 'C',
     ''));
-  grid.appendChild(card('Chuva hoje',
+  grid.appendChild(card('Rain today',
     (today.precip_sum !== null && today.precip_sum !== undefined ? today.precip_sum + ' mm' : DASH),
     (today.precip_prob ? today.precip_prob + '% prob.' : '')));
 
@@ -390,17 +390,17 @@ Widgets._wxMetrics = function (p) {
 };
 
 
-/* --- Orquestrador do modal de clima ---------------------------------------*/
+/* --- Weather modal orchestrator -------------------------------------------*/
 
 Widgets.renderWeatherDetail = function (node, payload) {
   if (!node) { return; }
   node.innerHTML = '';
   if (!payload || !payload.configured) {
-    node.appendChild(el('div', 'empty', 'Clima nao configurado.'));
+    node.appendChild(el('div', 'empty', 'Weather not configured.'));
     return;
   }
   if (payload.error) {
-    node.appendChild(el('div', 'empty', 'Sem dados de clima.'));
+    node.appendChild(el('div', 'empty', 'No weather data.'));
     return;
   }
   node.appendChild(Widgets._wxHero(payload));

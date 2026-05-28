@@ -6,7 +6,7 @@
 
 /* drawSparkline(canvas, values, color)
  *   canvas  elemento <canvas> (com width/height ja definidos em pixels)
- *   values  array de numeros; entradas nao-numericas sao ignoradas
+ *   values  array of numbers; non-numeric entries are ignored
  *   color   cor da linha (string CSS)
  */
 function drawSparkline(canvas, values, color) {

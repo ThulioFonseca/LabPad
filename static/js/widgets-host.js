@@ -1,19 +1,18 @@
 /* =============================================================================
- * widgets-host.js  —  cards de host: gauge, info, rede, Docker e modais de
- *                      sistema e disco.
+ * widgets-host.js  —  host cards: gauge, info, network, Docker and system/disk modals.
  *
- * Define o namespace global Widgets e os helpers compartilhados (_skel,
- * _cardHead, create, update). Os outros arquivos widgets-*.js estendem Widgets.
+ * Defines the global Widgets namespace and shared helpers (_skel,
+ * _cardHead, create, update). Other widgets-*.js files extend Widgets.
  *
- * Depende de: format.js (el, setText, getPath, fmt*), icons.js (ICONS),
+ * Depends on: format.js (el, setText, getPath, fmt*), icons.js (ICONS),
  *             sparkline.js (drawSparkline).
- * ES5 puro / Safari 9.
+ * Pure ES5 / Safari 9.
  * ===========================================================================*/
 
-/* Mapeia o id do widget gauge para a chave do icone em ICONS. */
+/* Maps gauge widget id to the icon key in ICONS. */
 var GAUGE_ICONS = { cpu: 'cpu', mem: 'mem', temp: 'temp', disk: 'disk' };
 
-/* Nivel (ok/warn/crit) de um valor segundo os limites do widget. */
+/* Level (ok/warn/crit) of a value according to widget thresholds. */
 function levelFor(widget, value) {
   if (typeof value !== 'number' || !isFinite(value)) { return 'none'; }
   if (widget.crit !== undefined && value >= widget.crit) { return 'crit'; }
@@ -21,7 +20,7 @@ function levelFor(widget, value) {
   return 'ok';
 }
 
-/* Cores dos sparklines. ESPELHA a paleta de theme.css — ajuste junto se mudar. */
+/* Sparkline colours. MIRRORS the theme.css palette — update together if changed. */
 var LEVEL_COLOR = {
   ok:   '#4f8cff',
   warn: '#d29922',
@@ -30,18 +29,18 @@ var LEVEL_COLOR = {
 };
 
 
-/* --- Namespace principal ---------------------------------------------------*/
+/* --- Main namespace --------------------------------------------------------*/
 
 var Widgets = {};
 
-/* Cria um <span class="skeleton skeleton-XXX"> para usar como placeholder
-   animado durante a carga inicial. setText() em format.js troca o elemento
-   por um nodo de texto puro no primeiro update — o pulso some sozinho. */
+/* Creates a <span class="skeleton skeleton-XXX"> to use as an animated
+   placeholder during initial load. setText() in format.js replaces the element
+   with a plain text node on the first update — the pulse disappears by itself. */
 Widgets._skel = function (sizeClass) {
   return el('span', 'skeleton ' + (sizeClass || 'skeleton-num'));
 };
 
-/* Monta <div.card-head> com <span.card-title> contendo icone (opcional) + texto. */
+/* Builds <div.card-head> with <span.card-title> containing icon (optional) + text. */
 Widgets._cardHead = function (iconKey, titleText) {
   var head = el('div', 'card-head');
   var titleEl = el('span', 'card-title');
@@ -55,13 +54,13 @@ Widgets._cardHead = function (iconKey, titleText) {
   return head;
 };
 
-/* Cria o DOM de um widget. Devolve um objeto com 'root' e refs para updates. */
+/* Creates the DOM for a widget. Returns an object with 'root' and refs for updates. */
 Widgets.create = function (widget) {
   if (widget.kind === 'info') { return Widgets._createInfo(widget); }
   return Widgets._createGauge(widget);
 };
 
-/* Atualiza um widget ja criado com os dados de /api/metrics. */
+/* Updates an already-created widget with data from /api/metrics. */
 Widgets.update = function (refs, widget, data, buffer) {
   if (!refs) { return; }
   if (widget.kind === 'info') { return Widgets._updateInfo(refs, widget, data); }
@@ -137,7 +136,7 @@ Widgets._updateGauge = function (refs, widget, data, buffer) {
 };
 
 
-/* --- Info (texto) ----------------------------------------------------------*/
+/* --- Info (text) -----------------------------------------------------------*/
 
 Widgets._createInfo = function (widget) {
   var root = el('div', 'info-item');
@@ -173,12 +172,12 @@ Widgets._fmtLoad = function (arr) {
 };
 
 
-/* --- Card de rede (double-row) --------------------------------------------*/
+/* --- Network card (double-row) --------------------------------------------*/
 
 Widgets.initNetCard = function (cardEl) {
   if (!cardEl) { return null; }
 
-  cardEl.appendChild(Widgets._cardHead('net', 'Rede'));
+  cardEl.appendChild(Widgets._cardHead('net', 'Network'));
 
   var row = el('div', 'rate-row');
 
@@ -246,7 +245,7 @@ Widgets.renderDockerSummary = function (cardEl, payload) {
   }
 
   cardEl.appendChild(el('div', 'docker-count',
-    running + ' / ' + list.length + ' ativos'));
+    running + ' / ' + list.length + ' active'));
 
   var active = [];
   for (var j = 0; j < list.length; j++) {
@@ -275,7 +274,7 @@ Widgets.renderDockerSummary = function (cardEl, payload) {
 };
 
 
-/* --- Modal Sistema: info de hardware/software por grupos ------------------*/
+/* --- System modal: hardware/software info grouped -------------------------*/
 
 Widgets.renderSystemInfo = function (node, hostData, containersData) {
   if (!node) { return; }
@@ -298,24 +297,24 @@ Widgets.renderSystemInfo = function (node, hostData, containersData) {
     return g;
   }
 
-  node.appendChild(group('Sistema', [
-    ['Hostname',     hostData.hostname],
-    ['SO',           hostData.os],
-    ['Kernel',       info.kernel],
-    ['Arquitetura',  info.arch]
+  node.appendChild(group('System', [
+    ['Hostname',         hostData.hostname],
+    ['OS',               hostData.os],
+    ['Kernel',           info.kernel],
+    ['Architecture',     info.arch]
   ]));
 
   var loadStr = (hostData.load && hostData.load.length
                  && hostData.load[0] !== null)
     ? hostData.load.join('  \xb7  ') : DASH;
   node.appendChild(group('CPU', [
-    ['Modelo',          info.cpu_model],
-    ['Nucleos fisicos', info.cpu_count_physical],
-    ['Nucleos logicos', hostData.cpu_count],
+    ['Model',            info.cpu_model],
+    ['Physical cores',   info.cpu_count_physical],
+    ['Logical cores',    hostData.cpu_count],
     ['Load (1\xb75\xb715m)', loadStr]
   ]));
 
-  node.appendChild(group('Memoria', [
+  node.appendChild(group('Memory', [
     ['Total', fmtBytes(hostData.mem_total)]
   ]));
 
@@ -324,11 +323,11 @@ Widgets.renderSystemInfo = function (node, hostData, containersData) {
   for (var d = 0; d < disks.length; d++) {
     var dk = disks[d];
     var pct = (dk.percent !== null && dk.percent !== undefined)
-      ? dk.percent + '% usado' : DASH;
+      ? dk.percent + '% used' : DASH;
     diskRows.push([dk.label, fmtBytes(dk.total) + '  \xb7  ' + pct]);
   }
-  if (!diskRows.length) { diskRows.push(['(nenhum)', '']); }
-  node.appendChild(group('Disco', diskRows));
+  if (!diskRows.length) { diskRows.push(['(none)', '']); }
+  node.appendChild(group('Disk', diskRows));
 
   var netRows = [];
   var ifaces = info.interfaces || [];
@@ -342,8 +341,8 @@ Widgets.renderSystemInfo = function (node, hostData, containersData) {
     var label = nif.name + (nif.is_up === false ? ' (down)' : '');
     netRows.push([label, detail.join('  \xb7  ') || DASH]);
   }
-  if (!netRows.length) { netRows.push(['(sem interfaces)', '']); }
-  node.appendChild(group('Rede', netRows));
+  if (!netRows.length) { netRows.push(['(no interfaces)', '']); }
+  node.appendChild(group('Network', netRows));
 
   node.appendChild(group('Runtime', [
     ['Docker',  runtime.docker_version],
@@ -353,13 +352,13 @@ Widgets.renderSystemInfo = function (node, hostData, containersData) {
 };
 
 
-/* --- Modal de particoes de disco ------------------------------------------*/
+/* --- Disk partitions modal ------------------------------------------------*/
 
 Widgets.renderDiskModal = function (container, disks) {
   if (!container) { return; }
   container.innerHTML = '';
   if (!disks || !disks.length) {
-    container.appendChild(document.createTextNode('Sem dados de disco.'));
+    container.appendChild(document.createTextNode('No disk data.'));
     return;
   }
   for (var i = 0; i < disks.length; i++) {

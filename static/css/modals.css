@@ -299,7 +299,7 @@
 }
 .toast--show { opacity: 1; }
 
-/* --- Modal de clima detalhado ------------------------------------------- */
+/* --- Detailed weather modal ----------------------------------------------- */
 #weather-modal { z-index: 140; }
 .modal--weather { max-width: 780px; max-height: 90%; }
 .wx-modal-city { font-weight: 400; opacity: 0.7; }
@@ -316,7 +316,7 @@
   margin: 0 0 10px;
 }
 
-/* Heroi (cidade, icone, temp grande, condicao, min/max/sensacao) */
+/* Hero (city, icon, large temp, condition, min/max/feels-like) */
 .wx-hero {
   display: -webkit-flex;
   display: flex;
@@ -377,8 +377,8 @@
 .wx-temprow-bar svg { display: block; width: 100%; height: 10px; }
 .wx-temprow-max  { -webkit-flex: 0 0 40px; flex: 0 0 40px; font-size: 12px; }
 
-/* Grafico de precipitacao — SVG escala uniformemente pelo viewBox.
-   width:100% + height:auto preserva proporcoes (texto nao distorce). */
+/* Precipitation chart — SVG scales uniformly via viewBox.
+   width:100% + height:auto preserves proportions (text does not distort). */
 .wx-precip svg { display: block; width: 100%; height: auto; }
 
 /* Lista diaria (dia + icone + prob + range bar) */
@@ -466,10 +466,10 @@
   box-sizing: border-box;
 }
 
-/* Reader mode: Merriweather — desenhada especificamente para leitura
-   prolongada em telas (x-height alto, contraste moderado). Line-height 1.7
-   e max-width 65ch seguem as regras de ouro do guia tipografico. Fallback
-   em Georgia mantem a estetica serif se o Google Fonts nao carregar. */
+/* Reader mode: Merriweather — designed specifically for extended reading
+   on screens (tall x-height, moderate contrast). Line-height 1.7
+   and max-width 65ch follow classic typographic guidelines. Fallback
+   to Georgia preserves the serif aesthetic when Google Fonts cannot load. */
 .article-content {
   font-family: "Merriweather", Georgia, "Times New Roman", serif;
   font-size: 17px;

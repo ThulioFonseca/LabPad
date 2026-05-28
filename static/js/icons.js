@@ -19,7 +19,7 @@ var ICONS = {
   trash: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>'
 };
 
-/* Icones de clima por grupo WMO — cores fixas, independentes do tema. */
+/* Weather icons by WMO group — fixed colours, independent of theme. */
 var WEATHER_ICONS = {
   clear:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="5" fill="#f5c542"/><line x1="12" y1="2" x2="12" y2="5" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="19" x2="12" y2="22" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="2" y1="12" x2="5" y2="12" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="19" y1="12" x2="22" y2="12" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="4.22" y1="4.22" x2="6.34" y2="6.34" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="19.78" y1="4.22" x2="17.66" y2="6.34" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/><line x1="6.34" y1="17.66" x2="4.22" y2="19.78" stroke="#f5c542" stroke-width="2" stroke-linecap="round"/></svg>',
   partly:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="10" cy="10" r="4" fill="#f5c542"/><rect x="6" y="13" width="13" height="7" rx="3.5" fill="#b0bec5"/><rect x="4" y="15" width="10" height="5" rx="2.5" fill="#cfd8dc"/></svg>',
@@ -32,7 +32,7 @@ var WEATHER_ICONS = {
   storm:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="10" rx="5" fill="#546e7a"/><polyline points="13,13 10,19 14,19 11,24" stroke="#fdd835" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
 };
 
-/* Icones da lua por fase (0=lua nova .. 7=minguante). */
+/* Moon icons by phase (0=new moon .. 7=waning crescent). */
 var MOON_ICONS = [
   '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/></svg>',
   '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 1 12 21 A5 9 0 0 0 12 3Z" fill="#f5c542"/></svg>',
@@ -44,19 +44,19 @@ var MOON_ICONS = [
   '<svg width="20" height="20" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="#37474f" stroke="#546e7a" stroke-width="1.5"/><path d="M12 3 A9 9 0 0 0 12 21 A5 9 0 0 1 12 3Z" fill="#f5c542"/></svg>'
 ];
 
-/* Mapeia um codigo WMO (Open-Meteo) para o icone de clima correspondente. */
-/* Mapeia codigo WMO -> texto curto humano (pt-BR). */
+/* Maps a WMO code (Open-Meteo) to the corresponding weather icon. */
+/* Maps WMO code -> short human-readable label. */
 var WMO_LABEL = {
-  0: 'Limpo', 1: 'Predom. limpo', 2: 'Parc. nublado', 3: 'Nublado',
-  45: 'Nevoeiro', 48: 'Nevoeiro com gelo',
-  51: 'Chuvisco leve', 53: 'Chuvisco', 55: 'Chuvisco forte',
-  56: 'Chuvisco gelado', 57: 'Chuvisco gelado forte',
-  61: 'Chuva leve', 63: 'Chuva', 65: 'Chuva forte',
-  66: 'Chuva gelada', 67: 'Chuva gelada forte',
-  71: 'Neve leve', 73: 'Neve', 75: 'Neve forte', 77: 'Granizo',
-  80: 'Pancadas leves', 81: 'Pancadas', 82: 'Pancadas fortes',
-  85: 'Pancadas de neve', 86: 'Pancadas de neve fortes',
-  95: 'Trovoadas', 96: 'Trovoadas com granizo', 99: 'Trovoadas fortes'
+  0: 'Clear', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+  45: 'Fog', 48: 'Icy fog',
+  51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+  56: 'Freezing drizzle', 57: 'Heavy freezing drizzle',
+  61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
+  66: 'Freezing rain', 67: 'Heavy freezing rain',
+  71: 'Light snow', 73: 'Snow', 75: 'Heavy snow', 77: 'Sleet',
+  80: 'Light showers', 81: 'Showers', 82: 'Heavy showers',
+  85: 'Snow showers', 86: 'Heavy snow showers',
+  95: 'Thunderstorm', 96: 'Thunderstorm with hail', 99: 'Severe thunderstorm'
 };
 function _wmoLabel(code) { return WMO_LABEL[code] || '—'; }
 

@@ -1,18 +1,18 @@
 /* =============================================================================
- * notifications.js — central de notificacoes (sino + sidebar + modal detalhe)
+ * notifications.js — notification centre (bell + sidebar + detail modal)
  *
- * Backend expoe /api/notifications (GET) e /api/notifications/<id>/read (POST).
- * Notificacoes sao criadas server-side quando coletores transitam de OK→fail
- * ou recuperam. Aqui apenas pollamos, renderizamos e marcamos como lidas.
+ * Backend exposes /api/notifications (GET) and /api/notifications/<id>/read (POST).
+ * Notifications are created server-side when collectors transition OK→fail
+ * or recover. Here we only poll, render, and mark as read.
  *
- * ES5 puro (Safari 9 / iPad 2). Sem fetch, sem template literals.
+ * Pure ES5 (Safari 9 / iPad 2). No fetch, no template literals.
  * ===========================================================================*/
 
 (function () {
 
-  var POLL_MS = 30000;   /* 30s — basta para um sistema com retry de 60s+ */
+  var POLL_MS = 30000;   /* 30s — enough for a system with 60s+ retry */
 
-  var unread = [];       /* ultima resposta do servidor */
+  var unread = [];       /* last server response */
   var pollTimer = null;
 
   /* --- Bell + badge -------------------------------------------------------*/
@@ -55,7 +55,7 @@
 
     var trash = el('button', 'notif-trash');
     trash.setAttribute('type', 'button');
-    trash.setAttribute('aria-label', 'Marcar como lida');
+    trash.setAttribute('aria-label', 'Mark as read');
     trash.innerHTML = ICONS.trash;
     trash.onclick = function (e) {
       e.stopPropagation();
@@ -69,13 +69,13 @@
 
   function ageLabel(epoch) {
     var s = Math.max(0, ((new Date()).getTime() / 1000) - epoch);
-    if (s < 60)    { return 'ha ' + Math.floor(s) + 's'; }
-    if (s < 3600)  { return 'ha ' + Math.floor(s / 60) + ' min'; }
-    if (s < 86400) { return 'ha ' + Math.floor(s / 3600) + ' h'; }
-    return 'ha ' + Math.floor(s / 86400) + ' d';
+    if (s < 60)    { return Math.floor(s) + 's ago'; }
+    if (s < 3600)  { return Math.floor(s / 60) + ' min ago'; }
+    if (s < 86400) { return Math.floor(s / 3600) + ' h ago'; }
+    return Math.floor(s / 86400) + ' d ago';
   }
 
-  /* --- Modal de detalhe ---------------------------------------------------*/
+  /* --- Detail modal -------------------------------------------------------*/
   function openDetail(n) {
     var titleEl = document.getElementById('notification-modal-title');
     var body    = document.getElementById('notification-modal-body');
@@ -87,7 +87,7 @@
     body.innerHTML = '';
     body.appendChild(el('div', 'notif-meta',
         n.source + '  ·  ' + (new Date(n.created_at * 1000)).toLocaleString()));
-    body.appendChild(el('pre', 'notif-detail', n.detail || '(sem detalhes)'));
+    body.appendChild(el('pre', 'notif-detail', n.detail || '(no details)'));
 
     trash.innerHTML = ICONS.trash;
     trash.onclick = function () {
@@ -98,7 +98,7 @@
     if (window.Modals) { Modals.open('notification-modal'); }
   }
 
-  /* --- Mark as read (otimista) -------------------------------------------*/
+  /* --- Mark as read (optimistic) -----------------------------------------*/
   function markRead(id) {
     var xhr = new XMLHttpRequest();
     xhr.open('POST', (CONFIG.apiBase || '') + '/api/notifications/' + id + '/read', true);
@@ -107,7 +107,7 @@
     };
     xhr.send();
 
-    /* UI otimista: remove imediatamente sem esperar resposta. */
+    /* Optimistic UI: remove immediately without waiting for response. */
     var next = [];
     for (var i = 0; i < unread.length; i++) {
       if (unread[i].id !== id) { next.push(unread[i]); }
@@ -117,7 +117,7 @@
     renderSidebar();
   }
 
-  /* --- Poll do servidor --------------------------------------------------*/
+  /* --- Server poll -------------------------------------------------------*/
   function refresh() {
     var url = (CONFIG.apiBase || '') + '/api/notifications?_=' + (new Date()).getTime();
     getJSON(url, function (data) {
@@ -125,11 +125,11 @@
       paintBell();
       if (isSidebarOpen()) { renderSidebar(); }
     }, function () {
-      /* silencioso — proximo tick tenta de novo */
+      /* silent — next tick will retry */
     });
   }
 
-  /* --- Toggle sidebar -----------------------------------------------------*/
+  /* --- Sidebar toggle -----------------------------------------------------*/
   function isSidebarOpen() {
     var s = document.getElementById('notif-sidebar');
     return s && s.className.indexOf('notif-sidebar--open') >= 0;
@@ -147,21 +147,21 @@
     }
   }
 
-  /* --- Wire-up do modal de detalhe (close + backdrop) --------------------*/
+  /* --- Wire detail modal (close + backdrop) ------------------------------*/
   function wireDetailModal() {
     function close() {
       if (window.Modals) { Modals.close('notification-modal'); }
     }
     var backdrop = document.getElementById('notification-modal');
     if (backdrop) { backdrop.onclick = close; }
-    /* Clique dentro da caixa nao propaga ao backdrop. */
+    /* Click inside the box does not propagate to the backdrop. */
     var box = document.getElementById('notification-modal-box');
     if (box) { box.onclick = function (e) { e.stopPropagation(); }; }
     var closeBtn = document.getElementById('notification-modal-close');
     if (closeBtn) { closeBtn.onclick = close; }
   }
 
-  /* --- API publica --------------------------------------------------------*/
+  /* --- Public API --------------------------------------------------------*/
   window.Notifications = {
     start: function () {
       paintBell();

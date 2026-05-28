@@ -92,16 +92,16 @@
             flex-direction: column;
   }
 
-  /* Cabecalho: altura natural, nao encolhe nem cresce. */
+  /* Header: natural height, neither shrinks nor grows. */
   .topbar {
     -webkit-flex: 0 0 auto;
             flex: 0 0 auto;
   }
 
-  /* <main>: ocupa todo o espaco vertical restante e e o ponto de corte
-     do overflow. min-height: 0 e CRITICO para Safari 9 permitir que os
-     filhos flex (em particular .feeds-row) recebam altura calculada
-     menor que o conteudo intrinseco — sem isso a feed-list nao rola. */
+  /* <main>: takes all remaining vertical space and is the overflow cut point.
+     min-height: 0 is CRITICAL for Safari 9 to allow flex children
+     (especially .feeds-row) to receive a computed height smaller than
+     their intrinsic content — without it the feed-list won't scroll. */
   main {
     -webkit-flex: 1 1 auto;
             flex: 1 1 auto;
@@ -113,15 +113,15 @@
             flex-direction: column;
   }
 
-  /* Painel de host (cards + double-row): altura natural. */
+  /* Host panel (cards + double-row): natural height. */
   main > .panel:first-child {
     -webkit-flex: 0 0 auto;
             flex: 0 0 auto;
   }
 
-  /* Linha dos feeds: ocupa o resto da viewport. nowrap garante uma
-     unica linha e evita bugs de wrap+stretch no Webkit. overflow:hidden
-     impede que conteudo escapar visualmente caso o JS de sizing demore. */
+  /* Feed row: takes the rest of the viewport. nowrap ensures a single
+     line and avoids wrap+stretch bugs in WebKit. overflow:hidden prevents
+     content from visually escaping while the JS sizing runs. */
   .feeds-row {
     -webkit-flex: 1 1 auto;
             flex: 1 1 auto;
@@ -133,21 +133,21 @@
             align-items: stretch;
   }
 
-  /* Cada painel de feed: stretch vem do parent (align-items:stretch).
-     SEM display:flex/height:100% aqui — em Safari 9 height:100% nao
-     resolve contra parent flex e o painel colapsa pra altura do titulo.
-     overflow:hidden so como rede de seguranca. */
+  /* Each feed panel: stretch comes from the parent (align-items:stretch).
+     NO display:flex/height:100% here — in Safari 9 height:100% does not
+     resolve against a flex parent and the panel collapses to the title height.
+     overflow:hidden only as a safety net. */
   .panel--feed {
     min-height: 0;
     overflow: hidden;
   }
 
-  /* A altura desta lista e setada em PIXELS pelo JS (sizeFeedLists em
-     dashboard.js) — necessario pra iOS Safari 9 reconhecer overflow como
-     rolavel. flex:1+min-height:0+overflow-y:auto NAO funciona em Safari
-     9 (e tambem nao funcionou com position:absolute, que colapsa quando
-     o pai nao tem height:100% resolvido). overflow-y:scroll (em vez de
-     auto) garante que iOS sempre trate como rolavel. */
+  /* This list's height is set in PIXELS by JS (sizeFeedLists in
+     dashboard.js) — required for iOS Safari 9 to treat overflow as
+     scrollable. flex:1+min-height:0+overflow-y:auto does NOT work in Safari
+     9 (position:absolute also failed — collapses when the parent has no
+     resolved height:100%). overflow-y:scroll (instead of auto) ensures
+     iOS always treats it as scrollable. */
   .feed-list {
     overflow-y: scroll;
     -webkit-overflow-scrolling: touch;

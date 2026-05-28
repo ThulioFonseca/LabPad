@@ -424,8 +424,8 @@
     loadFE();
     applyHtmlClasses();
 
-    /* Busca settings do backend (cidade, URLs, limites). Se falhar, segue
-       com defaults — o painel ainda funciona para configs do frontend. */
+    /* Fetch settings from backend (city, URLs, limits). If it fails, continue
+       with defaults — the panel still works for frontend-only config. */
     var xhr = new XMLHttpRequest();
     xhr.open('GET', '/api/settings?_=' + (new Date()).getTime(), true);
     xhr.onload = function () {
