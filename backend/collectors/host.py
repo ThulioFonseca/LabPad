@@ -1,4 +1,4 @@
-"""Coletor de metricas do host: CPU, memoria, disco, rede, load, uptime, SO."""
+"""Host metrics collector: CPU, memory, disk, network, load, uptime, OS."""
 import os
 import platform
 import socket
@@ -10,7 +10,7 @@ import psutil
 
 import config
 
-# Filesystems de sistema que nao representam discos do usuario.
+# System filesystems that do not represent user disks.
 _SKIP_FSTYPES = frozenset([
     'tmpfs', 'devtmpfs', 'sysfs', 'proc', 'cgroup', 'cgroup2',
     'pstore', 'bpf', 'hugetlbfs', 'mqueue', 'debugfs', 'fusectl',
@@ -18,24 +18,24 @@ _SKIP_FSTYPES = frozenset([
     'autofs', 'ramfs', 'overlay', 'fuse.lxcfs',
 ])
 
-# Prefixos de mount points que devem ser ignorados.
+# Mount point prefixes to skip.
 _SKIP_MOUNTS = (
     '/proc', '/sys', '/dev', '/run', '/snap',
     '/var/lib/docker', '/var/lib/kubelet', '/boot/efi',
 )
 
-# Estado para calcular a taxa de rede entre duas coletas consecutivas.
+# State for calculating network rate between two consecutive reads.
 _net_prev = {"time": None, "recv": 0, "sent": 0}
 _net_lock = threading.Lock()
 
-# Inicializa o contador de CPU; a primeira leitura com interval=None retorna 0.0
-# (sem referencia anterior) — descartamos esse valor aqui para que a primeira
-# coleta real ja retorne um percentual significativo.
+# Initialise the CPU counter; the first call with interval=None returns 0.0
+# (no previous reference) — discard it here so the first real read
+# already returns a meaningful percentage.
 psutil.cpu_percent(interval=None)
 
 
 def _read_os_name():
-    """Nome amigavel do SO, lido de /etc/os-release (montado do host)."""
+    """Friendly OS name, read from /etc/os-release (bind-mounted from host)."""
     try:
         with open("/etc/os-release", "r") as fh:
             for line in fh:
@@ -47,7 +47,7 @@ def _read_os_name():
 
 
 def _read_hostname():
-    """Hostname do host, lido do arquivo bind-montado; cai pro do container."""
+    """Host hostname, read from the bind-mounted file; falls back to container's."""
     try:
         with open(config.HOST_HOSTNAME_FILE, "r") as fh:
             name = fh.read().strip()
@@ -59,7 +59,7 @@ def _read_hostname():
 
 
 def _cpu_model():
-    """Modelo da CPU (primeira linha 'model name' de /proc/cpuinfo)."""
+    """CPU model (first 'model name' line from /proc/cpuinfo)."""
     try:
         with open("/proc/cpuinfo", "r") as fh:
             for line in fh:
@@ -71,7 +71,7 @@ def _cpu_model():
 
 
 def _interfaces():
-    """Lista das interfaces de rede do host (network_mode: host)."""
+    """List of host network interfaces (network_mode: host)."""
     out = []
     try:
         addrs = psutil.net_if_addrs()
@@ -100,8 +100,7 @@ def _interfaces():
     return out
 
 
-# SO, hostname, contagem de nucleos, modelo de CPU, kernel: nao mudam em
-# runtime — lidos so uma vez.
+# OS, hostname, core count, CPU model, kernel: don't change at runtime — read once.
 _static_cache = {}
 
 
@@ -121,11 +120,11 @@ def _static():
 
 
 def _disks():
-    """Auto-descobre particoes reais do host via /proc/1/mounts (pid: host).
+    """Auto-discover real host partitions via /proc/1/mounts (pid: host).
 
-    Le a tabela de montagem do processo 1 do host (acessivel porque o
-    container usa pid: host) e filtra particoes de sistema, traduzindo
-    cada mount point para dentro do rootfs montado em config.HOST_ROOT.
+    Reads the mount table of host process 1 (accessible because the container
+    uses pid: host), filters out system partitions, and translates each mount
+    point into the rootfs mounted at config.HOST_ROOT.
     """
     out = []
     seen_devs = set()
@@ -157,7 +156,7 @@ def _disks():
                 except OSError:
                     pass
     except OSError:
-        # Fallback: usa DISK_PATHS configurado em config.py
+        # Fallback: use DISK_PATHS from config.py
         for label, path in config.DISK_PATHS:
             try:
                 usage = psutil.disk_usage(path)
@@ -171,13 +170,13 @@ def _disks():
                 out.append({'label': label, 'percent': None, 'used': None, 'total': None})
         return out
 
-    # / primeiro, depois alfabetico
+    # / first, then alphabetical
     out.sort(key=lambda d: (d['label'] != '/', d['label']))
     return out
 
 
 def _net_rates():
-    """Taxa de rede (bytes/s) calculada pelo delta desde a coleta anterior."""
+    """Network rate (bytes/s) calculated from the delta since the previous read."""
     iface = config.NETWORK_IFACE
     if iface:
         per_nic = psutil.net_io_counters(pernic=True)

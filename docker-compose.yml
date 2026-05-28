@@ -1,25 +1,25 @@
-# Sobe o Homelab Monitor de forma autonoma:
+# Start the Homelab Monitor standalone:
 #   docker compose up -d --build
 #
-# Toda a configuracao (calendario, RSS, cidade do clima, fuso, tema, layout)
-# e feita pelo painel da engrenagem no dashboard e persiste em
-# /data/settings.json no volume nomeado abaixo.
+# All configuration (calendar, RSS, weather city, timezone, theme, layout)
+# is done through the gear panel on the dashboard and persists in
+# /data/settings.json in the named volume below.
 services:
   homelab-monitor:
     build: .
     container_name: homelab-monitor
     restart: unless-stopped
-    pid: host                 # psutil le o hardware real do host, nao o do container
-    network_mode: host        # expoe a porta 8723 direto no host
-    # Sem env_file: a configuracao e feita pelo painel da engrenagem no
-    # dashboard e persiste em /data/settings.json (volume abaixo).
+    pid: host                 # psutil reads the real host hardware, not the container's
+    network_mode: host        # exposes port 8723 directly on the host
+    # No env_file: all configuration is done through the gear panel on the
+    # dashboard and persists in /data/settings.json (volume below).
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /:/rootfs:ro
       - /sys:/sys:ro
       - /etc/os-release:/etc/os-release:ro
       - /etc/hostname:/host-hostname:ro
-      - homelab-monitor-data:/data     # persiste /data/settings.json
+      - homelab-monitor-data:/data     # persists /data/settings.json
 
 volumes:
   homelab-monitor-data:

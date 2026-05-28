@@ -1,28 +1,28 @@
-"""Store de notificacoes em memoria. Thread-safe. Sem persistencia em disco
-(restart limpa a fila — adequado para um dashboard sempre-aberto).
+"""In-memory notification store. Thread-safe. No disk persistence
+(restart clears the queue — suitable for an always-open dashboard).
 
-Severidades suportadas:
-- 'error'   → falha de integracao (destaque vermelho na UI)
-- 'warning' → degradacao (destaque amarelo)
-- 'info'    → eventos gerais, como recuperacao (sem destaque)
+Supported severities:
+- 'error'   → integration failure (red highlight in UI)
+- 'warning' → degradation (yellow highlight)
+- 'info'    → general events, such as recovery (no highlight)
 """
 import itertools
 import threading
 import time
 
 
-_MAX = 200                    # teto: descarta as mais antigas alem disso
+_MAX = 200                    # cap: discard oldest items beyond this
 _lock = threading.Lock()
-_items = []                   # list[dict] — mais recentes no inicio
-_seq = itertools.count(1)     # ids monotonicos
+_items = []                   # list[dict] — most recent first
+_seq = itertools.count(1)     # monotonic ids
 
-# Dedup de transicoes: se a ultima do mesmo (source, severity) ainda esta
-# nao-lida, nao cria uma duplicata.
+# Dedup on transitions: if the last notification from the same (source, severity)
+# is still unread, don't create a duplicate.
 _last_key = {}                # {(source, severity): id}
 
 
 def add(severity, source, title, detail=""):
-    """Cria uma notificacao. Devolve o id (int) ou None se for deduplicada."""
+    """Create a notification. Returns the id (int) or None if deduplicated."""
     key = (source, severity)
     with _lock:
         last_id = _last_key.get(key)

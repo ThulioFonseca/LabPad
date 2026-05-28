@@ -1,11 +1,11 @@
-"""Coletor de temperatura/sensores.
+"""Temperature/sensor collector.
 
-Degrada com elegancia: se o host nao expoe sensores (VM, /sys indisponivel),
-devolve cpu_temp=None e o dashboard mostra "indisponivel".
+Degrades gracefully: if the host does not expose sensors (VM, /sys unavailable),
+returns cpu_temp=None and the dashboard shows "unavailable".
 """
 import psutil
 
-# Chips preferidos para escolher a temperatura representativa da CPU.
+# Preferred chips for picking the representative CPU temperature.
 _CPU_CHIPS = ("coretemp", "k10temp", "zenpower", "cpu_thermal", "acpitz")
 
 
@@ -23,7 +23,7 @@ def collect():
     if not temps:
         return out
 
-    # Lista completa de leituras (util para widgets futuros).
+    # Full list of readings (useful for future widgets).
     flat = []
     for chip, entries in temps.items():
         for entry in entries:
@@ -34,7 +34,7 @@ def collect():
             })
     out["all"] = flat
 
-    # Temperatura representativa da CPU.
+    # Representative CPU temperature.
     cpu_temp = None
     for chip in _CPU_CHIPS:
         if temps.get(chip):

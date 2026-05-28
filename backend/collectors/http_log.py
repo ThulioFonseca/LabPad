@@ -1,19 +1,19 @@
-"""Wrapper HTTP com logging centralizado para todos os coletores externos.
+"""Centralized HTTP logging wrapper for all external collectors.
 
-Cada request externo aparece nos docker logs com:
+Each external request appears in docker logs as:
   HTTP GET <url>
-    -> <status> (<tempo>s) <snippet da resposta, truncado em 500 chars>
+    -> <status> (<elapsed>s) <response snippet, truncated at 500 chars>
 """
 import logging
 import time
 
 import requests as _req
 
-_TRUNCATE = 500   # max chars da resposta exibidos no log
+_TRUNCATE = 500   # max chars of the response shown in the log
 
 
 def fetch(url, headers=None, timeout=10):
-    """GET com logging completo. Levanta HTTPError em nao-2xx."""
+    """GET with full logging. Raises HTTPError on non-2xx."""
     logging.info("HTTP GET %s", url)
     t0 = time.time()
 
@@ -22,9 +22,9 @@ def fetch(url, headers=None, timeout=10):
 
     try:
         text = resp.text
-        snippet = text[:_TRUNCATE] + (" ...[truncado]" if len(text) > _TRUNCATE else "")
+        snippet = text[:_TRUNCATE] + (" ...[truncated]" if len(text) > _TRUNCATE else "")
     except Exception:
-        snippet = "<corpo binario>"
+        snippet = "<binary body>"
 
     if resp.ok:
         logging.info("  -> %d (%.2fs) %s", resp.status_code, elapsed, snippet)

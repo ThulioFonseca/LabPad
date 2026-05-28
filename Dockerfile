@@ -2,11 +2,11 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
-# Dependencias primeiro (melhor cache de build)
+# Dependencies first (better build cache)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Codigo da aplicacao
+# Application code
 COPY backend/ ./backend/
 COPY static/ ./static/
 

@@ -1,4 +1,4 @@
-"""Coletor de noticias a partir de um feed RSS/Atom."""
+"""News collector from an RSS/Atom feed."""
 import calendar as _calendar
 import datetime
 import re
@@ -14,7 +14,7 @@ _IMG_RE = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
 
 
 def _image(entry):
-    """Extrai a URL da primeira imagem do item, se houver."""
+    """Extract the URL of the first image in the item, if any."""
     thumbs = entry.get("media_thumbnail")
     if thumbs and thumbs[0].get("url"):
         return thumbs[0]["url"]
@@ -29,7 +29,7 @@ def _image(entry):
                 and link.get("type", "").startswith("image/")
                 and link.get("href")):
             return link["href"]
-    # Primeira <img> dentro do HTML do resumo/conteudo (caso do g1).
+    # First <img> inside the summary/content HTML (e.g. g1.com feeds).
     html = entry.get("summary", "")
     if not html and entry.get("content"):
         try:
@@ -43,8 +43,8 @@ def _image(entry):
 
 
 def _age_label(published_struct):
-    """Rotulo relativo ('ha 15 min', 'ontem', ...) a partir do time.struct_time
-    do feedparser (sempre em UTC)."""
+    """Relative label ('15 min ago', 'yesterday', ...) from a feedparser
+    time.struct_time (always UTC)."""
     if not published_struct:
         return ""
     epoch = _calendar.timegm(published_struct)
@@ -54,11 +54,11 @@ def _age_label(published_struct):
     if seconds < 0:
         seconds = 0
     if seconds < 3600:
-        return "ha %d min" % max(int(seconds // 60), 1)
+        return "%d min ago" % max(int(seconds // 60), 1)
     if seconds < 86400:
-        return "ha %d h" % int(seconds // 3600)
+        return "%d h ago" % int(seconds // 3600)
     days = int(seconds // 86400)
-    return "ontem" if days == 1 else ("ha %d dias" % days)
+    return "yesterday" if days == 1 else ("%d days ago" % days)
 
 
 def collect():
@@ -74,7 +74,7 @@ def collect():
     for entry in parsed.entries[:limit]:
         when = entry.get("published_parsed") or entry.get("updated_parsed")
         items.append({
-            "title": entry.get("title", "(sem titulo)"),
+            "title": entry.get("title", "(no title)"),
             "link": entry.get("link", ""),
             "age": _age_label(when),
             "image": _image(entry),

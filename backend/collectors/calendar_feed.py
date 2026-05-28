@@ -1,7 +1,7 @@
-"""Coletor da agenda: le um calendario Outlook publicado (.ics).
+"""Calendar collector: reads a published Outlook calendar (.ics).
 
-Expande eventos recorrentes e devolve os eventos dos proximos dias ja
-formatados (rotulo do dia e horario), de modo que o frontend so precise exibir.
+Expands recurring events and returns events for the next N days already
+formatted (day label and time), so the frontend only needs to display them.
 """
 import datetime
 
@@ -12,14 +12,14 @@ from collectors.http_log import fetch as _http_fetch
 import config
 import settings
 
-# (connect 5s, read 25s) — calendarios Office365 corporativos sao lentos.
+# (connect 5s, read 25s) — corporate Office365 calendars can be slow.
 _TIMEOUT = (5, 25)
 _UA = "Mozilla/5.0 (HomelabMonitor)"
 
-# Abreviacoes em pt-BR (Monday=0 .. Sunday=6).
-_WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sab", "Dom"]
-_MONTHS = ["jan", "fev", "mar", "abr", "mai", "jun",
-           "jul", "ago", "set", "out", "nov", "dez"]
+# Day/month abbreviations (Monday=0 .. Sunday=6).
+_WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 
 def _tz():
@@ -31,28 +31,28 @@ def _tz():
 
 
 def _to_local(value, tz):
-    """Converte date/datetime do icalendar para datetime com tz local."""
+    """Convert an icalendar date/datetime to a datetime with local tz."""
     if isinstance(value, datetime.datetime):
         if value.tzinfo is None:
             value = value.replace(tzinfo=tz)
         return value.astimezone(tz)
-    # date pura -> evento de dia inteiro
+    # plain date -> all-day event
     return datetime.datetime(value.year, value.month, value.day, tzinfo=tz)
 
 
 def _day_label(day, today):
     delta = (day - today).days
     if delta == 0:
-        return "Hoje"
+        return "Today"
     if delta == 1:
-        return "Amanha"
+        return "Tomorrow"
     return "%s, %d %s" % (_WEEKDAYS[day.weekday()], day.day,
                           _MONTHS[day.month - 1])
 
 
 def _time_label(start_local, end_local, all_day):
     if all_day:
-        return "Dia inteiro"
+        return "All day"
     label = start_local.strftime("%H:%M")
     if end_local is not None and end_local != start_local:
         label += "–" + end_local.strftime("%H:%M")
@@ -73,7 +73,7 @@ def collect():
     days = settings.get("calendar", "days", 3)
     window_end = now + datetime.timedelta(days=days)
 
-    # recurring_ical_events expande RRULE (reunioes semanais etc.) na janela.
+    # recurring_ical_events expands RRULE (weekly meetings etc.) within the window.
     occurrences = recurring_ical_events.of(calendar).between(now, window_end)
 
     rows = []
@@ -95,7 +95,7 @@ def collect():
         location = component.get("LOCATION")
 
         rows.append((start_local, {
-            "title": str(summary) if summary else "(sem titulo)",
+            "title": str(summary) if summary else "(no title)",
             "location": str(location) if location else None,
             "all_day": all_day,
             "day_key": day.isoformat(),

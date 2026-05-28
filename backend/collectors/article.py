@@ -72,23 +72,23 @@ def get(url):
     if cached is not None:
         return cached
     if not _HAS_TRAFILATURA:
-        return {"error": "trafilatura nao instalado no container"}
+        return {"error": "trafilatura not installed in container"}
     try:
         content, final_url = _fetch(url)
     except Exception as exc:
-        return {"error": "Falha ao baixar: " + str(exc)}
+        return {"error": "Download failed: " + str(exc)}
 
     body = extract(content, url=final_url, output_format='html',
                    include_images=False, include_links=False,
                    favor_recall=True)
     if not body:
-        return {"error": "Nao foi possivel extrair o conteudo desta pagina"}
+        return {"error": "Could not extract content from this page"}
 
     meta = None
     try:
         meta = extract_metadata(content, default_url=final_url)
     except Exception as exc:
-        logging.debug("[article] extract_metadata falhou: %s", exc)
+        logging.debug("[article] extract_metadata failed: %s", exc)
 
     out = {
         "title":  (getattr(meta, "title", None) or "") if meta else "",

@@ -1,9 +1,9 @@
-"""Coletor de clima via Open-Meteo (primario) com fallback para met.no.
+"""Weather collector via Open-Meteo (primary) with fallback to met.no.
 
-Open-Meteo: gratis, sem chave, 7 dias de previsao.
-met.no (Norwegian Meteorological Institute): gratis, sem chave, cobertura global,
-  usado automaticamente se Open-Meteo falhar.
-Fase lunar calculada localmente (sem API).
+Open-Meteo: free, no API key, 7-day forecast.
+met.no (Norwegian Meteorological Institute): free, no API key, global coverage,
+  used automatically if Open-Meteo fails.
+Lunar phase calculated locally (no API).
 """
 import logging
 import time
@@ -16,7 +16,7 @@ _TIMEOUT = 8
 
 _METNO_UA = "HomelabMonitor/1.0 thulio50@hotmail.com"
 
-# met.no symbol_code -> WMO weather code (aproximacao)
+# met.no symbol_code -> WMO weather code (approximation)
 _METNO_TO_WMO = {
     "clearsky":             0,
     "fair":                 1,
@@ -44,13 +44,13 @@ _METNO_TO_WMO = {
 
 
 def _metno_wmo(symbol_code):
-    """'lightrainshowers_day' -> WMO int. Desconhecido -> 3 (nublado)."""
+    """'lightrainshowers_day' -> WMO int. Unknown -> 3 (cloudy)."""
     base = (symbol_code or "").split("_")[0]
     return _METNO_TO_WMO.get(base, 3)
 
 
 def _at(arr, i, default=None):
-    """Indexacao defensiva: lista vazia ou indice fora -> default."""
+    """Defensive indexing: empty list or out-of-range index -> default."""
     try:
         return arr[i]
     except (IndexError, TypeError):
@@ -72,12 +72,12 @@ def _hhmm(iso_dt):
     return iso_dt.split("T", 1)[1][:5]
 
 
-# Coordenadas resolvidas em cache — so chama geocoding uma vez por processo.
+# Resolved coordinates cache — geocoding is called only once per process.
 _geo_cache = {"city": None, "lat": None, "lon": None}
 
-# Timestamp Unix do lua nova de referencia (6 Jan 2000 18:14 UTC)
+# Unix timestamp of the reference new moon (6 Jan 2000 18:14 UTC)
 _KNOWN_NEW_MOON = 947182440.0
-_LUNAR_CYCLE = 29.53059  # dias
+_LUNAR_CYCLE = 29.53059  # days
 
 
 def _moon():
@@ -85,8 +85,8 @@ def _moon():
     fraction = (days % _LUNAR_CYCLE) / _LUNAR_CYCLE  # 0..1
     phase_idx = int(fraction * 8 + 0.5) % 8
     names = [
-        'Lua Nova', 'Crescente', 'Quarto Crescente', 'Gibosa Crescente',
-        'Lua Cheia', 'Gibosa Minguante', 'Quarto Minguante', 'Minguante',
+        'New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous',
+        'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent',
     ]
     return {"fraction": round(fraction, 3), "name": names[phase_idx], "phase_index": phase_idx}
 
@@ -96,7 +96,7 @@ def _fetch(url):
 
 
 def _resolve_city(city):
-    """Converte nome de cidade em lat/lon via Open-Meteo Geocoding API."""
+    """Resolve a city name to lat/lon via the Open-Meteo Geocoding API."""
     if _geo_cache["city"] == city and _geo_cache["lat"] is not None:
         return _geo_cache["lat"], _geo_cache["lon"]
 
@@ -124,7 +124,7 @@ def _resolve_city(city):
 
 
 def _fetch_openmeteo(lat, lon):
-    """Busca clima no Open-Meteo. Retorna dict estruturado."""
+    """Fetch weather from Open-Meteo. Returns a structured dict."""
     url = (
         "https://api.open-meteo.com/v1/forecast"
         "?latitude={lat}&longitude={lon}"
@@ -139,7 +139,7 @@ def _fetch_openmeteo(lat, lon):
 
     data = _fetch(url)
 
-    # --- Proximas 24h (a partir da hora atual) ---
+    # --- Next 24h (starting from current hour) ---
     cur = data.get("current", {}) or {}
     now_str = cur.get("time", "")
     hourly = data.get("hourly", {}) or {}
@@ -158,7 +158,7 @@ def _fetch_openmeteo(lat, lon):
             "code":   _at(hourly.get("weather_code", []), h0 + i, 0),
         })
 
-    # --- Diaria (hoje + 6 dias seguintes) ---
+    # --- Daily (today + next 6 days) ---
     daily = data.get("daily", {}) or {}
     dt = daily.get("time", []) or []
     daily_out = []
@@ -198,7 +198,7 @@ def _fetch_openmeteo(lat, lon):
 
 
 def _fetch_metno(lat, lon):
-    """Fallback: Norwegian Meteorological Institute (met.no). Sem chave de API."""
+    """Fallback: Norwegian Meteorological Institute (met.no). No API key required."""
     url = (
         "https://api.met.no/weatherapi/locationforecast/2.0/compact"
         "?lat={lat:.4f}&lon={lon:.4f}"
@@ -207,7 +207,7 @@ def _fetch_metno(lat, lon):
     data = _http_fetch(url, headers={"User-Agent": _METNO_UA}, timeout=_TIMEOUT).json()
     ts = data["properties"]["timeseries"]
 
-    # --- current: primeira entrada ---
+    # --- current: first entry ---
     first = ts[0]
     inst  = first["data"]["instant"]["details"]
     nxt1  = first["data"].get("next_1_hours") or {}
@@ -226,7 +226,7 @@ def _fetch_metno(lat, lon):
         "uv":         _round_v(inst.get("ultraviolet_index_clear_sky")),
     }
 
-    # --- hourly: proximas 24 entradas com next_1_hours ---
+    # --- hourly: next 24 entries with next_1_hours ---
     hourly_out = []
     for entry in ts[:48]:
         if len(hourly_out) >= 24:
@@ -245,7 +245,7 @@ def _fetch_metno(lat, lon):
             "code":   _metno_wmo(sym_h),
         })
 
-    # --- daily: agregar por dia (max/min temp, precip acumulada, symbol) ---
+    # --- daily: aggregate by day (max/min temp, accumulated precip, symbol) ---
     day_buckets = defaultdict(lambda: {
         "temps": [], "precip": 0.0, "prob": 0, "sym": None
     })
@@ -296,7 +296,7 @@ def _fetch_metno(lat, lon):
 
 
 def invalidate_cache():
-    """Limpa o cache de geocoding (ex: ao trocar de cidade nas settings)."""
+    """Clear the geocoding cache (e.g. when the city changes in settings)."""
     _geo_cache["city"] = None
     _geo_cache["lat"] = None
     _geo_cache["lon"] = None
@@ -307,17 +307,17 @@ def collect():
     if not city:
         return {"configured": False}
 
-    # _resolve_city tambem pode falhar (Geocoding Open-Meteo fora do ar). Por
-    # isso fica DENTRO do try: se o geocoding cair mas met.no estiver no ar e
-    # ja tivermos lat/lon cacheado de uma execucao anterior, ainda da pra
-    # servir clima.
+    # _resolve_city can also fail (Open-Meteo Geocoding down). It stays
+    # INSIDE the try so that if geocoding fails but met.no is reachable and
+    # we already have lat/lon cached from a previous run, we can still serve
+    # weather data.
     try:
         lat, lon = _resolve_city(city)
         return _fetch_openmeteo(lat, lon)
     except Exception as exc:
-        logging.warning("[weather] Open-Meteo falhou: %s — tentando met.no como fallback", exc)
+        logging.warning("[weather] Open-Meteo failed: %s — falling back to met.no", exc)
         if _geo_cache["city"] != city or _geo_cache["lat"] is None:
-            # Sem lat/lon nao da pra chamar met.no — re-levanta para o
-            # scheduler retentar com backoff exponencial.
+            # Without lat/lon we can't call met.no — re-raise so the
+            # scheduler retries with exponential backoff.
             raise
         return _fetch_metno(_geo_cache["lat"], _geo_cache["lon"])
