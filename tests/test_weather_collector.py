@@ -73,7 +73,7 @@ def patch_settings(monkeypatch):
                         raising=False)
 
 
-def test_cidade_nao_configurada_retorna_configured_false(monkeypatch):
+def test_unconfigured_city_returns_configured_false(monkeypatch):
     monkeypatch.setattr("settings.get", lambda *a, **kw: "", raising=False)
     from collectors import weather
     result = weather.collect()
@@ -81,7 +81,7 @@ def test_cidade_nao_configurada_retorna_configured_false(monkeypatch):
 
 
 @pytest.mark.usefixtures()
-def test_coleta_openmeteo_com_mocks(monkeypatch):
+def test_openmeteo_collect_with_mocks(monkeypatch):
     import responses
 
     monkeypatch.setattr("settings.get",
@@ -109,11 +109,11 @@ def test_coleta_openmeteo_com_mocks(monkeypatch):
     assert result["current"]["temp"] == 22.5
 
 
-def test_geocoding_falha_levanta_excecao(monkeypatch):
+def test_geocoding_failure_raises_exception(monkeypatch):
     import responses
 
     monkeypatch.setattr("settings.get",
-                        lambda sec, key, default="": "CidadeInexistente" if key == "city" else default,
+                        lambda sec, key, default="": "NonExistentCity" if key == "city" else default,
                         raising=False)
     _reset_cache()
 
@@ -127,7 +127,7 @@ def test_geocoding_falha_levanta_excecao(monkeypatch):
             weather.collect()
 
 
-def test_invalidate_cache_limpa_geo_cache():
+def test_invalidate_cache_clears_geo_cache():
     from collectors import weather
     weather._geo_cache["city"] = "Carandai"
     weather._geo_cache["lat"] = -20.98

@@ -1,24 +1,24 @@
-"""Testes da logica de backoff exponencial do scheduler de feeds.
+"""Tests for the exponential backoff logic of the feed scheduler.
 
-Valida a formula de calculo do delay — sem subir threads reais.
+Validates the delay calculation formula — no real threads are started.
 """
 import math
 
 
 def _backoff(failures, retry_min=60, retry_max=600):
-    """Replica a formula do _scheduler_loop em app.py."""
+    """Replicates the _scheduler_loop formula from app.py."""
     return min(retry_min * (2 ** (failures - 1)), retry_max)
 
 
-def test_primeira_falha_usa_retry_min():
+def test_first_failure_uses_retry_min():
     assert _backoff(1) == 60
 
 
-def test_segunda_falha_dobra():
+def test_second_failure_doubles():
     assert _backoff(2) == 120
 
 
-def test_terceira_falha_dobra_novamente():
+def test_third_failure_doubles_again():
     assert _backoff(3) == 240
 
 
@@ -28,7 +28,7 @@ def test_teto_e_respeitado():
 
 
 def test_teto_atingido_na_quarta_falha():
-    # 60 * 2^3 = 480 < 600; 60 * 2^4 = 960 > 600 => teto na quinta falha
+    # 60 * 2^3 = 480 < 600; 60 * 2^4 = 960 > 600 => cap hit on fifth failure
     assert _backoff(4) == 480
     assert _backoff(5) == 600
 
