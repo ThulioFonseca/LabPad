@@ -517,3 +517,38 @@
 .mode-light .notif-empty      { color: #8b909c; }
 .mode-light .notif-meta       { color: #6a7080; }
 .mode-light .notif-detail     { background-color: #f0f2f5; color: #1c2026; }
+
+
+/* === News carousel — per-theme colors ==================================== *
+ * Background for slides without image (mirrors .news-item background) +
+ * accent for the active position bullet (mirrors ACCENTS in settings.js). */
+
+/* Minimal */
+.theme-minimal.mode-dark  .news-carousel-slide--no-image { background-color: #1e2128; }
+.theme-minimal.mode-light .news-carousel-slide--no-image { background-color: #ffffff; }
+.theme-minimal.mode-dark  .news-carousel-dot.is-active   { background-color: #4f8cff; }
+.theme-minimal.mode-light .news-carousel-dot.is-active   { background-color: #2563eb; }
+
+/* Neumorphic */
+.theme-neu.mode-dark  .news-carousel-slide--no-image { background-color: #2a2e35; }
+.theme-neu.mode-light .news-carousel-slide--no-image { background-color: #e6e9f0; }
+.theme-neu.mode-dark  .news-carousel-dot.is-active   { background-color: #8b93f8; }
+.theme-neu.mode-light .news-carousel-dot.is-active   { background-color: #6a74d8; }
+
+/* Elevated */
+.theme-elevated.mode-dark  .news-carousel-slide--no-image { background-color: #1b1f27; }
+.theme-elevated.mode-light .news-carousel-slide--no-image { background-color: #ffffff; }
+.theme-elevated.mode-dark  .news-carousel-dot.is-active   { background-color: #2dd4bf; }
+.theme-elevated.mode-light .news-carousel-dot.is-active   { background-color: #0d9488; }
+
+/* Outline */
+.theme-outline.mode-dark  .news-carousel-slide--no-image { background-color: #14171c; }
+.theme-outline.mode-light .news-carousel-slide--no-image { background-color: #ffffff; }
+.theme-outline.mode-dark  .news-carousel-dot.is-active   { background-color: #22d3ee; }
+.theme-outline.mode-light .news-carousel-dot.is-active   { background-color: #0891b2; }
+
+/* Frosted Glass */
+.theme-glass.mode-dark  .news-carousel-slide--no-image { background-color: rgba(255, 255, 255, 0.06); }
+.theme-glass.mode-light .news-carousel-slide--no-image { background-color: rgba(255, 255, 255, 0.55); }
+.theme-glass.mode-dark  .news-carousel-dot.is-active   { background-color: #a78bfa; }
+.theme-glass.mode-light .news-carousel-dot.is-active   { background-color: #7c3aed; }

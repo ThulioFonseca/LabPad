@@ -29,6 +29,9 @@
   /* Calendar */
   var lastCalendar = null;
 
+  /* News (cached so Settings.onChange can re-render when view style flips). */
+  var lastNews = null;
+
   function byId(id) { return document.getElementById(id); }
 
   /* Envia erro para o backend (aparece em docker logs como JS-ERROR). */
@@ -553,6 +556,7 @@
     getJSON(url, function (data) {
       try {
         lastCalendar = data.calendar;
+        lastNews = data.news;
         Widgets.renderCalendar(byId('section-calendar'), data.calendar);
         Widgets.renderNews(byId('section-news'), data.news);
         feedsLoaded = true;
@@ -653,6 +657,11 @@
   if (window.Settings && Settings.onChange) {
     Settings.onChange(function () {
       applySparkVisibility();
+      /* Re-render news section so list <-> carousel toggle takes effect
+         immediately (without waiting for the 10-min feeds cycle). */
+      if (lastNews) {
+        Widgets.renderNews(byId('section-news'), lastNews);
+      }
       /* Weather slides: weatherStep reads enabledWeatherSlides() on each step,
          so toggles apply on the next cycle (no restart here — avoids showing
          the OLD city for an instant when the save includes a city change). */

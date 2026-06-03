@@ -331,6 +331,120 @@ main {
   overflow: hidden;
 }
 
+/* === News carousel ====================================================== */
+.news-carousel {
+  position: relative;
+}
+.news-carousel-viewport {
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+}
+.news-carousel-track {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-transition: -webkit-transform 350ms ease;
+  transition: transform 350ms ease;
+}
+.news-carousel-slide {
+  -webkit-flex: 0 0 100%;
+  flex: 0 0 100%;
+  position: relative;
+  height: 240px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  margin-bottom: 0;
+}
+.news-carousel-slide::before {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0; top: 40%;
+  background-image: -webkit-linear-gradient(top, rgba(0,0,0,0) 0%, rgba(0,0,0,0.78) 100%);
+  background-image:         linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.78) 100%);
+}
+.news-carousel-text {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 14px 16px;
+  z-index: 1;
+}
+.news-carousel-slide .news-title {
+  color: #ffffff;
+  font-size: 16px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.news-carousel-slide .news-age {
+  color: rgba(255,255,255,0.88);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+}
+/* Slide without image: drop the gradient and inherit theme text colors */
+.news-carousel-slide--no-image::before {
+  display: none;
+}
+.news-carousel-slide--no-image .news-title,
+.news-carousel-slide--no-image .news-age {
+  color: inherit;
+  text-shadow: none;
+}
+
+/* Density variants reuse the existing news-{compact,normal,roomy} classes */
+.news-compact .news-carousel-slide { height: 180px; }
+.news-roomy   .news-carousel-slide { height: 300px; }
+
+/* Side navigation buttons */
+.news-carousel-nav {
+  position: absolute;
+  top: 50%;
+  margin-top: -18px;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background-color: rgba(0,0,0,0.45);
+  color: #ffffff;
+  font-size: 22px;
+  line-height: 32px;
+  text-align: center;
+  cursor: pointer;
+  padding: 0;
+  z-index: 2;
+}
+.news-carousel-nav:hover {
+  background-color: rgba(0,0,0,0.7);
+}
+.news-carousel-nav--prev { left: 8px; }
+.news-carousel-nav--next { right: 8px; }
+
+/* Position bullets */
+.news-carousel-dots {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: center;
+  justify-content: center;
+  margin-top: 10px;
+}
+.news-carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 0;
+  padding: 0;
+  margin: 0 4px;
+  background-color: rgba(127,127,127,0.45);
+  cursor: pointer;
+}
+.news-carousel-dot.is-active {
+  background-color: #4f8cff;
+}
+
 /* Calendar + News: Montserrat (Google Fonts) — modern geometric sans,
    tall x-height and scannable letterforms for card titles (NYT/Medium-style).
    Fallback to system sans preserves the look when Google Fonts cannot load. */

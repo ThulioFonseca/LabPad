@@ -31,6 +31,10 @@
     { id: 'normal',  name: 'Normal' },
     { id: 'roomy',   name: 'Spacious' }
   ];
+  var NEWS_VIEW_STYLES = [
+    { id: 'list',     name: 'List' },
+    { id: 'carousel', name: 'Carousel' }
+  ];
   var SPARK_WIDGETS = [
     { id: 'cpu',  name: 'CPU' },
     { id: 'mem',  name: 'Memory' },
@@ -60,6 +64,7 @@
   var FE_DEFAULTS = {
     theme: 'minimal', mode: 'dark',
     cardHeight: 'normal', newsCardHeight: 'normal',
+    newsViewStyle: 'list',
     sparks: { cpu: true, mem: true, disk: false, temp: true, net: true },
     weatherSlides: ['current', 'forecast', 'moon']
   };
@@ -114,7 +119,8 @@
   function applyHtmlClasses() {
     document.documentElement.className =
       'theme-' + fe.theme + ' mode-' + fe.mode +
-      ' cards-' + fe.cardHeight + ' news-' + fe.newsCardHeight;
+      ' cards-' + fe.cardHeight + ' news-' + fe.newsCardHeight +
+      ' news-style-' + (fe.newsViewStyle || 'list');
     if (typeof LEVEL_COLOR !== 'undefined') {
       var acc = (ACCENTS[fe.theme] || ACCENTS.minimal)[fe.mode];
       LEVEL_COLOR.ok = acc;
@@ -136,6 +142,7 @@
   window.Settings = {
     spark: function (id) { return fe.sparks[id] !== false; },
     weatherSlides: function () { return fe.weatherSlides.slice(); },
+    newsViewStyle: function () { return fe.newsViewStyle || 'list'; },
     onChange: function (cb) { if (typeof cb === 'function') { listeners.push(cb); } },
     /* Fires only after a PUT /api/settings returns 200 — clear signal that
        server data changed (city/URL/limit). dashboard.js uses this to refetch
@@ -272,6 +279,9 @@
       numberInput('news.limit', limit, 1, 50)));
     s.appendChild(formRow('Card density',
       selectInput('newsCardHeight', HEIGHT_PRESETS, fe.newsCardHeight)));
+    s.appendChild(formRow('View style',
+      selectInput('newsViewStyle', NEWS_VIEW_STYLES, fe.newsViewStyle),
+      'List shows compact rows; Carousel cycles a hero card every 5s.'));
     return s;
   }
   function buildSystemSection() {
@@ -312,10 +322,12 @@
     var mode  = body.querySelector('select[name="mode"]');
     var ch    = body.querySelector('select[name="cardHeight"]');
     var nh    = body.querySelector('select[name="newsCardHeight"]');
+    var nv    = body.querySelector('select[name="newsViewStyle"]');
     if (theme) { feNext.theme = theme.value; }
     if (mode)  { feNext.mode  = mode.value; }
     if (ch)    { feNext.cardHeight = ch.value; }
     if (nh)    { feNext.newsCardHeight = nh.value; }
+    if (nv)    { feNext.newsViewStyle = nv.value; }
 
     var sparkBoxes = body.querySelectorAll('input[name="sparks"]');
     feNext.sparks = {};
