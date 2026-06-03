@@ -512,8 +512,8 @@
         if (!isNaN(parsed)) { titleMb = parsed; }
       } catch (e) { /* ignore */ }
     }
-    /* main padding 8/24 + .panel margin-bottom 20 (gap between host and feeds). */
-    var avail = viewportH - topbarH - 8 - 24 - hostH - 20 - titleH - titleMb;
+    /* main padding 8/0 + .panel margin-bottom 20 (gap between host and feeds). */
+    var avail = viewportH - topbarH - 8 - hostH - 20 - titleH - titleMb;
     if (avail < 80) { avail = 80; }
     for (var j = 0; j < lists.length; j++) {
       lists[j].style.height = avail + 'px';
