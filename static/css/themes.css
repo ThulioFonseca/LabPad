@@ -110,7 +110,7 @@
 .theme-neu.mode-dark .info-label, .theme-neu.mode-dark .cimage,
 .theme-neu.mode-dark .cstat-label, .theme-neu.mode-dark .cal-loc,
 .theme-neu.mode-dark .news-age, .theme-neu.mode-dark .docker-top-cpu,
-.theme-neu.mode-dark .weather-day-name, .theme-neu.mode-dark .empty,
+.theme-neu.mode-dark .weather-day-name, .theme-neu.mode-dark .empty { color: #6e7484; }
 .theme-neu.mode-dark .bar-fill,
 .theme-neu.mode-dark .cmini-fill { background-color: #8b93f8; }
 .theme-neu.mode-dark .feed-day,
@@ -184,7 +184,7 @@
 .theme-elevated.mode-dark .info-label, .theme-elevated.mode-dark .cimage,
 .theme-elevated.mode-dark .cstat-label, .theme-elevated.mode-dark .cal-loc,
 .theme-elevated.mode-dark .news-age, .theme-elevated.mode-dark .docker-top-cpu,
-.theme-elevated.mode-dark .weather-day-name, .theme-elevated.mode-dark .empty,
+.theme-elevated.mode-dark .weather-day-name, .theme-elevated.mode-dark .empty { color: #6b7280; }
 .theme-elevated.mode-dark .bar-fill,
 .theme-elevated.mode-dark .cmini-fill { background-color: #2dd4bf; }
 .theme-elevated.mode-dark .feed-day,
