@@ -22,10 +22,10 @@ function levelFor(widget, value) {
 
 /* Sparkline colours. MIRRORS the theme.css palette — update together if changed. */
 var LEVEL_COLOR = {
-  ok:   '#4f8cff',
+  ok:   '#5b93ff',
   warn: '#d29922',
   crit: '#f85149',
-  none: '#6a7080'
+  none: '#6c7382'
 };
 
 

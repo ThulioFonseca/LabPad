@@ -5,20 +5,26 @@
  *   themes: minimal | neu | elevated | outline | glass
  *   modes:  dark | light
  *
- * base.css = structure;  theme.css = Minimal dark (bare rules, the default).
- * This file adds only the OVERRIDES for the other 9 combinations, plus the
- * semantic blocks (warn/crit/ok) and the gear menu style.
+ * base.css = structure;  theme.css = Minimal dark (the default palette).
+ * This file adds the OVERRIDES for the other 9 combinations, plus the semantic
+ * blocks (warn/crit/ok), the settings/modal chrome and the news carousel.
  *
- * Theme colour rules use the prefix '.theme-X.mode-Y' (specificity 0,3,0)
- * over single-class selectors. Semantic blocks use '.mode-Y' + the state class
- * (same specificity) and come AFTER — so they win the override.
+ * Each theme has a distinct identity + depth cue:
+ *   minimal   flat, editorial, hairline borders + soft shadow
+ *   neu       soft extruded "neumorphism" (dual-tone shadows)
+ *   elevated  material cards floating on a near-black stage (layered shadows)
+ *   outline   crisp hairline frames that light up (accent border on hover)
+ *   glass     translucent frosted panels over a coloured gradient (no live blur)
  *
- * No CSS variables / no backdrop-filter (Safari 9 / iPad 2). The "Glass" theme
- * uses translucency over a gradient — no live blur.
+ * Theme colour rules use '.theme-X.mode-Y' (specificity 0,3,0). Semantic blocks
+ * use '.mode-Y' + a state class (same specificity) and come AFTER, so they win.
+ *
+ * No CSS variables / no backdrop-filter (Safari 9 / iPad 2). "Glass" fakes the
+ * frosted look with translucency + bright hairline edges over a gradient.
  * ===========================================================================*/
 
 
-/* === Estrutura por tema (forma; igual nos dois modos) ===================== */
+/* === Per-theme shape (same in both modes) ================================= */
 
 .theme-neu .card, .theme-neu .info-item, .theme-neu .crow,
 .theme-neu .cal-event, .theme-neu .news-item {
@@ -34,7 +40,7 @@
 .theme-outline .cal-event, .theme-outline .news-item {
   border-width: 1.5px;
   border-style: solid;
-  border-radius: 5px;
+  border-radius: 6px;
 }
 .theme-glass .card, .theme-glass .info-item, .theme-glass .crow,
 .theme-glass .cal-event, .theme-glass .news-item {
@@ -44,135 +50,195 @@
 }
 
 
-/* === Minimal · claro ====================================================== */
+/* === Minimal · light ====================================================== */
 
-.theme-minimal.mode-light body { background-color: #f5f6f8; color: #1c2026; }
+.theme-minimal.mode-light body {
+  background-color: #f4f6f9;
+  background-image: -webkit-linear-gradient(top, #f7f9fc 0%, #eaeef4 100%);
+  background-image:         linear-gradient(to bottom, #f7f9fc 0%, #eaeef4 100%);
+  color: #1b1f27;
+}
 .theme-minimal.mode-light .card, .theme-minimal.mode-light .info-item,
 .theme-minimal.mode-light .crow, .theme-minimal.mode-light .cal-event,
 .theme-minimal.mode-light .news-item {
   background-color: #ffffff;
-  border-color: #e2e5ea;
+  border-color: #e4e8ee;
+  -webkit-box-shadow: 0 1px 3px rgba(24, 32, 48, 0.06);
+  box-shadow: 0 1px 3px rgba(24, 32, 48, 0.06);
 }
 .theme-minimal.mode-light .brand-name, .theme-minimal.mode-light .num,
 .theme-minimal.mode-light .rate-val, .theme-minimal.mode-light .info-value,
 .theme-minimal.mode-light .cname, .theme-minimal.mode-light .cal-title,
 .theme-minimal.mode-light .news-title, .theme-minimal.mode-light .docker-count,
-.theme-minimal.mode-light .weather-val { color: #1c2026; }
+.theme-minimal.mode-light .weather-val { color: #1b1f27; }
 .theme-minimal.mode-light .status, .theme-minimal.mode-light .weather-clock,
 .theme-minimal.mode-light .panel-count, .theme-minimal.mode-light .card-title,
 .theme-minimal.mode-light .cstat-val, .theme-minimal.mode-light .docker-top-name,
 .theme-minimal.mode-light .weather-day-temp,
 .theme-minimal.mode-light .topbar-center,
-.theme-minimal.mode-light .cal-time { color: #586070; }
+.theme-minimal.mode-light .cal-time { color: #5b6473; }
 .theme-minimal.mode-light .panel-title, .theme-minimal.mode-light .panel-meta,
 .theme-minimal.mode-light .card-sub, .theme-minimal.mode-light .unit,
 .theme-minimal.mode-light .info-label, .theme-minimal.mode-light .cimage,
 .theme-minimal.mode-light .cstat-label, .theme-minimal.mode-light .cal-loc,
 .theme-minimal.mode-light .news-age, .theme-minimal.mode-light .docker-top-cpu,
-.theme-minimal.mode-light .weather-day-name, .theme-minimal.mode-light .empty { color: #8a909e; }
+.theme-minimal.mode-light .weather-day-name, .theme-minimal.mode-light .empty { color: #8b93a1; }
 .theme-minimal.mode-light .bar-fill,
 .theme-minimal.mode-light .cmini-fill { background-color: #2563eb; }
 .theme-minimal.mode-light .feed-day,
 .theme-minimal.mode-light .rate--down .rate-arrow { color: #2563eb; }
 .theme-minimal.mode-light .bar, .theme-minimal.mode-light .cmini,
-.theme-minimal.mode-light .news-thumb { background-color: #e7e9ee; }
-.theme-minimal.mode-light .topbar { border-bottom-color: #e2e5ea; }
-.theme-minimal.mode-light .docker-top { border-top-color: #e2e5ea; }
-.theme-minimal.mode-light .weather-sep { color: #e2e5ea; }
+.theme-minimal.mode-light .news-thumb { background-color: #e8ebf1; }
+.theme-minimal.mode-light .topbar { border-bottom-color: #e4e8ee; }
+.theme-minimal.mode-light .docker-top { border-top-color: #e4e8ee; }
+.theme-minimal.mode-light .weather-sep { color: #e4e8ee; }
 
 
-/* === Neumorfismo · escuro ================================================= */
+/* === Neumorphism · dark ===================================================
+ * Soft UI: page and surfaces share ONE flat colour (no gradient), extruded by
+ * a single top-left light source. Base #2a2e35 is a mid-dark grey — light
+ * enough that the top-left highlight actually reads (very dark grounds kill the
+ * effect). Shadows are derived symmetrically from the base (±~11 per channel),
+ * kept soft (blur ~2.6× offset) and low-contrast. */
 
-.theme-neu.mode-dark body { background-color: #2a2e35; color: #d6dae2; }
+.theme-neu.mode-dark body {
+  background-color: #2a2e35;
+  background-image: none;
+  color: #dfe3ea;
+}
 .theme-neu.mode-dark .card, .theme-neu.mode-dark .info-item,
 .theme-neu.mode-dark .crow, .theme-neu.mode-dark .cal-event,
 .theme-neu.mode-dark .news-item {
   background-color: #2a2e35;
-  box-shadow: 6px 6px 12px #20242a, -6px -6px 12px #343a44;
+  box-shadow: 6px 6px 16px #1f232a, -6px -6px 16px #353a44;
 }
 .theme-neu.mode-dark .bar, .theme-neu.mode-dark .cmini,
 .theme-neu.mode-dark .news-thumb {
   background-color: #2a2e35;
-  box-shadow: inset 2px 2px 4px #20242a, inset -2px -2px 4px #343a44;
+  box-shadow: inset 3px 3px 6px #1f232a, inset -3px -3px 6px #353a44;
 }
 .theme-neu.mode-dark .brand-name, .theme-neu.mode-dark .num,
 .theme-neu.mode-dark .rate-val, .theme-neu.mode-dark .info-value,
 .theme-neu.mode-dark .cname, .theme-neu.mode-dark .cal-title,
 .theme-neu.mode-dark .news-title, .theme-neu.mode-dark .docker-count,
-.theme-neu.mode-dark .weather-val { color: #d6dae2; }
+.theme-neu.mode-dark .weather-val { color: #e7ebf2; }
 .theme-neu.mode-dark .status, .theme-neu.mode-dark .weather-clock,
 .theme-neu.mode-dark .panel-count, .theme-neu.mode-dark .card-title,
 .theme-neu.mode-dark .cstat-val, .theme-neu.mode-dark .docker-top-name,
 .theme-neu.mode-dark .weather-day-temp, .theme-neu.mode-dark .topbar-center,
-.theme-neu.mode-dark .cal-time { color: #969ba8; }
+.theme-neu.mode-dark .cal-time { color: #99a1b0; }
 .theme-neu.mode-dark .panel-title, .theme-neu.mode-dark .panel-meta,
 .theme-neu.mode-dark .card-sub, .theme-neu.mode-dark .unit,
 .theme-neu.mode-dark .info-label, .theme-neu.mode-dark .cimage,
 .theme-neu.mode-dark .cstat-label, .theme-neu.mode-dark .cal-loc,
 .theme-neu.mode-dark .news-age, .theme-neu.mode-dark .docker-top-cpu,
-.theme-neu.mode-dark .weather-day-name, .theme-neu.mode-dark .empty { color: #6e7484; }
+.theme-neu.mode-dark .weather-day-name, .theme-neu.mode-dark .empty { color: #767e8f; }
 .theme-neu.mode-dark .bar-fill,
-.theme-neu.mode-dark .cmini-fill { background-color: #8b93f8; }
+.theme-neu.mode-dark .cmini-fill { background-color: #949bfa; }
 .theme-neu.mode-dark .feed-day,
-.theme-neu.mode-dark .rate--down .rate-arrow { color: #8b93f8; }
-.theme-neu.mode-dark .topbar { border-bottom-color: #20242a; }
-.theme-neu.mode-dark .docker-top { border-top-color: #20242a; }
-.theme-neu.mode-dark .weather-sep { color: #20242a; }
+.theme-neu.mode-dark .rate--down .rate-arrow { color: #949bfa; }
+.theme-neu.mode-dark .topbar { border-bottom-color: #1f232a; }
+.theme-neu.mode-dark .docker-top { border-top-color: #1f232a; }
+.theme-neu.mode-dark .weather-sep { color: #1f232a; }
 
 
-/* === Neumorfismo · claro ================================================== */
+/* === Neumorphism · light ==================================================
+ * Base #e7eaf1 (soft blue-grey, ~91% lightness). Dark shadow is the base
+ * darkened toward its hue; light shadow is pure white — the canonical Soft UI
+ * pairing. Same flat ground on page and cards. */
 
-.theme-neu.mode-light body { background-color: #e6e9f0; color: #404757; }
+.theme-neu.mode-light body {
+  background-color: #e7eaf1;
+  background-image: none;
+  color: #3c4350;
+}
 .theme-neu.mode-light .card, .theme-neu.mode-light .info-item,
 .theme-neu.mode-light .crow, .theme-neu.mode-light .cal-event,
 .theme-neu.mode-light .news-item {
-  background-color: #e6e9f0;
-  box-shadow: 6px 6px 12px #c5cad6, -6px -6px 12px #ffffff;
+  background-color: #e7eaf1;
+  box-shadow: 6px 6px 16px #c6cbd8, -6px -6px 16px #ffffff;
 }
 .theme-neu.mode-light .bar, .theme-neu.mode-light .cmini,
 .theme-neu.mode-light .news-thumb {
-  background-color: #e6e9f0;
-  box-shadow: inset 2px 2px 4px #c5cad6, inset -2px -2px 4px #ffffff;
+  background-color: #e7eaf1;
+  box-shadow: inset 3px 3px 6px #c6cbd8, inset -3px -3px 6px #ffffff;
 }
 .theme-neu.mode-light .brand-name, .theme-neu.mode-light .num,
 .theme-neu.mode-light .rate-val, .theme-neu.mode-light .info-value,
 .theme-neu.mode-light .cname, .theme-neu.mode-light .cal-title,
 .theme-neu.mode-light .news-title, .theme-neu.mode-light .docker-count,
-.theme-neu.mode-light .weather-val { color: #404757; }
+.theme-neu.mode-light .weather-val { color: #363d4a; }
 .theme-neu.mode-light .status, .theme-neu.mode-light .weather-clock,
 .theme-neu.mode-light .panel-count, .theme-neu.mode-light .card-title,
 .theme-neu.mode-light .cstat-val, .theme-neu.mode-light .docker-top-name,
 .theme-neu.mode-light .weather-day-temp, .theme-neu.mode-light .topbar-center,
-.theme-neu.mode-light .cal-time { color: #6f7686; }
+.theme-neu.mode-light .cal-time { color: #6d7484; }
 .theme-neu.mode-light .panel-title, .theme-neu.mode-light .panel-meta,
 .theme-neu.mode-light .card-sub, .theme-neu.mode-light .unit,
 .theme-neu.mode-light .info-label, .theme-neu.mode-light .cimage,
 .theme-neu.mode-light .cstat-label, .theme-neu.mode-light .cal-loc,
 .theme-neu.mode-light .news-age, .theme-neu.mode-light .docker-top-cpu,
-.theme-neu.mode-light .weather-day-name, .theme-neu.mode-light .empty { color: #969db0; }
+.theme-neu.mode-light .weather-day-name, .theme-neu.mode-light .empty { color: #99a0b2; }
 .theme-neu.mode-light .bar-fill,
-.theme-neu.mode-light .cmini-fill { background-color: #6a74d8; }
+.theme-neu.mode-light .cmini-fill { background-color: #5b66d6; }
 .theme-neu.mode-light .feed-day,
-.theme-neu.mode-light .rate--down .rate-arrow { color: #6a74d8; }
-.theme-neu.mode-light .topbar { border-bottom-color: #d2d7e1; }
-.theme-neu.mode-light .docker-top { border-top-color: #d2d7e1; }
-.theme-neu.mode-light .weather-sep { color: #c5cad6; }
+.theme-neu.mode-light .rate--down .rate-arrow { color: #5b66d6; }
+.theme-neu.mode-light .topbar { border-bottom-color: #d3d8e2; }
+.theme-neu.mode-light .docker-top { border-top-color: #d3d8e2; }
+.theme-neu.mode-light .weather-sep { color: #c6cbd8; }
 
 
-/* === Elevado · escuro ===================================================== */
+/* === Neumorphism · interaction (both modes) ===============================
+ * Soft UI must never fall back to a flat drop shadow or "lift". Override the
+ * generic hover/press from motion.css: hover gently DEEPENS the extrusion
+ * (card rises from the surface), press carves it INWARD (inset) — the
+ * canonical pressed state. Specificity theme+mode (0,4,x) beats motion.css. */
 
-.theme-elevated.mode-dark body { background-color: #101319; color: #eceef3; }
+.theme-neu.mode-dark .card:hover, .theme-neu.mode-dark .info-item:hover,
+.theme-neu.mode-dark .crow:hover, .theme-neu.mode-dark .cal-event:hover,
+.theme-neu.mode-dark .news-item:hover {
+  -webkit-transform: none; transform: none;
+  box-shadow: 8px 8px 20px #1f232a, -8px -8px 20px #353a44;
+}
+.theme-neu.mode-dark .crow:active, .theme-neu.mode-dark .news-item:active,
+.theme-neu.mode-dark #section-docker-summary:active {
+  -webkit-transform: none; transform: none;
+  box-shadow: inset 5px 5px 11px #1f232a, inset -5px -5px 11px #353a44;
+}
+
+.theme-neu.mode-light .card:hover, .theme-neu.mode-light .info-item:hover,
+.theme-neu.mode-light .crow:hover, .theme-neu.mode-light .cal-event:hover,
+.theme-neu.mode-light .news-item:hover {
+  -webkit-transform: none; transform: none;
+  box-shadow: 8px 8px 20px #c6cbd8, -8px -8px 20px #ffffff;
+}
+.theme-neu.mode-light .crow:active, .theme-neu.mode-light .news-item:active,
+.theme-neu.mode-light #section-docker-summary:active {
+  -webkit-transform: none; transform: none;
+  box-shadow: inset 5px 5px 11px #c6cbd8, inset -5px -5px 11px #ffffff;
+}
+
+
+/* === Elevated · dark ====================================================== */
+
+.theme-elevated.mode-dark body {
+  background-color: #0e1116;
+  background-image: -webkit-linear-gradient(top, #12151c 0%, #0a0c11 100%);
+  background-image:         linear-gradient(to bottom, #12151c 0%, #0a0c11 100%);
+  color: #eef0f4;
+}
 .theme-elevated.mode-dark .card, .theme-elevated.mode-dark .info-item,
 .theme-elevated.mode-dark .crow, .theme-elevated.mode-dark .cal-event,
 .theme-elevated.mode-dark .news-item {
-  background-color: #1b1f27;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  background-color: #191d25;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4), 0 10px 26px rgba(0, 0, 0, 0.5),
+              inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 .theme-elevated.mode-dark .brand-name, .theme-elevated.mode-dark .num,
 .theme-elevated.mode-dark .rate-val, .theme-elevated.mode-dark .info-value,
 .theme-elevated.mode-dark .cname, .theme-elevated.mode-dark .cal-title,
 .theme-elevated.mode-dark .news-title, .theme-elevated.mode-dark .docker-count,
-.theme-elevated.mode-dark .weather-val { color: #eceef3; }
+.theme-elevated.mode-dark .weather-val { color: #eef0f4; }
 .theme-elevated.mode-dark .status, .theme-elevated.mode-dark .weather-clock,
 .theme-elevated.mode-dark .panel-count, .theme-elevated.mode-dark .card-title,
 .theme-elevated.mode-dark .cstat-val, .theme-elevated.mode-dark .docker-top-name,
@@ -196,14 +262,19 @@
 .theme-elevated.mode-dark .weather-sep { color: #272c35; }
 
 
-/* === Elevado · claro ====================================================== */
+/* === Elevated · light ===================================================== */
 
-.theme-elevated.mode-light body { background-color: #eaecf0; color: #181b21; }
+.theme-elevated.mode-light body {
+  background-color: #eceef2;
+  background-image: -webkit-linear-gradient(top, #f1f3f6 0%, #e3e7ec 100%);
+  background-image:         linear-gradient(to bottom, #f1f3f6 0%, #e3e7ec 100%);
+  color: #181b21;
+}
 .theme-elevated.mode-light .card, .theme-elevated.mode-light .info-item,
 .theme-elevated.mode-light .crow, .theme-elevated.mode-light .cal-event,
 .theme-elevated.mode-light .news-item {
   background-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(20, 28, 40, 0.12);
+  box-shadow: 0 1px 3px rgba(20, 28, 40, 0.08), 0 10px 26px rgba(20, 28, 40, 0.10);
 }
 .theme-elevated.mode-light .brand-name, .theme-elevated.mode-light .num,
 .theme-elevated.mode-light .rate-val, .theme-elevated.mode-light .info-value,
@@ -234,20 +305,32 @@
 .theme-elevated.mode-light .weather-sep { color: #dde0e5; }
 
 
-/* === Contorno · escuro ==================================================== */
+/* === Outline · dark ======================================================= */
 
-.theme-outline.mode-dark body { background-color: #0d0f13; color: #e3e7eb; }
+.theme-outline.mode-dark body {
+  background-color: #0b0d11;
+  background-image: -webkit-linear-gradient(top, #0e1015 0%, #090a0e 100%);
+  background-image:         linear-gradient(to bottom, #0e1015 0%, #090a0e 100%);
+  color: #e4e8ec;
+}
 .theme-outline.mode-dark .card, .theme-outline.mode-dark .info-item,
 .theme-outline.mode-dark .crow, .theme-outline.mode-dark .cal-event,
 .theme-outline.mode-dark .news-item {
-  background-color: #14171c;
-  border-color: #313b46;
+  background-color: #12151b;
+  border-color: #2f3a45;
+}
+/* Frames light up with the accent on hover (desktop) / press (touch). */
+.theme-outline.mode-dark .card:hover, .theme-outline.mode-dark .info-item:hover,
+.theme-outline.mode-dark .crow:hover, .theme-outline.mode-dark .cal-event:hover,
+.theme-outline.mode-dark .news-item:hover,
+.theme-outline.mode-dark .crow:active, .theme-outline.mode-dark .news-item:active {
+  border-color: #22d3ee;
 }
 .theme-outline.mode-dark .brand-name, .theme-outline.mode-dark .num,
 .theme-outline.mode-dark .rate-val, .theme-outline.mode-dark .info-value,
 .theme-outline.mode-dark .cname, .theme-outline.mode-dark .cal-title,
 .theme-outline.mode-dark .news-title, .theme-outline.mode-dark .docker-count,
-.theme-outline.mode-dark .weather-val { color: #e3e7eb; }
+.theme-outline.mode-dark .weather-val { color: #e4e8ec; }
 .theme-outline.mode-dark .status, .theme-outline.mode-dark .weather-clock,
 .theme-outline.mode-dark .panel-count, .theme-outline.mode-dark .card-title,
 .theme-outline.mode-dark .cstat-val, .theme-outline.mode-dark .docker-top-name,
@@ -266,19 +349,30 @@
 .theme-outline.mode-dark .rate--down .rate-arrow { color: #22d3ee; }
 .theme-outline.mode-dark .bar, .theme-outline.mode-dark .cmini,
 .theme-outline.mode-dark .news-thumb { background-color: #1f242b; }
-.theme-outline.mode-dark .topbar { border-bottom-color: #313b46; }
-.theme-outline.mode-dark .docker-top { border-top-color: #313b46; }
-.theme-outline.mode-dark .weather-sep { color: #313b46; }
+.theme-outline.mode-dark .topbar { border-bottom-color: #2f3a45; }
+.theme-outline.mode-dark .docker-top { border-top-color: #2f3a45; }
+.theme-outline.mode-dark .weather-sep { color: #2f3a45; }
 
 
-/* === Contorno · claro ===================================================== */
+/* === Outline · light ====================================================== */
 
-.theme-outline.mode-light body { background-color: #f2f3f5; color: #14171c; }
+.theme-outline.mode-light body {
+  background-color: #f1f3f6;
+  background-image: -webkit-linear-gradient(top, #f5f7f9 0%, #e9ecf0 100%);
+  background-image:         linear-gradient(to bottom, #f5f7f9 0%, #e9ecf0 100%);
+  color: #14171c;
+}
 .theme-outline.mode-light .card, .theme-outline.mode-light .info-item,
 .theme-outline.mode-light .crow, .theme-outline.mode-light .cal-event,
 .theme-outline.mode-light .news-item {
   background-color: #ffffff;
-  border-color: #cbd2d9;
+  border-color: #cdd4dc;
+}
+.theme-outline.mode-light .card:hover, .theme-outline.mode-light .info-item:hover,
+.theme-outline.mode-light .crow:hover, .theme-outline.mode-light .cal-event:hover,
+.theme-outline.mode-light .news-item:hover,
+.theme-outline.mode-light .crow:active, .theme-outline.mode-light .news-item:active {
+  border-color: #0891b2;
 }
 .theme-outline.mode-light .brand-name, .theme-outline.mode-light .num,
 .theme-outline.mode-light .rate-val, .theme-outline.mode-light .info-value,
@@ -303,24 +397,25 @@
 .theme-outline.mode-light .rate--down .rate-arrow { color: #0891b2; }
 .theme-outline.mode-light .bar, .theme-outline.mode-light .cmini,
 .theme-outline.mode-light .news-thumb { background-color: #eceef1; }
-.theme-outline.mode-light .topbar { border-bottom-color: #cbd2d9; }
-.theme-outline.mode-light .docker-top { border-top-color: #cbd2d9; }
-.theme-outline.mode-light .weather-sep { color: #cbd2d9; }
+.theme-outline.mode-light .topbar { border-bottom-color: #cdd4dc; }
+.theme-outline.mode-light .docker-top { border-top-color: #cdd4dc; }
+.theme-outline.mode-light .weather-sep { color: #cdd4dc; }
 
 
-/* === Vidro Fosco · escuro ================================================= */
+/* === Frosted Glass · dark ================================================= */
 
 .theme-glass.mode-dark body {
-  background-color: #13151d;
-  background-image: linear-gradient(155deg, #1c2130 0%, #11131b 100%);
+  background-color: #12141c;
+  background-image: -webkit-linear-gradient(300deg, #212c46 0%, #171b2c 48%, #0f1119 100%);
+  background-image:         linear-gradient(150deg, #212c46 0%, #171b2c 48%, #0f1119 100%);
   color: #eef0f5;
 }
 .theme-glass.mode-dark .card, .theme-glass.mode-dark .info-item,
 .theme-glass.mode-dark .crow, .theme-glass.mode-dark .cal-event,
 .theme-glass.mode-dark .news-item {
-  background-color: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.11);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  background-color: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 .theme-glass.mode-dark .brand-name, .theme-glass.mode-dark .num,
 .theme-glass.mode-dark .rate-val, .theme-glass.mode-dark .info-value,
@@ -331,37 +426,38 @@
 .theme-glass.mode-dark .panel-count, .theme-glass.mode-dark .card-title,
 .theme-glass.mode-dark .cstat-val, .theme-glass.mode-dark .docker-top-name,
 .theme-glass.mode-dark .weather-day-temp, .theme-glass.mode-dark .topbar-center,
-.theme-glass.mode-dark .cal-time { color: #b0b6c2; }
+.theme-glass.mode-dark .cal-time { color: #b3b9c5; }
 .theme-glass.mode-dark .panel-title, .theme-glass.mode-dark .panel-meta,
 .theme-glass.mode-dark .card-sub, .theme-glass.mode-dark .unit,
 .theme-glass.mode-dark .info-label, .theme-glass.mode-dark .cimage,
 .theme-glass.mode-dark .cstat-label, .theme-glass.mode-dark .cal-loc,
 .theme-glass.mode-dark .news-age, .theme-glass.mode-dark .docker-top-cpu,
-.theme-glass.mode-dark .weather-day-name, .theme-glass.mode-dark .empty { color: #7e8593; }
+.theme-glass.mode-dark .weather-day-name, .theme-glass.mode-dark .empty { color: #838a99; }
 .theme-glass.mode-dark .bar-fill,
-.theme-glass.mode-dark .cmini-fill { background-color: #a78bfa; }
+.theme-glass.mode-dark .cmini-fill { background-color: #b39cff; }
 .theme-glass.mode-dark .feed-day,
-.theme-glass.mode-dark .rate--down .rate-arrow { color: #a78bfa; }
+.theme-glass.mode-dark .rate--down .rate-arrow { color: #b39cff; }
 .theme-glass.mode-dark .bar, .theme-glass.mode-dark .cmini,
-.theme-glass.mode-dark .news-thumb { background-color: rgba(255, 255, 255, 0.09); }
-.theme-glass.mode-dark .topbar { border-bottom-color: rgba(255, 255, 255, 0.11); }
-.theme-glass.mode-dark .docker-top { border-top-color: rgba(255, 255, 255, 0.11); }
-.theme-glass.mode-dark .weather-sep { color: rgba(255, 255, 255, 0.18); }
+.theme-glass.mode-dark .news-thumb { background-color: rgba(255, 255, 255, 0.10); }
+.theme-glass.mode-dark .topbar { border-bottom-color: rgba(255, 255, 255, 0.12); }
+.theme-glass.mode-dark .docker-top { border-top-color: rgba(255, 255, 255, 0.12); }
+.theme-glass.mode-dark .weather-sep { color: rgba(255, 255, 255, 0.20); }
 
 
-/* === Vidro Fosco · claro ================================================== */
+/* === Frosted Glass · light ================================================ */
 
 .theme-glass.mode-light body {
   background-color: #e9edf4;
-  background-image: linear-gradient(155deg, #eef1f7 0%, #dfe4ee 100%);
+  background-image: -webkit-linear-gradient(300deg, #eaf0fb 0%, #e3e9f5 50%, #d9e0ef 100%);
+  background-image:         linear-gradient(150deg, #eaf0fb 0%, #e3e9f5 50%, #d9e0ef 100%);
   color: #1e2430;
 }
 .theme-glass.mode-light .card, .theme-glass.mode-light .info-item,
 .theme-glass.mode-light .crow, .theme-glass.mode-light .cal-event,
 .theme-glass.mode-light .news-item {
-  background-color: rgba(255, 255, 255, 0.55);
-  border-color: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 4px 14px rgba(30, 42, 66, 0.12);
+  background-color: rgba(255, 255, 255, 0.62);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 20px rgba(30, 42, 66, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 .theme-glass.mode-light .brand-name, .theme-glass.mode-light .num,
 .theme-glass.mode-light .rate-val, .theme-glass.mode-light .info-value,
@@ -384,16 +480,16 @@
 .theme-glass.mode-light .feed-day,
 .theme-glass.mode-light .rate--down .rate-arrow { color: #7c3aed; }
 .theme-glass.mode-light .bar, .theme-glass.mode-light .cmini,
-.theme-glass.mode-light .news-thumb { background-color: rgba(255, 255, 255, 0.5); }
+.theme-glass.mode-light .news-thumb { background-color: rgba(255, 255, 255, 0.55); }
 .theme-glass.mode-light .topbar { border-bottom-color: rgba(255, 255, 255, 0.85); }
 .theme-glass.mode-light .docker-top { border-top-color: rgba(255, 255, 255, 0.85); }
 .theme-glass.mode-light .weather-sep { color: rgba(30, 42, 66, 0.2); }
 
 
 /* === Semantic · dark ======================================================
- * Restores warn/crit/in-progress over the theme accent. Same specificity
- * as the blocks above (0,3,0) — wins by coming after. Covers all 4 dark
- * themes (minimal dark also uses theme.css). */
+ * Restores warn/crit/in-progress over the theme accent. Same specificity as
+ * the theme blocks (0,3,0) — wins by coming after. Covers all 4 dark themes
+ * (minimal dark also uses theme.css). */
 
 .mode-dark .card--warn .bar-fill,
 .mode-dark .crow--warn .cmini-fill { background-color: #d29922; }
@@ -419,7 +515,7 @@
 .mode-dark .cal-event--active .cal-title { color: #ff7b72; }
 
 
-/* === Semantica · claro ==================================================== */
+/* === Semantic · light ===================================================== */
 
 .mode-light .status-dot--on  { background-color: #1a7f37; }
 .mode-light .status-dot--off { background-color: #cf222e; }
@@ -454,69 +550,71 @@
 .mode-light .cal-event--active .cal-title { color: #cf222e; }
 
 
-/* === Menu da engrenagem (so por modo) ===================================== */
-
-/* === Painel de configuracoes (controles + toast) ========================= */
+/* === Settings panel (controls + toast) + modal chrome ==================== */
 
 .mode-dark .form-input, .mode-dark .form-select {
-  background-color: #14171c;
-  border-color: #2a2e37;
-  color: #e6e8ec;
+  background-color: #121419;
+  border-color: #2a2f3a;
+  color: #e8eaef;
 }
 .mode-light .form-input, .mode-light .form-select {
   background-color: #f6f7f9;
   border-color: #d4d8de;
-  color: #1c2026;
+  color: #1b1f27;
 }
-.mode-dark  .form-input:focus, .mode-dark  .form-select:focus { border-color: #4f8cff; }
+.mode-dark  .form-input:focus, .mode-dark  .form-select:focus { border-color: #5b93ff; }
 .mode-light .form-input:focus, .mode-light .form-select:focus { border-color: #2563eb; }
 
-.mode-dark  .settings-actions { border-top-color: #2a2e37; }
-.mode-light .settings-actions { border-top-color: #e2e5ea; }
+.mode-dark  .settings-actions { border-top-color: #2a2f3a; }
+.mode-light .settings-actions { border-top-color: #e4e8ee; }
 
-.mode-dark  .btn-save { background-color: #4f8cff; color: #ffffff; border-color: #4f8cff; }
+.mode-dark  .btn-save { background-color: #5b93ff; color: #ffffff; border-color: #5b93ff; }
 .mode-light .btn-save { background-color: #2563eb; color: #ffffff; border-color: #2563eb; }
-.mode-dark  .btn-secondary { color: #c8ccd4; }
-.mode-light .btn-secondary { color: #586070; }
+.mode-dark  .btn-secondary { color: #cbd0d9; }
+.mode-light .btn-secondary { color: #5b6473; }
 
-.mode-dark  .toast { background-color: #1e2128; color: #e6e8ec; border-color: #2a2e37; }
-.mode-light .toast { background-color: #ffffff; color: #1c2026; border-color: #e2e5ea; }
+.mode-dark  .toast { background-color: #1c1f27; color: #e8eaef; border-color: #2a2f3a; }
+.mode-light .toast { background-color: #ffffff; color: #1b1f27; border-color: #e4e8ee; }
 
 
-/* === Modal de containers (caixa por modo) ================================= */
+/* === Modals (box per mode) =============================================== */
 
 .mode-dark .modal {
-  background-color: #1e2128;
-  border-color: #2a2e37;
-  color: #e6e8ec;
+  background-color: #1c1f27;
+  border-color: #2a2f3a;
+  color: #e8eaef;
+  -webkit-box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
 }
 .mode-light .modal {
   background-color: #ffffff;
-  border-color: #e2e5ea;
-  color: #1c2026;
+  border-color: #e4e8ee;
+  color: #1b1f27;
+  -webkit-box-shadow: 0 20px 60px rgba(20, 28, 40, 0.22);
+  box-shadow: 0 20px 60px rgba(20, 28, 40, 0.22);
 }
-.mode-dark  .modal-head { border-bottom-color: #2a2e37; }
-.mode-light .modal-head { border-bottom-color: #e2e5ea; }
+.mode-dark  .modal-head { border-bottom-color: #2a2f3a; }
+.mode-light .modal-head { border-bottom-color: #e4e8ee; }
 
-/* Sino + sidebar: variantes light (dark ja vive em theme.css). */
+/* Bell + sidebar: light variants (dark already lives in theme.css). */
 .mode-light .notif-btn        { color: #4a4f59; }
-.mode-light .notif-btn:hover  { color: #1c2026; }
+.mode-light .notif-btn:hover  { color: #1b1f27; }
 .mode-light .notif-sidebar {
   background-color: #ffffff;
-  color: #1c2026;
-  border-left: 1px solid #e2e5ea;
+  color: #1b1f27;
+  border-left: 1px solid #e4e8ee;
   -webkit-box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
   box-shadow: -8px 0 24px rgba(0, 0, 0, 0.12);
 }
-.mode-light .notif-head       { border-bottom-color: #e2e5ea; }
-.mode-light .notif-title      { color: #1c2026; }
+.mode-light .notif-head       { border-bottom-color: #e4e8ee; }
+.mode-light .notif-title      { color: #1b1f27; }
 .mode-light .notif-item       { border-bottom-color: #eef0f3; }
 .mode-light .notif-item:hover { background-color: #f5f6f8; }
-.mode-light .notif-row-title  { color: #1c2026; }
+.mode-light .notif-row-title  { color: #1b1f27; }
 .mode-light .notif-row-sub    { color: #6a7080; }
 .mode-light .notif-empty      { color: #8b909c; }
 .mode-light .notif-meta       { color: #6a7080; }
-.mode-light .notif-detail     { background-color: #f0f2f5; color: #1c2026; }
+.mode-light .notif-detail     { background-color: #f0f2f5; color: #1b1f27; }
 
 
 /* === News carousel — per-theme colors ==================================== *
@@ -524,31 +622,31 @@
  * accent for the active position bullet (mirrors ACCENTS in settings.js). */
 
 /* Minimal */
-.theme-minimal.mode-dark  .news-carousel-slide--no-image { background-color: #1e2128; }
+.theme-minimal.mode-dark  .news-carousel-slide--no-image { background-color: #1c1f27; }
 .theme-minimal.mode-light .news-carousel-slide--no-image { background-color: #ffffff; }
-.theme-minimal.mode-dark  .news-carousel-dot.is-active   { background-color: #4f8cff; }
+.theme-minimal.mode-dark  .news-carousel-dot.is-active   { background-color: #5b93ff; }
 .theme-minimal.mode-light .news-carousel-dot.is-active   { background-color: #2563eb; }
 
 /* Neumorphic */
 .theme-neu.mode-dark  .news-carousel-slide--no-image { background-color: #2a2e35; }
-.theme-neu.mode-light .news-carousel-slide--no-image { background-color: #e6e9f0; }
-.theme-neu.mode-dark  .news-carousel-dot.is-active   { background-color: #8b93f8; }
-.theme-neu.mode-light .news-carousel-dot.is-active   { background-color: #6a74d8; }
+.theme-neu.mode-light .news-carousel-slide--no-image { background-color: #e7eaf1; }
+.theme-neu.mode-dark  .news-carousel-dot.is-active   { background-color: #949bfa; }
+.theme-neu.mode-light .news-carousel-dot.is-active   { background-color: #5b66d6; }
 
 /* Elevated */
-.theme-elevated.mode-dark  .news-carousel-slide--no-image { background-color: #1b1f27; }
+.theme-elevated.mode-dark  .news-carousel-slide--no-image { background-color: #191d25; }
 .theme-elevated.mode-light .news-carousel-slide--no-image { background-color: #ffffff; }
 .theme-elevated.mode-dark  .news-carousel-dot.is-active   { background-color: #2dd4bf; }
 .theme-elevated.mode-light .news-carousel-dot.is-active   { background-color: #0d9488; }
 
 /* Outline */
-.theme-outline.mode-dark  .news-carousel-slide--no-image { background-color: #14171c; }
+.theme-outline.mode-dark  .news-carousel-slide--no-image { background-color: #12151b; }
 .theme-outline.mode-light .news-carousel-slide--no-image { background-color: #ffffff; }
 .theme-outline.mode-dark  .news-carousel-dot.is-active   { background-color: #22d3ee; }
 .theme-outline.mode-light .news-carousel-dot.is-active   { background-color: #0891b2; }
 
 /* Frosted Glass */
-.theme-glass.mode-dark  .news-carousel-slide--no-image { background-color: rgba(255, 255, 255, 0.06); }
-.theme-glass.mode-light .news-carousel-slide--no-image { background-color: rgba(255, 255, 255, 0.55); }
-.theme-glass.mode-dark  .news-carousel-dot.is-active   { background-color: #a78bfa; }
+.theme-glass.mode-dark  .news-carousel-slide--no-image { background-color: rgba(255, 255, 255, 0.07); }
+.theme-glass.mode-light .news-carousel-slide--no-image { background-color: rgba(255, 255, 255, 0.62); }
+.theme-glass.mode-dark  .news-carousel-dot.is-active   { background-color: #b39cff; }
 .theme-glass.mode-light .news-carousel-dot.is-active   { background-color: #7c3aed; }
