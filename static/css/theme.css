@@ -1,146 +1,161 @@
 /* =============================================================================
- * theme.css  —  TODA A PALETA VIVE AQUI.  Edite este arquivo para re-tematizar.
+ * theme.css  —  THE WHOLE PALETTE LIVES HERE (Minimal · dark = the default).
  *
- * Tema: "Dark minimal elegante" (grafite + um acento azul sutil).
- * Intentionally avoids CSS variables (Safari 9 / iPad 2 is unreliable with them).
+ * Theme: "Refined graphite" — deep cool graphite with a clean electric-blue
+ * accent. Surfaces are lifted a step above the background and carry a hairline
+ * top highlight + a soft resting shadow so cards read as physical objects
+ * instead of flat rectangles.
  *
- * Paleta de referencia:
- *   fundo        #16181d      superficie    #1e2128
- *   borda        #2a2e37      borda suave   #23262e
- *   texto        #e6e8ec      texto suave   #8b909c    texto fraco  #6a7080
- *   acento azul  #4f8cff      ok  #3fb950   alerta #d29922   critico #f85149
+ * Intentionally avoids CSS variables (Safari 9 / iPad 2 is unreliable with
+ * them). The other themes and both light modes live in themes.css.
+ *
+ * Reference palette:
+ *   bg          #14161b      surface       #1c1f27
+ *   border      #2a2f3a      border soft   #23272f
+ *   text        #e8eaef      text muted    #949bab   text faint  #6c7382
+ *   accent blue #5b93ff      ok #3fb950   warn #d29922   crit #f85149
  * ===========================================================================*/
 
 body {
-  background-color: #16181d;
-  color: #e6e8ec;
+  background-color: #14161b;
+  background-image: -webkit-linear-gradient(top, #181b22 0%, #111318 100%);
+  background-image:         linear-gradient(to bottom, #181b22 0%, #111318 100%);
+  color: #e8eaef;
 }
 
-/* --- Topo ------------------------------------------------------------------*/
-.topbar      { border-bottom: 1px solid #23262e; }
-.brand-name  { color: #e6e8ec; }
-.status      { color: #8b909c; }
-.weather-clock { color: #c8ccd4; }
+/* --- Top bar ---------------------------------------------------------------*/
+.topbar      { border-bottom: 1px solid #23272f; }
+.brand-name  { color: #f2f4f8; }
+.status      { color: #949bab; }
+.weather-clock { color: #cbd0d9; }
 
-.status-dot      { background-color: #8b909c; }
+.status-dot      { background-color: #949bab; }
 .status-dot--on  {
   background-color: #3fb950;
-  -webkit-box-shadow: 0 0 7px rgba(63, 185, 80, 0.7);
-  box-shadow: 0 0 7px rgba(63, 185, 80, 0.7);
+  -webkit-box-shadow: 0 0 8px rgba(63, 185, 80, 0.75);
+  box-shadow: 0 0 8px rgba(63, 185, 80, 0.75);
 }
 .status-dot--off { background-color: #f85149; }
 
-/* --- Sino + sidebar de notificacoes ---------------------------------------*/
-.notif-btn         { color: #c8ccd4; }
+/* --- Bell + notifications sidebar ------------------------------------------*/
+.notif-btn         { color: #cbd0d9; }
 .notif-btn:hover   { color: #ffffff; }
 .notif-sidebar {
-  background-color: #1a1d23;
-  color: #e6e8ec;
-  border-left: 1px solid #2a2e37;
+  background-color: #191c23;
+  color: #e8eaef;
+  border-left: 1px solid #2a2f3a;
+  -webkit-box-shadow: -10px 0 30px rgba(0, 0, 0, 0.35);
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.35);
 }
-.notif-head        { border-bottom-color: #23262e; }
-.notif-title       { color: #e6e8ec; }
-.notif-item        { border-bottom-color: #23262e; }
-.notif-item:hover  { background-color: #1e2128; }
-.notif-row-title   { color: #e6e8ec; }
-.notif-row-sub     { color: #8b909c; }
-.notif-empty       { color: #6a7080; }
-.notif-meta        { color: #8b909c; }
-.notif-detail      { background-color: #14161a; color: #c8ccd4; }
+.notif-head        { border-bottom-color: #23272f; }
+.notif-title       { color: #e8eaef; }
+.notif-item        { border-bottom-color: #23272f; }
+.notif-item:hover  { background-color: #1c1f27; }
+.notif-row-title   { color: #e8eaef; }
+.notif-row-sub     { color: #949bab; }
+.notif-empty       { color: #6c7382; }
+.notif-meta        { color: #949bab; }
+.notif-detail      { background-color: #121419; color: #cbd0d9; }
 
-/* --- Titulos de painel -----------------------------------------------------*/
-.panel-title { color: #6a7080; }
-.panel-count { color: #8b909c; }
+/* --- Panel titles ----------------------------------------------------------*/
+.panel-title { color: #6c7382; }
+.panel-count { color: #949bab; }
 
 /* --- Cards (gauge / rate) --------------------------------------------------*/
 .card {
-  background-color: #1e2128;
-  border: 1px solid #2a2e37;
+  background-color: #1c1f27;
+  border: 1px solid #2a2f3a;
+  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
-.card-title       { color: #8b909c; }
-.card-value .num  { color: #e6e8ec; }
-.card-value .unit { color: #8b909c; }
-.card-sub         { color: #6a7080; }
+.card-title       { color: #949bab; }
+.card-value .num  { color: #f2f4f8; }
+.card-value .unit { color: #949bab; }
+.card-sub         { color: #6c7382; }
 
-/* barra de progresso e cores por nivel */
-.bar              { background-color: #2a2e37; }
-.bar-fill         { background-color: #4f8cff; }
+/* progress bar and per-level colors */
+.bar              { background-color: #262b35; }
+.bar-fill         { background-color: #5b93ff; }
 .card--warn .bar-fill { background-color: #d29922; }
 .card--crit .bar-fill { background-color: #f85149; }
 .card--warn .card-value .num { color: #e3b341; }
 .card--crit .card-value .num { color: #ff7b72; }
 
-/* card de taxa (rede) */
-.rate-val               { color: #e6e8ec; }
-.rate--down .rate-arrow { color: #4f8cff; }
+/* network rate card */
+.rate-val               { color: #f2f4f8; }
+.rate--down .rate-arrow { color: #5b93ff; }
 .rate--up   .rate-arrow { color: #3fb950; }
 
-/* --- Painel Sistema --------------------------------------------------------*/
+/* --- System panel ----------------------------------------------------------*/
 .info-item {
-  background-color: #1e2128;
-  border: 1px solid #2a2e37;
+  background-color: #1c1f27;
+  border: 1px solid #2a2f3a;
+  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
-.info-label { color: #6a7080; }
-.info-value { color: #e6e8ec; }
+.info-label { color: #6c7382; }
+.info-value { color: #e8eaef; }
 
 /* --- Containers ------------------------------------------------------------*/
 .crow {
-  background-color: #1e2128;
-  border: 1px solid #2a2e37;
+  background-color: #1c1f27;
+  border: 1px solid #2a2f3a;
+  -webkit-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 .crow--down { opacity: 0.55; }
 
 .crow--up   .cdot { background-color: #3fb950; }
 .crow--down .cdot { background-color: #f85149; }
 
-.cname        { color: #e6e8ec; }
-.cimage       { color: #6a7080; }
-.cstat-label  { color: #6a7080; }
-.cstat-val    { color: #c8ccd4; }
-.cmini        { background-color: #2a2e37; }
-.cmini-fill   { background-color: #4f8cff; }
+.cname        { color: #e8eaef; }
+.cimage       { color: #6c7382; }
+.cstat-label  { color: #6c7382; }
+.cstat-val    { color: #cbd0d9; }
+.cmini        { background-color: #262b35; }
+.cmini-fill   { background-color: #5b93ff; }
 
 .crow--up   .cstatus { color: #3fb950; }
 .crow--down .cstatus { color: #f85149; }
 
-.empty { color: #6a7080; }
+.empty { color: #6c7382; }
 
-/* --- Feeds: Agenda e Noticias ---------------------------------------------*/
-.feed-day { color: #4f8cff; }
+/* --- Feeds: calendar and news ---------------------------------------------*/
+.feed-day { color: #5b93ff; }
 
 .cal-event {
-  background-color: #1e2128;
-  border: 1px solid #2a2e37;
+  background-color: #1c1f27;
+  border: 1px solid #2a2f3a;
 }
-.cal-time  { color: #8b909c; }
-.cal-title { color: #e6e8ec; }
-.cal-loc   { color: #6a7080; }
+.cal-time  { color: #949bab; }
+.cal-title { color: #e8eaef; }
+.cal-loc   { color: #6c7382; }
 
 .news-item {
-  background-color: #1e2128;
-  border: 1px solid #2a2e37;
+  background-color: #1c1f27;
+  border: 1px solid #2a2f3a;
 }
-.news-title { color: #e6e8ec; }
-.news-age   { color: #6a7080; }
-.news-thumb { background-color: #2a2e37; }
+.news-title { color: #e8eaef; }
+.news-age   { color: #6c7382; }
+.news-thumb { background-color: #262b35; }
 
-/* --- Meta-line ------------------------------------------------------------ */
-.panel-meta { color: #6a7080; }
+/* --- Meta line ------------------------------------------------------------ */
+.panel-meta { color: #6c7382; }
 
 /* --- Docker Summary ------------------------------------------------------- */
-.docker-count { color: #e6e8ec; }
-.docker-top { border-top-color: #2a2e37; }
-.docker-top-name { color: #c8ccd4; }
-.docker-top-cpu  { color: #8b909c; }
+.docker-count { color: #f2f4f8; }
+.docker-top { border-top-color: #2a2f3a; }
+.docker-top-name { color: #cbd0d9; }
+.docker-top-cpu  { color: #949bab; }
 
 /* --- Weather widget ------------------------------------------------------- */
-.topbar-center    { color: #c8ccd4; }
-.weather-val      { color: #e6e8ec; }
-.weather-sep      { color: #2a2e37; }
-.weather-day-name { color: #6a7080; }
-.weather-day-temp { color: #c8ccd4; }
+.topbar-center    { color: #cbd0d9; }
+.weather-val      { color: #e8eaef; }
+.weather-sep      { color: #2a2f3a; }
+.weather-day-name { color: #6c7382; }
+.weather-day-temp { color: #cbd0d9; }
 
-/* --- Eventos em breve / em andamento -------------------------------------- */
+/* --- Soon / in-progress events -------------------------------------------- */
 .cal-event--soon   { background-color: rgba(210, 153, 34, 0.10); }
 .cal-event--soon .cal-time  { color: #e3b341; }
 .cal-event--soon .cal-title { color: #e3b341; }
@@ -148,13 +163,13 @@ body {
 .cal-event--active .cal-time  { color: #ff7b72; }
 .cal-event--active .cal-title { color: #ff7b72; }
 
-/* --- Modal de disco (particoes) ------------------------------------------- */
-.disk-part         { border-bottom-color: #23262e; }
-.disk-part-label   { color: #e6e8ec; }
-.disk-part-pct     { color: #8b909c; }
-.disk-part-sub     { color: #6a7080; }
+/* --- Disk partitions modal ------------------------------------------------ */
+.disk-part         { border-bottom-color: #23272f; }
+.disk-part-label   { color: #e8eaef; }
+.disk-part-pct     { color: #949bab; }
+.disk-part-sub     { color: #6c7382; }
 
-/* --- Containers warn/crit ------------------------------------------------- */
+/* --- Container warn/crit -------------------------------------------------- */
 .crow--warn { border-color: #d29922; }
 .crow--crit { border-color: #f85149; }
 .crow--warn .cdot       { background-color: #d29922; }

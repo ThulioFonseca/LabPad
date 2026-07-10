@@ -1,0 +1,134 @@
+/* =============================================================================
+ * motion.css — INTERACTION & FLUIDITY LAYER.
+ *
+ * Color-agnostic polish shared by every theme: smooth transitions, hover lift
+ * (desktop), press feedback (iPad touch), a glossy sheen on progress bars, a
+ * live status-dot pulse and modal entrance animation.
+ *
+ * Safari 9 / iPad 2 safe: only opacity + transform are animated (GPU
+ * composited), durations are short, and there is no backdrop-filter / no CSS
+ * variables. Loaded AFTER theme.css / themes.css so hover states win.
+ * ===========================================================================*/
+
+/* Kill the gray tap-flash box on iOS; we provide our own press feedback. */
+* { -webkit-tap-highlight-color: rgba(0, 0, 0, 0); }
+
+/* --- Surfaces animate their depth/tint ----------------------------------- */
+.card, .info-item, .crow, .cal-event, .news-item, .disk-part {
+  -webkit-transition: -webkit-transform 0.16s ease, box-shadow 0.22s ease,
+                      background-color 0.22s ease, border-color 0.22s ease;
+  transition: transform 0.16s ease, box-shadow 0.22s ease,
+              background-color 0.22s ease, border-color 0.22s ease;
+}
+
+/* Hover lift — desktop pointer only (the iPad has no hover, so it's inert
+   there). Applied to every card for consistency; harmless on non-clickable
+   ones. A mode-scoped shadow sells the elevation on the flat themes. */
+.card:hover, .info-item:hover { -webkit-transform: translateY(-2px); transform: translateY(-2px); }
+.crow:hover, .cal-event:hover, .news-item:hover { -webkit-transform: translateY(-1px); transform: translateY(-1px); }
+
+.mode-dark .card:hover, .mode-dark .info-item:hover,
+.mode-dark .crow:hover, .mode-dark .news-item:hover, .mode-dark .cal-event:hover {
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.5);
+}
+.mode-light .card:hover, .mode-light .info-item:hover,
+.mode-light .crow:hover, .mode-light .news-item:hover, .mode-light .cal-event:hover {
+  box-shadow: 0 8px 22px rgba(24, 32, 48, 0.14);
+}
+
+/* Press feedback — works on touch, so the iPad gets a tactile cue on the
+   clickable surfaces (container rows, news cards, docker card, disk rows). */
+.crow:active, .news-item:active, .disk-part:active,
+.news-carousel-slide:active, #section-docker-summary:active {
+  -webkit-transform: scale(0.985);
+  transform: scale(0.985);
+}
+
+/* --- Glossy progress bars ------------------------------------------------- *
+ * A translucent top-down sheen over the theme's bar color turns the flat fill
+ * into a subtly glossy one, in every theme at once. The width itself already
+ * animates (cards.css). */
+.bar-fill, .cmini-fill {
+  background-image: -webkit-linear-gradient(top, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0));
+  background-image:         linear-gradient(to bottom, rgba(255, 255, 255, 0.30), rgba(255, 255, 255, 0));
+}
+
+/* --- Buttons & controls come alive --------------------------------------- */
+.notif-btn, .notif-clear-all, .notif-trash, .theme-gear, .modal-close,
+.modal-action, .panel-info-btn, .btn-save, .btn-secondary,
+.news-carousel-nav, .news-carousel-dot, .form-input, .form-select {
+  -webkit-transition: color 0.15s ease, background-color 0.15s ease,
+                      border-color 0.15s ease, opacity 0.15s ease,
+                      -webkit-transform 0.15s ease;
+  transition: color 0.15s ease, background-color 0.15s ease,
+              border-color 0.15s ease, opacity 0.15s ease, transform 0.15s ease;
+}
+/* Delightful micro-interaction: the settings gear turns on hover (desktop). */
+.theme-gear:hover { -webkit-transform: rotate(35deg); transform: rotate(35deg); }
+.btn-save:hover   { -webkit-transform: translateY(-1px); transform: translateY(-1px); }
+.news-carousel-nav:active { -webkit-transform: scale(0.92); transform: scale(0.92); }
+
+/* Active carousel bullet grows instead of only recoloring. */
+.news-carousel-dot.is-active { -webkit-transform: scale(1.3); transform: scale(1.3); }
+
+/* --- Live status dot ------------------------------------------------------ *
+ * A slow breathing pulse signals "connected" at a glance. One tiny element,
+ * opacity + transform only — negligible cost on the iPad 2. */
+@-webkit-keyframes labpad-pulse {
+  0%, 100% { -webkit-transform: scale(1);    opacity: 1;    }
+  50%      { -webkit-transform: scale(1.18); opacity: 0.72; }
+}
+@keyframes labpad-pulse {
+  0%, 100% { transform: scale(1);    opacity: 1;    }
+  50%      { transform: scale(1.18); opacity: 0.72; }
+}
+.status-dot--on {
+  -webkit-animation: labpad-pulse 2.6s ease-in-out infinite;
+  animation: labpad-pulse 2.6s ease-in-out infinite;
+}
+
+/* --- Modal entrance ------------------------------------------------------- *
+ * Fade the backdrop and float the box up as it opens. The controller toggles
+ * .modal-backdrop--open (display:flex); the transition rides that change. */
+.modal-backdrop {
+  opacity: 0;
+  -webkit-transition: opacity 0.2s ease;
+  transition: opacity 0.2s ease;
+}
+.modal-backdrop--open { opacity: 1; }
+.modal {
+  -webkit-transform: translateY(10px) scale(0.985);
+  transform: translateY(10px) scale(0.985);
+  -webkit-transition: -webkit-transform 0.22s ease;
+  transition: transform 0.22s ease;
+}
+.modal-backdrop--open .modal {
+  -webkit-transform: translateY(0) scale(1);
+  transform: translateY(0) scale(1);
+}
+
+/* Feed rows fade/slide in on (re)render — a soft settle instead of a hard pop.
+   One-shot, cheap; applies whenever the list is rebuilt. */
+@-webkit-keyframes labpad-rise {
+  from { opacity: 0; -webkit-transform: translateY(6px); }
+  to   { opacity: 1; -webkit-transform: translateY(0);   }
+}
+@keyframes labpad-rise {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+.cal-event, .news-item {
+  -webkit-animation: labpad-rise 0.28s ease both;
+  animation: labpad-rise 0.28s ease both;
+}
+
+/* Respect users who ask for reduced motion (supported on newer viewers;
+   silently ignored on the iPad 2, which keeps the animations). */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    -webkit-animation: none !important;
+    animation: none !important;
+    -webkit-transition: none !important;
+    transition: none !important;
+  }
+}
