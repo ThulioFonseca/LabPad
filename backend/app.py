@@ -248,6 +248,14 @@ def read_notification(nid):
     return jsonify({"ok": True, "unread_count": notifications.unread_count()})
 
 
+@app.route("/api/notifications/read-all", methods=["POST"])
+def read_all_notifications():
+    """Mark every unread notification as read (clear the sidebar)."""
+    cleared = notifications.mark_all_read()
+    return jsonify({"ok": True, "cleared": cleared,
+                    "unread_count": notifications.unread_count()})
+
+
 @app.route("/api/client-error", methods=["POST"])
 def client_error():
     """Receive JavaScript errors from the browser and log them to docker logs."""

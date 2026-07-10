@@ -66,6 +66,18 @@ def mark_read(nid):
         return False
 
 
+def mark_all_read():
+    """Mark every unread notification as read. Returns how many were cleared."""
+    now = time.time()
+    with _lock:
+        cleared = 0
+        for n in _items:
+            if n["read_at"] is None:
+                n["read_at"] = now
+                cleared += 1
+        return cleared
+
+
 def unread_count():
     with _lock:
         return sum(1 for n in _items if n["read_at"] is None)

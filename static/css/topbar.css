@@ -125,6 +125,25 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 .notif-title { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.02em; }
+.notif-head-actions {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.notif-clear-all {
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  margin-right: 4px;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.6;
+  border-radius: 6px;
+}
+.notif-clear-all:hover { opacity: 1; color: #f85149; }
 .notif-list {
   -webkit-flex: 1 1 auto;
   flex: 1 1 auto;
