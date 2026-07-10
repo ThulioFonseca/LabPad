@@ -181,7 +181,7 @@ def _fetch_openmeteo(lat, lon):
         "configured": True,
         "city": settings.get("weather", "city", ""),
         "current": {
-            "temp":       round(cur.get("temperature_2m", 0), 1),
+            "temp":       _round_v(cur.get("temperature_2m")),
             "humidity":   cur.get("relative_humidity_2m"),
             "feels_like": _round_v(cur.get("apparent_temperature")),
             "is_day":     cur.get("is_day", 1) == 1,

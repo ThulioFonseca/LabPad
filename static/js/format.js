@@ -70,3 +70,13 @@ function fmtDuration(sec) {
 function fmtNumber(value) {
   return (Math.round(value * 10) / 10).toString();
 }
+
+/* Build a safe CSS url("...") value from an untrusted string (e.g. an image
+   URL from an RSS feed). Escapes the quote and backslash that would otherwise
+   break out of the quoted string, and drops newlines. */
+function cssUrl(u) {
+  var s = String(u === null || u === undefined ? '' : u)
+            .replace(/[\\"]/g, '\\$&')
+            .replace(/[\r\n]/g, '');
+  return 'url("' + s + '")';
+}

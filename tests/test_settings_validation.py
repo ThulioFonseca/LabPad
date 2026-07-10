@@ -6,30 +6,62 @@ Flask server. Covers accepted fields and rejection rules.
 import sys
 import os
 import types
+import importlib
 
-# Stub modules that app.py imports but are not needed for this test.
-for _mod in ("notifications", "settings", "config",
-             "collectors.article", "collectors.calendar_feed",
-             "collectors.containers", "collectors.host",
-             "collectors.news", "collectors.sensors", "collectors.weather"):
+import flask
+
+# Stub the collector/service modules app.py imports (not needed to test pure
+# validation). The stubs are installed ONLY for the duration of the module
+# load, then removed — otherwise they leak into sys.modules and break the real
+# collector tests (host/sensors/weather) when the whole suite runs together.
+_STUB_MODULES = (
+    "notifications", "settings", "config",
+    "collectors.article", "collectors.calendar_feed",
+    "collectors.containers", "collectors.host",
+    "collectors.news", "collectors.sensors", "collectors.weather",
+)
+_added = []
+for _mod in _STUB_MODULES:
     if _mod not in sys.modules:
         sys.modules[_mod] = types.ModuleType(_mod)
+        _added.append(_mod)
 
-# app.py accesses these at module level when building _FEED_JOBS dict.
+# app.py accesses these at module level when building the _FEED_JOBS dict.
 # Stubs must expose a callable `collect` before exec_module runs.
 for _coll in ("collectors.calendar_feed", "collectors.news", "collectors.weather"):
     if not hasattr(sys.modules[_coll], "collect"):
         sys.modules[_coll].collect = lambda: {}
 
-import importlib
-import flask
+# Importing app.py starts the background feeds scheduler (daemon thread), which
+# reads these numeric config values. Provide them on the stub so the thread
+# doesn't raise AttributeError and emit an unhandled-thread warning.
+for _name, _val in (("FEEDS_CACHE_TTL", 900.0), ("FEEDS_RETRY_MIN_S", 60.0),
+                    ("FEEDS_RETRY_MAX_S", 600.0), ("CACHE_TTL", 2.0),
+                    ("REFRESH_MS", 5000)):
+    if not hasattr(sys.modules["config"], _name):
+        setattr(sys.modules["config"], _name, _val)
 
 # Load only the validation function without starting the server.
 _app_path = os.path.join(os.path.dirname(__file__), "..", "backend", "app.py")
 _spec = importlib.util.spec_from_file_location("app", _app_path)
 _app_mod = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_app_mod)
-_validate = _app_mod._validate_settings
+try:
+    _spec.loader.exec_module(_app_mod)
+    _validate = _app_mod._validate_settings
+finally:
+    # Undo the stubbing so a later test can import the real modules. Also drop
+    # the attribute the `from collectors import ...` in app.py set on the
+    # package, so `from collectors import weather` re-imports the real one.
+    import collectors as _collectors_pkg
+    for _mod in _added:
+        stub = sys.modules.pop(_mod, None)
+        if _mod.startswith("collectors."):
+            _sub = _mod.split(".", 1)[1]
+            if getattr(_collectors_pkg, _sub, None) is stub:
+                try:
+                    delattr(_collectors_pkg, _sub)
+                except AttributeError:
+                    pass
 
 
 def test_payload_vazio_aceito():

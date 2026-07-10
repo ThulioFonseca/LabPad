@@ -3,11 +3,9 @@
 Serves the static dashboard and metrics API. Runs inside a container;
 see Dockerfile / docker-compose.yml.
 """
-import ipaddress
 import logging
 import os
 import re
-import socket
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -15,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, jsonify, request, send_from_directory
 
 import config
+import net_guard
 import notifications
 import settings
 from collectors import article, calendar_feed, containers, host, news, sensors, weather
@@ -199,29 +198,6 @@ def feeds():
     return response
 
 
-def _is_private_url(url):
-    """Check if URL points to a private/loopback/link-local address.
-
-    Resolves the hostname after parsing the URL to block SSRF attacks.
-    Returns True if the destination is a private, loopback, link-local, or
-    non-global IP address.
-    """
-    try:
-        from urllib.parse import urlparse
-    except ImportError:
-        from urlparse import urlparse
-    try:
-        host = urlparse(url).hostname or ""
-        # Resolve hostname to actual destination IP.
-        ip_str = socket.gethostbyname(host)
-        addr = ipaddress.ip_address(ip_str)
-        return (addr.is_private or addr.is_loopback
-                or addr.is_link_local or not addr.is_global)
-    except Exception:
-        # Resolution failed → block as a precaution.
-        return True
-
-
 @app.route("/api/article")
 def article_route():
     """Reader mode: fetch URL and return cleaned main content."""
@@ -230,7 +206,7 @@ def article_route():
         return jsonify({"error": "invalid url"}), 400
     if not (url.startswith("http://") or url.startswith("https://")):
         return jsonify({"error": "url must start with http(s)://"}), 400
-    if _is_private_url(url):
+    if net_guard.is_private_url(url):
         return jsonify({"error": "url not allowed"}), 400
     data = article.get(url)
     status = 502 if "error" in data else 200
@@ -393,7 +369,7 @@ def put_settings():
         return jsonify(cleaned), 400
     prev, new = settings.update(cleaned)
     _invalidate_settings_caches(prev, new)
-    logging.info("Settings atualizadas: %s", list(cleaned.keys()))
+    logging.info("Settings updated: %s", list(cleaned.keys()))
     return jsonify(new)
 
 
