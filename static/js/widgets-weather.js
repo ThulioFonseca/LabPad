@@ -58,10 +58,10 @@ Widgets.renderWeatherSlide = function (panel, payload, slideId) {
     icon0.innerHTML = _wmoIcon(cur.code || 0);
     panel.appendChild(icon0);
     panel.appendChild(el('span', 'weather-val',
-      (cur.temp !== undefined ? cur.temp + '\xb0C' : DASH)));
+      (cur.temp != null ? cur.temp + '\xb0C' : DASH)));
     panel.appendChild(el('span', 'weather-sep', '\xb7'));
     panel.appendChild(el('span', 'weather-val',
-      (cur.humidity !== undefined ? cur.humidity + '%' : DASH)));
+      (cur.humidity != null ? cur.humidity + '%' : DASH)));
 
   } else if (id === 'forecast') {
     var daily = payload.daily || [];

@@ -10,6 +10,12 @@ import logging
 import re
 import time
 
+try:
+    from urllib.parse import urljoin
+except ImportError:  # pragma: no cover - Python 2 fallback
+    from urlparse import urljoin
+
+import net_guard
 from collectors.http_log import fetch as _http_fetch
 
 try:
@@ -30,6 +36,9 @@ _META_REFRESH = re.compile(
     rb'<meta[^>]+http-equiv=["\']refresh["\'][^>]+url=([^"\'>\s]+)',
     re.IGNORECASE)
 
+_MAX_REDIRECTS = 5
+_REDIRECT_CODES = (301, 302, 303, 307, 308)
+
 _cache = {}
 
 
@@ -47,20 +56,40 @@ def _cache_get(url):
     return None
 
 
+def _fetch_following(url):
+    """Follow redirects one hop at a time, re-validating every target against
+    the SSRF guard. requests is told NOT to auto-follow so no intermediate host
+    escapes the check (a public URL can 302 to http://localhost/ or a cloud
+    metadata endpoint). Returns the final response object."""
+    current = url
+    for _ in range(_MAX_REDIRECTS + 1):
+        if net_guard.is_private_url(current):
+            raise ValueError("URL not allowed (private/internal destination)")
+        response = _http_fetch(current, headers={"User-Agent": _UA},
+                               timeout=_TIMEOUT, allow_redirects=False)
+        if response.status_code in _REDIRECT_CODES:
+            location = response.headers.get("location")
+            if not location:
+                return response
+            current = urljoin(current, location)
+            continue
+        return response
+    raise ValueError("Too many redirects")
+
+
 def _fetch(url):
-    """GET with HTTP redirects. Return bytes (NOT str) — sites often omit
-    charset in headers, and requests defaults to ISO-8859-1, breaking special
-    chars. Trafilatura detects charset via <meta charset> / sniffing on bytes.
-    If final destination is news.google.com (interstitial), try to follow
-    meta-refresh."""
-    response = _http_fetch(url, headers={"User-Agent": _UA}, timeout=_TIMEOUT)
+    """Fetch article bytes (NOT str) — sites often omit charset in headers, and
+    requests defaults to ISO-8859-1, breaking special chars. Trafilatura detects
+    charset via <meta charset> / sniffing on bytes. If final destination is
+    news.google.com (interstitial), try to follow meta-refresh (also validated)."""
+    response = _fetch_following(url)
     content = response.content
     final_url = response.url
     if "news.google.com" in final_url:
         match = _META_REFRESH.search(content[:8192])
         if match:
-            target = match.group(1).decode('ascii', errors='replace')
-            response = _http_fetch(target, headers={"User-Agent": _UA}, timeout=_TIMEOUT)
+            target = urljoin(final_url, match.group(1).decode('ascii', errors='replace'))
+            response = _fetch_following(target)
             content = response.content
             final_url = response.url
     return content, final_url
