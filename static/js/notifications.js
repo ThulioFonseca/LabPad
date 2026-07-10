@@ -18,12 +18,16 @@
   /* --- Bell + badge -------------------------------------------------------*/
   function paintBell() {
     var btn = document.getElementById('notif-btn');
-    if (!btn) { return; }
-    btn.innerHTML = ICONS.bell;
-    if (unread.length > 0) {
-      btn.appendChild(el('span', 'notif-badge',
-          unread.length > 99 ? '99+' : String(unread.length)));
+    if (btn) {
+      btn.innerHTML = ICONS.bell;
+      if (unread.length > 0) {
+        btn.appendChild(el('span', 'notif-badge',
+            unread.length > 99 ? '99+' : String(unread.length)));
+      }
     }
+    /* "Clear all" only makes sense when there is something to clear. */
+    var clearBtn = document.getElementById('notif-clear-all');
+    if (clearBtn) { clearBtn.style.display = unread.length > 0 ? '' : 'none'; }
   }
 
   /* --- Sidebar ------------------------------------------------------------*/
@@ -117,6 +121,22 @@
     renderSidebar();
   }
 
+  /* --- Mark ALL as read (optimistic) -------------------------------------*/
+  function markAll() {
+    if (!unread.length) { return; }
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', (CONFIG.apiBase || '') + '/api/notifications/read-all', true);
+    xhr.onreadystatechange = function () {
+      if (xhr.readyState === 4) { refresh(); }
+    };
+    xhr.send();
+
+    /* Optimistic UI: clear the sidebar immediately. */
+    unread = [];
+    paintBell();
+    renderSidebar();
+  }
+
   /* --- Server poll -------------------------------------------------------*/
   function refresh() {
     var url = (CONFIG.apiBase || '') + '/api/notifications?_=' + (new Date()).getTime();
@@ -167,8 +187,10 @@
       paintBell();
       var btn = document.getElementById('notif-btn');
       var closeBtn = document.getElementById('notif-sidebar-close');
+      var clearBtn = document.getElementById('notif-clear-all');
       if (btn)      { btn.onclick = toggleSidebar; }
       if (closeBtn) { closeBtn.onclick = toggleSidebar; }
+      if (clearBtn) { clearBtn.onclick = markAll; }
       wireDetailModal();
       refresh();
       pollTimer = setInterval(refresh, POLL_MS);

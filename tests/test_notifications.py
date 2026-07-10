@@ -78,6 +78,33 @@ def test_teto_max_descarta_mais_antigas():
     assert len(n._items) <= 5
 
 
+def test_mark_all_read_limpa_todas_e_retorna_contagem():
+    n = _fresh()
+    n.add("error",   "weather",  "Failure", "")
+    n.add("warning", "calendar", "Alert",   "")
+    n.add("info",    "news",     "Info",    "")
+    assert n.unread_count() == 3
+    cleared = n.mark_all_read()
+    assert cleared == 3
+    assert n.unread_count() == 0
+    assert n.list_unread() == []
+
+
+def test_mark_all_read_sem_nao_lidas_retorna_zero():
+    n = _fresh()
+    assert n.mark_all_read() == 0
+
+
+def test_mark_all_read_nao_afeta_ja_lidas():
+    n = _fresh()
+    id1 = n.add("error", "weather",  "Failure", "")
+    n.add("warning",     "calendar", "Alert",   "")
+    n.mark_read(id1)               # one already read
+    cleared = n.mark_all_read()    # should only clear the remaining unread one
+    assert cleared == 1
+    assert n.unread_count() == 0
+
+
 def test_campos_obrigatorios_presentes():
     n = _fresh()
     nid = n.add("error", "calendar", "Title", "Long detail")
