@@ -2,12 +2,14 @@
  * motion.css — INTERACTION & FLUIDITY LAYER.
  *
  * Color-agnostic polish shared by every theme: smooth transitions, hover lift
- * (desktop), press feedback (iPad touch), a glossy sheen on progress bars, a
- * live status-dot pulse and modal entrance animation.
+ * (desktop), press feedback (iPad touch), a glossy sheen on progress bars and
+ * a modal entrance animation.
  *
- * Safari 9 / iPad 2 safe: only opacity + transform are animated (GPU
- * composited), durations are short, and there is no backdrop-filter / no CSS
- * variables. Loaded AFTER theme.css / themes.css so hover states win.
+ * Safari 9 / iPad 2 safe: every animation is short and one-shot (opacity +
+ * transform only, GPU composited). There are NO perpetual/infinite animations
+ * — an indefinitely-running composited animation leaks memory on iOS 9.3.5
+ * until Safari kills the tab. No backdrop-filter / no CSS variables. Loaded
+ * AFTER theme.css / themes.css so hover states win.
  * ===========================================================================*/
 
 /* Kill the gray tap-flash box on iOS; we provide our own press feedback. */
@@ -72,20 +74,11 @@
 .news-carousel-dot.is-active { -webkit-transform: scale(1.3); transform: scale(1.3); }
 
 /* --- Live status dot ------------------------------------------------------ *
- * A slow breathing pulse signals "connected" at a glance. One tiny element,
- * opacity + transform only — negligible cost on the iPad 2. */
-@-webkit-keyframes labpad-pulse {
-  0%, 100% { -webkit-transform: scale(1);    opacity: 1;    }
-  50%      { -webkit-transform: scale(1.18); opacity: 0.72; }
-}
-@keyframes labpad-pulse {
-  0%, 100% { transform: scale(1);    opacity: 1;    }
-  50%      { transform: scale(1.18); opacity: 0.72; }
-}
-.status-dot--on {
-  -webkit-animation: labpad-pulse 2.6s ease-in-out infinite;
-  animation: labpad-pulse 2.6s ease-in-out infinite;
-}
+ * NO perpetual animation here on purpose. An indefinitely-running composited
+ * animation (transform/opacity, infinite) keeps a GPU layer alive forever and
+ * on iOS 9.3.5 / iPad 2 it slowly leaks until Safari kills the tab after hours.
+ * The "connected" cue is fully carried by the dot's green fill + soft glow
+ * (static box-shadow in theme.css) — no motion, no ongoing cost. */
 
 /* --- Modal entrance ------------------------------------------------------- *
  * Fade the backdrop and float the box up as it opens. The controller toggles
