@@ -11,6 +11,15 @@
   var buffers = {};
   var feedsLoaded = false;
 
+  /* Last /api/metrics payload — kept so a modal can render itself on open
+     without waiting for the next poll (its body is NOT rebuilt every cycle
+     while closed; see render()). */
+  var lastData = null;
+
+  /* Cache of the host panel height: feed-list sizing only re-runs when it
+     actually changes, instead of forcing a reflow every metrics cycle. */
+  var lastHostPanelH = -1;
+
   var netRefs = null;
   var netBuffer = [];
 
@@ -66,8 +75,13 @@
 
   function sizeCanvas(canvas) {
     if (!canvas) { return; }
-    canvas.width = canvas.clientWidth || 200;
-    canvas.height = canvas.clientHeight || 34;
+    /* Assigning canvas.width/height reallocates the backing bitmap even when
+       the value is unchanged. Only touch it when the size actually changed —
+       avoids per-cycle garbage on the iPad 2. */
+    var w = canvas.clientWidth || 200;
+    var h = canvas.clientHeight || 34;
+    if (canvas.width !== w) { canvas.width = w; }
+    if (canvas.height !== h) { canvas.height = h; }
   }
 
   function resizeAllCanvases() {
@@ -106,10 +120,9 @@
   /* --- Render de um ciclo -------------------------------------------------*/
   function render(data) {
     var i, widget;
-    var hostData = data.host || {};
+    lastData = data;
 
-    Widgets.renderSystemInfo(byId('system-modal-body'), hostData, data.containers);
-
+    /* Always-visible surfaces: gauges, network + docker summary cards. */
     for (i = 0; i < CONFIG.widgets.length; i++) {
       widget = CONFIG.widgets[i];
       if (widget.spark) {
@@ -119,18 +132,49 @@
     }
 
     pushNetBuffer(data);
-    /* Docker summary define a altura da double-row; medir o canvas depois. */
+    /* Docker summary can change the double-row height; measure the canvas after. */
     Widgets.renderDockerSummary(byId('section-docker-summary'), data.containers);
     sizeCanvas(netRefs && netRefs.canvas);
     Widgets.updateNetCard(netRefs, data, netBuffer);
 
-    Widgets.renderContainers(byId('section-containers'), data.containers);
-    updateContainerCount(data.containers);
+    /* Modal bodies (system / containers / disk) are hidden 99% of the time.
+       Rebuilding their DOM every 5s just to throw it away is the biggest source
+       of GC churn on the iPad 2 — only refresh them while their modal is open.
+       Each modal also renders itself once on open (see the open* handlers). */
+    if (Modals.isOpen('system-modal'))     { renderSystemBody(); }
+    if (Modals.isOpen('containers-modal'))  { renderContainersBody(); }
+    if (Modals.isOpen('disk-modal'))        { renderDiskBody(); }
 
-    /* Recomputa altura dos feeds: docker top-3 ou subs podem ter mudado
-       a altura do painel host, alterando o espaco disponivel pras listas. */
+    /* Feed-list height depends on the host panel height (docker top-3 / gauge
+       subs can reflow it). Only recompute when that height actually changed,
+       instead of forcing a reflow every cycle. */
+    maybeSizeFeedLists();
+  }
+
+  /* Render helpers for the on-demand modal bodies, from the cached payload. */
+  function renderSystemBody() {
+    if (!lastData) { return; }
+    Widgets.renderSystemInfo(byId('system-modal-body'),
+                             lastData.host || {}, lastData.containers);
+  }
+  function renderContainersBody() {
+    if (!lastData) { return; }
+    Widgets.renderContainers(byId('section-containers'), lastData.containers);
+    updateContainerCount(lastData.containers);
+  }
+  function renderDiskBody() {
+    if (!lastData) { return; }
+    Widgets.renderDiskModal(byId('disk-modal-body'), (lastData.host || {}).disk);
+  }
+
+  /* Reflow-guarded feed sizing: read the host panel height once; only rerun
+     the (read+write) sizing pass when it changed since last time. */
+  function maybeSizeFeedLists() {
+    var hostEl = document.getElementsByClassName('panel')[0];
+    var h = hostEl ? hostEl.offsetHeight : 0;
+    if (h === lastHostPanelH) { return; }
+    lastHostPanelH = h;
     sizeFeedLists();
-    Widgets.renderDiskModal(byId('disk-modal-body'), hostData.disk);
   }
 
   function updateContainerCount(payload) {
@@ -173,7 +217,7 @@
   }
 
   /* --- Modal da lista de containers --------------------------------------*/
-  function openContainersModal() { Modals.open('containers-modal'); }
+  function openContainersModal() { renderContainersBody(); Modals.open('containers-modal'); }
   function closeContainersModal() { Modals.close('containers-modal'); }
 
   function wireContainersModal() {
@@ -194,7 +238,7 @@
   }
 
   /* --- Modal de particoes de disco ----------------------------------------*/
-  function openDiskModal()  { Modals.open('disk-modal');  }
+  function openDiskModal()  { renderDiskBody(); Modals.open('disk-modal');  }
   function closeDiskModal() { Modals.close('disk-modal'); }
 
   function wireDiskModal() {
@@ -212,7 +256,7 @@
   }
 
   /* --- Modal "Sistema" (botao (i) no titulo do painel Host) --------------*/
-  function openSystemModal() { Modals.open('system-modal'); }
+  function openSystemModal() { renderSystemBody(); Modals.open('system-modal'); }
   function closeSystemModal() { Modals.close('system-modal'); }
 
   function wireSystemModal() {
@@ -649,11 +693,15 @@
   }
 
   function tickClock() {
-    /* Background tab: avoid unnecessary 1s wake on iPad 2. */
-    if (document.hidden) { setTimeout(tickClock, 5000); return; }
+    /* The clock reads HH:MM, so it only needs to change once a minute. Waking
+       every second (×60/min forever) kept the iPad 2 CPU from idling; instead
+       update now and reschedule to just after the next minute boundary. */
+    var now = new Date();
     var node = byId('weather-clock');
-    if (node) { setText(node, clockText(new Date())); }
-    setTimeout(tickClock, 1000);
+    if (node) { setText(node, clockText(now)); }
+    if (document.hidden) { setTimeout(tickClock, 30000); return; }
+    var msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 50;
+    setTimeout(tickClock, msToNextMinute);
   }
 
   /* --- Initialization -----------------------------------------------------*/
@@ -689,6 +737,7 @@
   }
   window.onresize = function () {
     resizeAllCanvases();
+    lastHostPanelH = -1;   /* viewport changed: force a feed-list recompute */
     sizeFeedLists();
   };
   showFeedSkeleton('section-calendar', 4);

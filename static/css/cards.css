@@ -74,10 +74,16 @@ main {
 }
 .bar-fill {
   height: 100%;
-  width: 0;
+  width: 100%;
   border-radius: 3px;
-  -webkit-transition: width 0.45s ease;
-  transition: width 0.45s ease;
+  /* Filled via transform: scaleX() (GPU-composited) instead of width — set by
+     setBarFill() in format.js. Grows from the left edge. */
+  -webkit-transform: scaleX(0);
+  transform: scaleX(0);
+  -webkit-transform-origin: left center;
+  transform-origin: left center;
+  -webkit-transition: -webkit-transform 0.45s ease;
+  transition: transform 0.45s ease;
 }
 
 .card-sub {
@@ -212,9 +218,14 @@ main {
 }
 .cmini-fill {
   height: 100%;
-  width: 0;
-  -webkit-transition: width 0.45s ease;
-  transition: width 0.45s ease;
+  width: 100%;
+  /* scaleX() fill (see setBarFill / .bar-fill). */
+  -webkit-transform: scaleX(0);
+  transform: scaleX(0);
+  -webkit-transform-origin: left center;
+  transform-origin: left center;
+  -webkit-transition: -webkit-transform 0.45s ease;
+  transition: transform 0.45s ease;
 }
 .cstatus {
   -webkit-flex: 0 0 auto;

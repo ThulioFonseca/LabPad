@@ -56,9 +56,7 @@ Widgets._containerRow = function (c) {
   var mini = el('div', 'cmini');
   var miniFill = el('div', 'cmini-fill');
   var mp = (running && typeof c.mem_percent === 'number') ? c.mem_percent : 0;
-  if (mp < 0) { mp = 0; }
-  if (mp > 100) { mp = 100; }
-  miniFill.style.width = mp + '%';
+  setBarFill(miniFill, mp);
   mini.appendChild(miniFill);
   row.appendChild(mini);
 
