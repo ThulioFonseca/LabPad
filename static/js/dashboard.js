@@ -154,11 +154,20 @@
     if (!brand) { return; }
     function go() { location.reload(true); }
     brand.onclick = function (e) {
+      /* Walk up from the actual click target: the info button holds an inline
+         <svg>, so a click lands on the <svg>/<path>, not on the button itself.
+         Checking only e.target.id would miss it and trigger the refresh. */
       var t = e.target;
-      if (t && t.id === 'host-info-btn') { return; }
+      while (t && t !== brand) {
+        if (t.id === 'host-info-btn') { return; }
+        t = t.parentNode;
+      }
       go();
     };
     brand.onkeydown = function (e) {
+      /* Only when the brand itself is focused — not the nested info button,
+         whose Enter/Space keydown would otherwise bubble up and refresh. */
+      if (e.target !== brand) { return; }
       if (e.keyCode === 13 || e.keyCode === 32) { e.preventDefault(); go(); }
     };
   }
@@ -210,7 +219,11 @@
     var btn = byId('host-info-btn');
     if (btn) {
       btn.innerHTML = ICONS.info;
-      btn.onclick = openSystemModal;
+      btn.onclick = function (e) {
+        /* Stop the click from bubbling to the brand's full-refresh handler. */
+        if (e && e.stopPropagation) { e.stopPropagation(); }
+        openSystemModal();
+      };
     }
     var backdrop = byId('system-modal');
     if (backdrop) { backdrop.onclick = closeSystemModal; }
