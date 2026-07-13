@@ -121,9 +121,7 @@ Widgets._updateGauge = function (refs, widget, data, buffer) {
   }
 
   var pct = hasValue ? (value / max) * 100 : 0;
-  if (pct < 0) { pct = 0; }
-  if (pct > 100) { pct = 100; }
-  refs.fill.style.width = pct + '%';
+  setBarFill(refs.fill, pct);
 
   if (widget.sub) {
     setText(refs.sub, fmtBytes(getPath(data, widget.sub.used)) +
@@ -376,7 +374,7 @@ Widgets.renderDiskModal = function (container, disks) {
 
     var bar = el('div', 'bar');
     var fill = el('div', 'bar-fill');
-    fill.style.width = pct + '%';
+    setBarFill(fill, pct);
     bar.appendChild(fill);
     row.appendChild(bar);
 

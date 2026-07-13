@@ -71,6 +71,19 @@ function fmtNumber(value) {
   return (Math.round(value * 10) / 10).toString();
 }
 
+/* Set a progress-bar fill level (0..100) via a GPU-composited transform
+   instead of animating `width` (which forces layout + paint every frame — a
+   real cost on the iPad 2 when it happens on many bars every metrics cycle).
+   The fill element must be width:100% with transform-origin:left (cards.css). */
+function setBarFill(node, pct) {
+  if (!node) { return; }
+  if (typeof pct !== 'number' || !isFinite(pct)) { pct = 0; }
+  if (pct < 0) { pct = 0; } else if (pct > 100) { pct = 100; }
+  var s = 'scaleX(' + (pct / 100) + ')';
+  node.style.webkitTransform = s;
+  node.style.transform = s;
+}
+
 /* Build a safe CSS url("...") value from an untrusted string (e.g. an image
    URL from an RSS feed). Escapes the quote and backslash that would otherwise
    break out of the quoted string, and drops newlines. */
