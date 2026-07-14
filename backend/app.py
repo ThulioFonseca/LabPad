@@ -13,6 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 from flask import Flask, jsonify, request, send_from_directory
 
 import config
+import health
 import net_guard
 import notifications
 import settings
@@ -97,6 +98,8 @@ def _build_metrics():
         "containers": (containers.collect, {"list": []}),
     })
     data["meta"] = {"time": time.time(), "refresh_ms": config.REFRESH_MS}
+    # Raise/clear host health alerts from the fresh readings (best-effort).
+    health.evaluate(data)
     return data
 
 

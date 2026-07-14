@@ -69,3 +69,21 @@ NETWORK_IFACE = _env("MONITOR_NETWORK_IFACE", "")
 # Weather: city name to monitor (e.g. New York, Tokyo).
 # Empty = section disabled.
 WEATHER_CITY = _env("WEATHER_CITY", "")
+
+
+# --- Health Alerts ---------------------------------------------------------
+# Raise a dashboard notification when a host resource crosses a threshold
+# (warning/critical) and a recovery notice when it returns to normal. Memory
+# and disk are percent; temperature is degrees Celsius. Set HEALTH_ALERTS=0
+# to disable entirely.
+HEALTH_ALERTS_ENABLED = _env("HEALTH_ALERTS", "1") not in ("0", "false", "no")
+HEALTH_MEM_WARN = float(_env("HEALTH_MEM_WARN", "90"))
+HEALTH_MEM_CRIT = float(_env("HEALTH_MEM_CRIT", "97"))
+HEALTH_DISK_WARN = float(_env("HEALTH_DISK_WARN", "85"))
+HEALTH_DISK_CRIT = float(_env("HEALTH_DISK_CRIT", "95"))
+HEALTH_TEMP_WARN = float(_env("HEALTH_TEMP_WARN", "75"))
+HEALTH_TEMP_CRIT = float(_env("HEALTH_TEMP_CRIT", "85"))
+# Hysteresis margin (in the metric's unit): a tripped alert only clears once
+# the value falls this far below the threshold, preventing flapping when a
+# value hovers on a boundary.
+HEALTH_HYSTERESIS = float(_env("HEALTH_HYSTERESIS", "3"))

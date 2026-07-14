@@ -85,6 +85,27 @@ The dashboard **has no authentication** — designed for **local network use onl
 Do not expose port 8723 to the internet. Docker socket is mounted read-only, but
 it still exposes container visibility; keep it on your LAN.
 
+### Health Alerts
+
+The dashboard watches the host's own resources and raises a **notification**
+(bell icon / sidebar) when one crosses a threshold — so a disk quietly filling
+up or an overheating CPU surfaces on the wall display instead of hiding behind a
+gauge you have to notice. A single alert fires when a metric enters the
+`warning`/`critical` band and a single `info` recovery when it returns to
+normal — no per-cycle spam, and a small hysteresis margin stops flapping at the
+boundary. Monitored: **memory**, **CPU temperature**, and **each disk** mount.
+
+Thresholds default to sensible values and are tunable via environment variables
+(see [`backend/config.py`](backend/config.py)):
+
+| Variable | Default | Meaning |
+|----------|---------|---------|
+| `HEALTH_ALERTS` | `1` | Set `0` to disable all health alerts |
+| `HEALTH_MEM_WARN` / `HEALTH_MEM_CRIT` | `90` / `97` | Memory usage % |
+| `HEALTH_DISK_WARN` / `HEALTH_DISK_CRIT` | `85` / `95` | Disk usage % |
+| `HEALTH_TEMP_WARN` / `HEALTH_TEMP_CRIT` | `75` / `85` | CPU temperature °C |
+| `HEALTH_HYSTERESIS` | `3` | How far a value must fall below a threshold before the alert clears |
+
 ## Calendar, News, and Weather
 
 Configure everything via the **settings panel** (gear icon, top right) — no `.env`,
