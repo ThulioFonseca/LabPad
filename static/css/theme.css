@@ -28,6 +28,7 @@ body {
 .brand-name  { color: #f2f4f8; }
 .status      { color: #949bab; }
 .weather-clock { color: #cbd0d9; }
+.topbar-clock  { color: #f2f4f8; }
 
 .status-dot      { background-color: #949bab; }
 .status-dot--on  {

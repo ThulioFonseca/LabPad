@@ -683,10 +683,13 @@
   }
 
   /* --- Clock --------------------------------------------------------------*/
-  /* The clock lives inside the 'city' slide of the weather carousel
-     (rendered by widgets.js). Here we only update the span when it exists
-     in the DOM — outside the 'city' slide byId returns null and the tick
-     becomes a no-op. No seconds: HH:MMh format. */
+  /* Two clocks share this one tick:
+       - #topbar-clock: always present in the topbar, so the time is visible
+         on the wall display even when weather is unconfigured or the carousel
+         has rotated past its (transient) 'city' slide.
+       - #weather-clock: only exists inside the 'city' slide of the weather
+         carousel; outside that slide byId returns null and the update is a
+         no-op. Both use the HH:MMh format. */
   function clockText(d) {
     function pad(n) { return (n < 10 ? '0' : '') + n; }
     return pad(d.getHours()) + ':' + pad(d.getMinutes()) + 'h';
@@ -697,8 +700,11 @@
        every second (×60/min forever) kept the iPad 2 CPU from idling; instead
        update now and reschedule to just after the next minute boundary. */
     var now = new Date();
+    var text = clockText(now);
+    var topbar = byId('topbar-clock');
+    if (topbar) { setText(topbar, text); }
     var node = byId('weather-clock');
-    if (node) { setText(node, clockText(now)); }
+    if (node) { setText(node, text); }
     if (document.hidden) { setTimeout(tickClock, 30000); return; }
     var msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds() + 50;
     setTimeout(tickClock, msToNextMinute);
