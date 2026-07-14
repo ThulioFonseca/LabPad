@@ -1,13 +1,13 @@
-# Start the Homelab Monitor standalone:
+# Start LabPad standalone:
 #   docker compose up -d --build
 #
 # All configuration (calendar, RSS, weather city, timezone, theme, layout)
 # is done through the gear panel on the dashboard and persists in
 # /data/settings.json in the named volume below.
 services:
-  homelab-monitor:
+  labpad:
     build: .
-    container_name: homelab-monitor
+    container_name: labpad
     restart: unless-stopped
     pid: host                 # psutil reads the real host hardware, not the container's
     network_mode: host        # exposes port 8723 directly on the host
@@ -19,7 +19,7 @@ services:
       - /sys:/sys:ro
       - /etc/os-release:/etc/os-release:ro
       - /etc/hostname:/host-hostname:ro
-      - homelab-monitor-data:/data     # persists /data/settings.json
+      - labpad-data:/data     # persists /data/settings.json
 
 volumes:
-  homelab-monitor-data:
+  labpad-data:

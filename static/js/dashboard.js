@@ -190,7 +190,7 @@
   }
 
   /* --- Brand como atalho de Full refresh ----------------------------------*/
-  /* O titulo "Homelab" no topo virou o gatilho do reload completo: um clique
+  /* O titulo "LabPad" no topo virou o gatilho do reload completo: um clique
      na area do brand recarrega tudo. Ignoramos cliques no botao de info do
      host info button embedded in the brand itself, to avoid conflicting with that action. */
   function wireBrandRefresh() {

@@ -14,7 +14,7 @@ import settings
 
 # (connect 5s, read 25s) — corporate Office365 calendars can be slow.
 _TIMEOUT = (5, 25)
-_UA = "Mozilla/5.0 (HomelabMonitor)"
+_UA = "Mozilla/5.0 (LabPad)"
 
 # Day/month abbreviations (Monday=0 .. Sunday=6).
 _WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]

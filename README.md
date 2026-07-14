@@ -1,16 +1,36 @@
-# Homelab Monitor
+<div align="center">
 
-A monitoring dashboard for your homelab, designed to run on an **iPad 2 (iOS 9.3.5)**
-as an always-on wall display.
+# LabPad
 
-Shows near real-time **Ubuntu host** and **Docker container** metrics, plus
-**calendar**, **news**, and **weather**. Runs as a single container and serves
-a hand-crafted page for Safari 9 — no CSS Grid, no `fetch`, no frameworks, no build.
-Beautiful, lightweight, and easy to customize.
+### A real-time homelab dashboard built to run *forever* on a 2012 iPad 2.
+
+Near real-time Ubuntu host & Docker metrics, plus calendar, news, and weather —
+served as a hand-crafted page that runs on **Safari 9 / iOS 9.3.5** with no
+frameworks, no `fetch`, no CSS Grid, and **no build step**.
+
+[![CI](https://github.com/ThulioFonseca/LabPad/actions/workflows/ci.yml/badge.svg)](https://github.com/ThulioFonseca/LabPad/actions/workflows/ci.yml)
+[![Docker](https://github.com/ThulioFonseca/LabPad/actions/workflows/docker.yml/badge.svg)](https://github.com/ThulioFonseca/LabPad/actions/workflows/docker.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Runs on iOS 9.3.5](https://img.shields.io/badge/runs%20on-iOS%209.3.5-black?logo=safari&logoColor=white)](CLAUDE.md)
+[![Python](https://img.shields.io/badge/python-3.11%2B-3776AB?logo=python&logoColor=white)](requirements.txt)
+[![No build step](https://img.shields.io/badge/frontend-no%20build%20step-success)](CLAUDE.md)
+
+</div>
+
+<!--
+  Add real screenshots at docs/screenshots/ and they will render below.
+  Suggested captures: dashboard.png (full board on iPad), themes.png (theme grid),
+  settings.png (settings panel). Until then the ASCII mockup stands in.
+-->
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="LabPad dashboard on an iPad 2 wall display" width="720">
+  <br>
+  <em>Screenshot placeholder — drop your capture at <code>docs/screenshots/dashboard.png</code>.</em>
+</p>
 
 ```
 ┌───────────────────────────────────────────────┐
-│ Homelab        ☀ 24°C · 60%       ● online 14:22│
+│ LabPad         ☀ 24°C · 60%       ● online 14:22│
 ├───────────────────────────────────────────────┤
 │ HOST   ubuntu · up 6d · load 0.4 · 8 cores     │
 │ ┌ CPU ┐ ┌ Memory ┐ ┌ Disk ┐ ┌ Temp ┐         │
@@ -23,25 +43,63 @@ Beautiful, lightweight, and easy to customize.
 └───────────────────────────────────────────────┘
 ```
 
-## Getting Started
+---
+
+## ✨ Features
+
+**System monitoring**
+- Real-time CPU, memory, and disk usage with gauges and `<canvas>` sparklines
+- Network I/O (receive / transmit rates), load average, uptime, OS, hostname
+- CPU temperature when available — degrades gracefully when it isn't
+- Per-container Docker stats: status, CPU %, RAM, and network
+
+**External data**
+- **Calendar** — published Outlook `.ics` feed; expands recurring events; next *N* days
+- **News** — any RSS/Atom feed, with images, age labels, and links (list or carousel)
+- **Weather** — current temp/humidity, 5-day forecast, and moon phase (Open-Meteo, no API key; met.no fallback)
+
+**Appearance**
+- 5 themes — Minimal, Neumorphic, Elevated, Outline, Frosted Glass — each with light/dark
+- Card density presets (compact / normal / spacious) and per-metric sparkline toggles
+
+**Notifications**
+- Sidebar for system alerts, degradations, and recoveries, with de-duplication
+
+**Built for the long haul**
+- ES5 + Flexbox, served as-is — tuned to run for **weeks** on a 512 MB iPad 2 without leaking
+
+---
+
+## 🪧 Why this exists
+
+LabPad's whole identity is a constraint: it has to run **indefinitely as an
+always-on wall display on an iPad 2 (iOS 9.3.5 / Safari 9)** — 2012 hardware with
+512 MB of RAM. That single requirement shapes every technical choice:
+
+- **Hand-written ES5**, no frameworks, no transpiler, **no build step** — files are served exactly as written.
+- **Flexbox-only** layout, no CSS Grid, no CSS variables, no `backdrop-filter`.
+- **`XMLHttpRequest`**, never `fetch()`.
+- **No perpetual animations** and **no per-cycle DOM churn** — the two things that crash old Safari over long uptime.
+
+If you plan to change anything under `static/`, read **[CLAUDE.md](CLAUDE.md)** first —
+it's the compatibility contract that keeps the iPad alive.
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-docker compose up -d --build      # Modern Docker
+docker compose up -d --build      # modern Docker
 # or:  docker-compose up -d --build   (older version)
 ```
 
-No `.env` needed. Everything (weather city, calendar URL, RSS URL, limits, days,
-timezone, theme, layout) is configured via the **settings button** (gear icon)
-in the top right of the dashboard. Your choices persist in `/data/settings.json`
-in a named Docker volume — they survive rebuilds.
-
-Access from any device on your local network, **including an iPad 2**:
+No `.env` needed. Access from any device on your LAN — **including an iPad 2**:
 
 ```
 http://HOST-IP:8723
 ```
 
-To find your host IP: `ip addr` (look for something like `192.168.x.x`).
+Find your host IP with `ip addr` (look for something like `192.168.x.x`).
 
 Stop / update:
 
@@ -50,167 +108,198 @@ docker compose down
 docker compose up -d --build      # after editing any file
 ```
 
-> Only editing `static/` (HTML/CSS/JS)? No need to rebuild the image if you mount
-> the folder as a volume — see "Development" below. By default, static files go
-> into the image, so run `up -d --build` again.
+> Editing only `static/` (HTML/CSS/JS)? Mount the folder as a volume to skip
+> rebuilds — see [Development](#-development). By default static files are baked
+> into the image, so re-run `up -d --build`.
 
-## Set Up iPad as a Wall Monitor
+---
+
+## 📺 Set Up the iPad as a Wall Monitor
 
 1. Open `http://HOST-IP:8723` in Safari.
-2. **Share → Add to Home Screen** — opens fullscreen, no bars.
+2. **Share → Add to Home Screen** — launches fullscreen, no browser bars.
 3. **Settings → Display & Brightness → Auto-Lock → Never**.
-4. (Optional) **Settings → General → Accessibility → Guided Access** to lock the
-   iPad on this screen (kiosk mode).
+4. *(Optional)* **Settings → General → Accessibility → Guided Access** to lock the
+   iPad on this one screen (kiosk mode).
 
-## How It Works
+---
+
+## ⚙️ Configuration
+
+Everything is configured **live** via the **settings panel** (gear icon, top right) —
+no `.env`, no rebuild. Values persist in `/data/settings.json` inside a named Docker
+volume, so they survive rebuilds and restarts.
+
+| Section | What you set |
+|---------|--------------|
+| **Theme** | One of 5 styles + light/dark mode |
+| **Cards** | Density (compact/normal/spacious) and which cards show sparklines |
+| **Weather** | City (Open-Meteo lookup) and which slides appear in the topbar |
+| **Calendar** | Published Outlook `.ics` URL + how many days ahead to show |
+| **News** | RSS/Atom feed URL, item count, and card height |
+| **System** | Timezone (IANA, e.g. `America/New_York`) used for calendar times |
+
+**Getting your calendar `.ics` link:** in Outlook web, *Settings → Calendar →
+Shared calendars → Publish calendar* — copy the **ICS** link (ends in `.ics`), not
+the HTML one. Leave a URL blank to **disable** that section.
+
+> ⚠️ The dashboard has **no authentication** and the `.ics` URL is a *capability
+> link*. Keep LabPad on your LAN — never expose port 8723 to the internet.
+
+Appearance settings (theme, mode, density, sparklines, slides) live in browser
+`localStorage`. Data-source/system settings (city, URLs, limits, days, timezone)
+are stored server-side in `/data/settings.json`.
+
+---
+
+## 🧠 How It Works
 
 ```
 Ubuntu Host ── Docker
-                └─ container "homelab-monitor"  (Flask + Python)
+                └─ container "labpad"  (Flask + Python)
                      GET /            -> dashboard (static/)
-                     GET /api/metrics -> hardware + containers (5 s)
-                     GET /api/feeds   -> calendar + news + weather (10 min)
+                     GET /api/metrics -> host + containers   (polled every 5 s)
+                     GET /api/feeds   -> calendar+news+weather (polled every 10 min)
 ```
 
-- Container runs with `pid: host` + `network_mode: host` so `psutil` reads the
-  **actual host hardware** (not the container's).
-- All volumes are **read-only** (`:ro`). Container never writes to the host.
-- Dashboard polls `/api/metrics` every 5 s via `XMLHttpRequest`.
-- Calendar, news, and weather come from `/api/feeds`, updated every 10 min —
-  the backend fetches external feeds and caches them (no overloading providers).
+- The container runs with `pid: host` + `network_mode: host` so `psutil` reads the
+  **actual host hardware**, not the container's.
+- All host mounts are **read-only** (`:ro`). LabPad never writes to the host.
+- The frontend is **declarative**: the dashboard is built from a `widgets` array in
+  [`static/config.js`](static/config.js) — adding a metric is usually a one-line edit.
+- **Metrics** poll every 5 s (cheap, local). **Feeds** poll every 10 min — the backend
+  fetches external providers, caches results, and backs off on failure so it never
+  overloads them.
 
-### Security
+### API reference
 
-The dashboard **has no authentication** — designed for **local network use only**.
-Do not expose port 8723 to the internet. Docker socket is mounted read-only, but
-it still exposes container visibility; keep it on your LAN.
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/metrics` | GET | Host hardware + Docker container stats (5 s cadence) |
+| `/api/feeds` | GET | Calendar, news, and weather (10 min cadence) |
+| `/api/settings` | GET / PUT | Read or update server-side settings |
+| `/api/notifications` | GET | Notification queue |
+| `/api/health` | GET | Health check for container orchestration |
 
-## Calendar, News, and Weather
+---
 
-Configure everything via the **settings panel** (gear icon, top right) — no `.env`,
-no rebuild. Values persist in `/data/settings.json` in the Docker volume.
+## 🧩 Extending
 
-- **Calendar** — `.ics` URL from a published Outlook calendar + how many days ahead to show.
-- **News** — RSS/Atom feed URL + how many items to display.
-- **Weather** — city name (Open-Meteo, free, no API key); cycles between current
-  temp/humidity, 5-day forecast, and moon phase.
-- **System** — timezone (IANA format, e.g. `America/New_York`) used by calendar times.
+### Add a new metric
 
-**How to get your calendar's `.ics` link:** in Outlook web, *Settings → Calendar →
-Shared calendars → Publish calendar* — copy the **ICS** link (ends in `.ics`),
-**not** the HTML link.
-
-> The calendar URL is a *capability link*: whoever has it can see your calendar.
-> Keep the dashboard on your LAN (no auth).
-
-Leave a URL blank to **disable** that section. Recurring events (weekly meetings, etc.)
-are automatically expanded.
-
-## How to Extend (the project's strongest point)
-
-### Add a New Metric
-
-1. **Backend** — return the value in `/api/metrics`. Edit the appropriate collector in
-   [`backend/collectors/`](backend/collectors/) (e.g. add a field to `host.py`)
-   or create a new collector and wire it into [`backend/app.py`](backend/app.py).
-2. **Frontend** — open [`static/config.js`](static/config.js) and add **one line**
-   to the `widgets` array. Done: the card appears. No HTML/CSS/JS editing.
-
-Example — show process count:
+1. **Backend** — return the value from `/api/metrics`. Edit the relevant collector in
+   [`backend/collectors/`](backend/collectors/) (e.g. add a field to `host.py`), or
+   add a new collector and wire it into [`backend/app.py`](backend/app.py).
+2. **Frontend** — add **one line** to the `widgets` array in
+   [`static/config.js`](static/config.js). The card appears — no HTML/CSS/JS edits.
 
 ```js
 { id:'procs', title:'Processes', kind:'info', section:'system',
   path:'host.proc_count', fmt:'text' }
 ```
 
-### Settings Panel
+| `kind`  | Use |
+|---------|-----|
+| `gauge` | number + bar `0..max` (CPU, RAM, disk, temp) |
+| `info`  | single line of text (uptime, OS, load avg) |
 
-The **settings button** (gear icon, top right) opens a full panel to adjust your
-dashboard **live**. It has 6 sections:
+> Any change under `static/` must satisfy the **[iPad 2 compatibility contract](CLAUDE.md)** —
+> ES5 only, no perpetual animations, no `fetch`, no CSS Grid/variables.
 
-- **Theme** — 5 styles (Minimal, Neumorphic, Elevated, Outline, Frosted Glass)
-  and light/dark mode.
-- **Cards** — density (compact/normal/spacious) and which cards show sparklines.
-- **Weather** — city and which slides appear in the topbar.
-- **Calendar** — `.ics` URL and how many days ahead to show.
-- **News** — RSS feed URL, count, and card height.
-- **System** — timezone (IANA format).
+---
 
-**Appearance** settings (theme, mode, density, sparklines, slides) go to browser
-`localStorage`. **Data source / system** settings (city, URLs, limits, days, timezone)
-are saved in `/data/settings.json` in a named Docker volume — they survive rebuilds
-and apply to the next collection. The "Reset to defaults" button resets frontend
-settings only.
+## 🛠 Development
 
-Each theme is a *style* (shadow, border, shape), not just color. Minimal dark lives in
-[`static/css/theme.css`](static/css/theme.css); others and light variants live in
-`themes.css`, applied via classes on `<html>` (`theme-X mode-Y cards-Z news-W`).
-Structure and layout live in `base.css`.
-
-### Available Widget Types
-
-| `kind`  | Use                                            |
-|---------|------------------------------------------------|
-| `gauge` | number + bar 0..max (CPU, RAM, disk, temp)    |
-| `info`  | single line of text (uptime, OS, load avg)    |
-
-Each widget field is documented inside `config.js` itself.
-
-## Project Structure
-
-```
-backend/
-  app.py                 Flask server: routes + /api/metrics + /api/feeds
-  config.py              port, disk paths, feeds, cache TTLs
-  collectors/
-    host.py              CPU, memory, disk, network, load, uptime, OS
-    sensors.py           temperature (degrades if unavailable)
-    containers.py        status, CPU%, RAM, network per container
-    calendar_feed.py     calendar: reads published Outlook .ics
-    news.py              news: reads RSS/Atom feed
-    weather.py           weather and moon phase (Open-Meteo, no key)
-static/
-  index.html             page skeleton
-  config.js          ★   widgets and polling intervals — edit here
-  css/base.css           layout (Flexbox, no Grid)
-  css/theme.css          Minimal dark theme (default)
-  css/themes.css         other themes + light/dark variants
-  js/xhr.js              requests (XMLHttpRequest, replaces fetch)
-  js/format.js           DOM and formatting utilities
-  js/icons.js            SVG icons (cards, weather, moon)
-  js/sparkline.js        mini chart in <canvas>
-  js/widgets.js          components: cards, calendar, news, weather
-  js/settings.js         settings panel (gear icon → modal)
-  js/dashboard.js        polling + render
-backend/settings.py      mutable store persisted in /data/settings.json
-Dockerfile · docker-compose.yml · requirements.txt
-```
-
-## Development / Running Outside Docker
-
-To run directly on your machine (no container), pointing to real system root:
+Run directly on your machine (no container), pointed at the real system root:
 
 ```bash
 pip install -r requirements.txt
 HOST_ROOT=/ HOST_HOSTNAME_FILE=/etc/hostname python backend/app.py
 ```
 
-Open `http://localhost:8723`. Sensors and container stats require the process
-to have access to `/sys` and the Docker socket.
+Open `http://localhost:8723`. Sensors and container stats require access to `/sys`
+and the Docker socket.
 
-To iterate on frontend without rebuilding the image, mount `static/` as a volume
-by adding to the service in `docker-compose.yml`:
+Run the test suite:
+
+```bash
+pytest
+```
+
+To iterate on the frontend without rebuilding the image, mount `static/` as a
+volume in `docker-compose.yml` (files are served with `Cache-Control: no-store`,
+so just edit and refresh):
 
 ```yaml
     volumes:
       - ./static:/app/static:ro
-      # ... (keep other volumes)
+      # ... keep the other volumes
 ```
 
-Static files are served with `Cache-Control: no-store`, so just edit and refresh
-in the browser.
+<details>
+<summary><strong>Project structure</strong></summary>
 
-## Compatibility
+```
+backend/
+  app.py                 Flask server: routes + /api/metrics + /api/feeds
+  config.py              port, disk paths, feeds, cache TTLs
+  settings.py            mutable store persisted in /data/settings.json
+  notifications.py       in-memory notification queue
+  net_guard.py           SSRF / URL validation for outbound feed fetches
+  collectors/
+    host.py              CPU, memory, disk, network, load, uptime, OS
+    sensors.py           CPU temperature (degrades if unavailable)
+    containers.py        status, CPU%, RAM, network per container
+    calendar_feed.py     published Outlook .ics parsing
+    news.py              RSS/Atom feed parsing
+    weather.py           weather + moon phase (Open-Meteo, met.no fallback)
+static/
+  index.html             page skeleton
+  config.js          ★   widgets + polling intervals — edit here
+  css/base.css           layout (Flexbox, no Grid)
+  css/theme.css          Minimal dark theme (default)
+  css/themes.css         other themes + light/dark variants
+  css/motion.css         transitions & one-shot animations (iPad-safe)
+  js/xhr.js              HTTP via XMLHttpRequest (replaces fetch)
+  js/dashboard.js        polling + render orchestrator
+  js/widgets-*.js        host / containers / feeds / weather cards
+  js/settings.js         settings panel (gear icon → modal)
+  js/sparkline.js        mini chart in <canvas>
+tests/                   pytest suite
+Dockerfile · docker-compose.yml · requirements.txt
+```
 
-Tested for **Safari 9 / iOS 9.3.5**: layout uses Flexbox only, JavaScript ES5,
-`XMLHttpRequest`, 2D `<canvas>`. No CSS Grid, `fetch`, ES6, or frameworks.
+</details>
+
+---
+
+## 🩹 Troubleshooting
+
+- **Feeds (calendar/news/weather) not showing** — the backend caches for 10 min and
+  backs off after failures. Check the `.ics`/RSS URL and city in the settings panel;
+  a blank URL disables that section by design.
+- **Host metrics look like the container, not the host** — confirm the service still
+  has `pid: host` and `network_mode: host` in `docker-compose.yml`.
+- **Settings don't persist across rebuilds** — server-side settings live in the
+  `/data` named volume; make sure it isn't being removed (`docker compose down -v`).
+- **Blank or broken dashboard on the iPad** — almost always a Safari 9 regression:
+  an ES6 feature, `fetch`, a CSS variable, or CSS Grid slipped in. See
+  [CLAUDE.md](CLAUDE.md) and test against Safari 9.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome. Before touching `static/`:
+
+1. **Read [CLAUDE.md](CLAUDE.md)** — the iPad 2 compatibility contract is non-negotiable.
+2. Write **ES5 only** (no arrow functions, `const`/`let`, template literals, `fetch`,
+   `class`), Flexbox-only CSS, and no perpetual animations.
+3. Run `pytest` and verify the change on Safari 9 (or the closest device you have).
+4. Match the surrounding code style — comments carry the *why*, so keep them.
+
+---
+
+## 📄 License
+
+Released under the [MIT License](LICENSE).

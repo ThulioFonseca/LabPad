@@ -1,4 +1,4 @@
-"""Configuration for the Homelab Monitor backend.
+"""Configuration for the LabPad backend.
 
 All values can be overridden by environment variables
 (defined in docker-compose.yml).

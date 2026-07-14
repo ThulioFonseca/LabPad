@@ -9,7 +9,7 @@ from collectors.http_log import fetch as _http_fetch
 import settings
 
 _TIMEOUT = 12
-_UA = "Mozilla/5.0 (HomelabMonitor)"
+_UA = "Mozilla/5.0 (LabPad)"
 _IMG_RE = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
 
 
