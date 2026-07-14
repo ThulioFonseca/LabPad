@@ -69,7 +69,7 @@
     weatherSlides: ['current', 'forecast', 'moon']
   };
 
-  var SK = 'homelab.settings';  /* Single key in localStorage */
+  var SK = 'labpad.settings';  /* Single key in localStorage */
 
   /* === State ============================================================= */
   var fe = clone(FE_DEFAULTS);
@@ -100,18 +100,11 @@
         var parsed = JSON.parse(raw);
         fe = mergeDeep(clone(FE_DEFAULTS), parsed);
       }
-      /* Migration of old keys (theme.js v1). */
-      var oldT = localStorage.getItem('homelab.theme');
-      var oldM = localStorage.getItem('homelab.mode');
-      if (oldT) { fe.theme = oldT; }
-      if (oldM) { fe.mode = oldM; }
     } catch (e) { /* localStorage unavailable */ }
   }
   function saveFE() {
     try {
       localStorage.setItem(SK, JSON.stringify(fe));
-      localStorage.removeItem('homelab.theme');
-      localStorage.removeItem('homelab.mode');
     } catch (e) {}
   }
 

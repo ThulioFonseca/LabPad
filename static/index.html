@@ -5,14 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Homelab">
-  <title>Homelab Monitor</title>
+  <meta name="apple-mobile-web-app-title" content="LabPad">
+  <title>LabPad</title>
   <script>
     /* Apply saved theme/layout before paint (no flash). */
     (function () {
       var t = 'minimal', m = 'dark', ch = 'normal', nh = 'normal';
       try {
-        var raw = localStorage.getItem('homelab.settings');
+        var raw = localStorage.getItem('labpad.settings');
         if (raw) {
           var p = JSON.parse(raw);
           if (p) {
@@ -22,11 +22,6 @@
             if (p.newsCardHeight) { nh = p.newsCardHeight; }
           }
         }
-        /* Compatibility with v1 of theme.js (separate keys) */
-        var oldT = localStorage.getItem('homelab.theme');
-        var oldM = localStorage.getItem('homelab.mode');
-        if (oldT) { t = oldT; }
-        if (oldM) { m = oldM; }
       } catch (e) { /* localStorage unavailable */ }
       document.documentElement.className =
         'theme-' + t + ' mode-' + m + ' cards-' + ch + ' news-' + nh;
@@ -54,7 +49,7 @@
     <div class="brand" id="brand-refresh" role="button" tabindex="0"
          aria-label="Refresh all (full refresh)">
       <span class="status-dot" id="status-dot" aria-hidden="true"></span>
-      <span class="brand-name">Homelab</span>
+      <span class="brand-name">LabPad</span>
       <button class="panel-info-btn" id="host-info-btn" type="button"
               aria-label="System info"></button>
     </div>

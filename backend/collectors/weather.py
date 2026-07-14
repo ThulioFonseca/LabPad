@@ -14,7 +14,7 @@ import settings
 
 _TIMEOUT = 8
 
-_METNO_UA = "HomelabMonitor/1.0 thulio50@hotmail.com"
+_METNO_UA = "LabPad/1.0 thulio50@hotmail.com"
 
 # met.no symbol_code -> WMO weather code (approximation)
 _METNO_TO_WMO = {
@@ -92,7 +92,7 @@ def _moon():
 
 
 def _fetch(url):
-    return _http_fetch(url, headers={"User-Agent": "Homelab-Monitor/1.0"}, timeout=_TIMEOUT).json()
+    return _http_fetch(url, headers={"User-Agent": "LabPad/1.0"}, timeout=_TIMEOUT).json()
 
 
 def _resolve_city(city):

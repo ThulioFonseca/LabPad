@@ -1,4 +1,4 @@
-"""Homelab Monitor — Flask server.
+"""LabPad — Flask server.
 
 Serves the static dashboard and metrics API. Runs inside a container;
 see Dockerfile / docker-compose.yml.
@@ -398,5 +398,5 @@ threading.Thread(target=_scheduler_loop, daemon=True, name="feeds-scheduler").st
 
 
 if __name__ == "__main__":
-    print("Homelab Monitor: http://%s:%s" % (config.HOST_BIND, config.PORT))
+    print("LabPad: http://%s:%s" % (config.HOST_BIND, config.PORT))
     app.run(host=config.HOST_BIND, port=config.PORT, threaded=True)

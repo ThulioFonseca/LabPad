@@ -27,7 +27,7 @@ except ImportError:
 
 _TIMEOUT = 10
 _UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-       "(KHTML, like Gecko) Chrome/124.0 Safari/537.36 HomelabMonitor/1.0")
+       "(KHTML, like Gecko) Chrome/124.0 Safari/537.36 LabPad/1.0")
 _CACHE_TTL = 600    # 10 min
 _CACHE_MAX = 50
 # Pattern in BYTES — work with response.content (not decoded) to preserve
