@@ -56,6 +56,18 @@
 }
 .brand .status-dot { margin-right: 10px; }
 
+/* Offline label in the brand: empty (and thus invisible) during normal
+   operation; dashboard.js fills it only when the metrics feed goes stale.
+   tabular-nums keeps the "since HH:MM" digits from jittering. */
+.status-text {
+  margin-left: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Clock in the weather 'city' slide: stable digit width so it doesn't
    "jump" when the minute changes. */
 .weather-clock { font-variant-numeric: tabular-nums; }

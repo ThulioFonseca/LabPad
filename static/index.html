@@ -52,6 +52,10 @@
       <span class="brand-name">LabPad</span>
       <button class="panel-info-btn" id="host-info-btn" type="button"
               aria-label="System info"></button>
+      <!-- Empty in normal operation; dashboard.js fills it ("Offline · since
+           HH:MM") only when the metrics feed goes stale, so an outage is
+           legible from across the room, not just via the 9px dot. -->
+      <span class="status-text" id="status-text" role="status" aria-live="polite"></span>
     </div>
     <div class="topbar-center" id="section-weather">
       <!-- Filled by dashboard.js -->
