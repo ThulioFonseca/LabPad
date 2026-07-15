@@ -59,3 +59,16 @@ body.scroll-locked {
    reduced opacity signals a degraded state without drawing attention. */
 .weather-retry { opacity: 0.65; }
 
+/* Offline / stale-data state (dashboard.js latches `is-offline` on <body>
+   after the metrics feed misses a few polls). Fade the HOST metrics panel so
+   its now-frozen numbers read as stale from across the room — the feed panels
+   (calendar / news) come from a separate endpoint and are left untouched.
+   This is a STATIC opacity change with a one-shot transition (fires once, on
+   the state change); it is NOT a perpetual animation, so it respects the
+   iPad 2 long-uptime rule in motion.css. */
+.panel:not(.panel--feed) {
+  -webkit-transition: opacity 0.4s ease;
+  transition: opacity 0.4s ease;
+}
+body.is-offline .panel:not(.panel--feed) { opacity: 0.4; }
+

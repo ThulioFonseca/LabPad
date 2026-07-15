@@ -36,6 +36,7 @@ body {
   box-shadow: 0 0 8px rgba(63, 185, 80, 0.75);
 }
 .status-dot--off { background-color: #f85149; }
+.status-text     { color: #f85149; }
 
 /* --- Bell + notifications sidebar ------------------------------------------*/
 .notif-btn         { color: #cbd0d9; }

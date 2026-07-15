@@ -519,6 +519,7 @@
 
 .mode-light .status-dot--on  { background-color: #1a7f37; }
 .mode-light .status-dot--off { background-color: #cf222e; }
+.mode-light .status-text     { color: #cf222e; }
 .mode-light .crow--up .cdot   { background-color: #1a7f37; }
 .mode-light .crow--down .cdot { background-color: #cf222e; }
 .mode-light .crow--up .cstatus,
