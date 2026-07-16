@@ -23,6 +23,10 @@
   var netRefs = null;
   var netBuffer = [];
 
+  /* Docker summary card refs — built once, updated in place each cycle (the
+     card is always visible; rebuilding its DOM every 5s churned GC). */
+  var dockerRefs = null;
+
   /* Weather */
   var weatherRefs = null;
   var lastWeather = null;
@@ -70,6 +74,8 @@
     netRefs = Widgets.initNetCard(byId('section-network'));
     sizeCanvas(netRefs && netRefs.canvas);
 
+    dockerRefs = Widgets.initDockerSummary(byId('section-docker-summary'));
+
     weatherRefs = Widgets.initWeather(byId('section-weather'));
   }
 
@@ -112,78 +118,9 @@
   }
 
   /* --- Estado de conexao --------------------------------------------------*/
-  /* Timestamp of the last successful metrics poll — shown when the feed goes
-     stale so a wall observer can see *when* the numbers froze. */
-  var lastOkTime = null;
-  /* Consecutive failed polls. The offline state only latches after
-     STALE_AFTER misses in a row, so a single transient hiccup doesn't flash
-     the whole wall display. */
-  var offlineStrikes = 0;
-  /* null = unknown (before first poll), true = offline, false = online.
-     Starts null so the first success reliably paints the "online" state. */
-  var isOffline = null;
-  var STALE_AFTER = 2;
-
-  function pad2(n) { return (n < 10 ? '0' : '') + n; }
-
-  /* Add/remove a body class without clobbering others (modals.js toggles
-     `scroll-locked` on the same element). */
-  function bodyClass(name, on) {
-    var b = document.body;
-    if (!b) { return; }
-    var cur = ' ' + b.className + ' ';
-    var has = cur.indexOf(' ' + name + ' ') >= 0;
-    if (on && !has) {
-      b.className = (b.className + ' ' + name).replace(/^\s+/, '');
-    } else if (!on && has) {
-      b.className = cur.replace(' ' + name + ' ', ' ').replace(/^\s+|\s+$/g, '');
-    }
-  }
-
-  /* Reflect the connection state. Every DOM write is guarded behind an actual
-     state change: poll() runs on a 5s loop forever, and rewriting the dot's
-     className every cycle is exactly the kind of needless per-cycle work the
-     iPad 2 can't afford over long uptime. */
   function setOnline(ok) {
-    if (ok) {
-      lastOkTime = new Date();
-      offlineStrikes = 0;
-      if (isOffline === false) { return; }   /* already online: nothing to do */
-      isOffline = false;
-      applyConnState(false);
-      return;
-    }
-    /* A miss. Wait for STALE_AFTER consecutive misses before latching offline,
-       so a brief blip doesn't grey out the wall display. */
-    offlineStrikes = offlineStrikes + 1;
-    if (isOffline === true || offlineStrikes < STALE_AFTER) { return; }
-    isOffline = true;
-    applyConnState(true);
-  }
-
-  /* Paint the offline/online treatment. Runs only on a state transition. */
-  function applyConnState(off) {
     var dot = byId('status-dot');
-    if (dot) { dot.className = 'status-dot status-dot--' + (off ? 'off' : 'on'); }
-
-    var label = byId('status-text');
-    if (label) {
-      if (off && lastOkTime) {
-        setText(label, 'Offline \xb7 since '
-          + pad2(lastOkTime.getHours()) + ':' + pad2(lastOkTime.getMinutes()));
-      } else if (off) {
-        setText(label, 'Offline');
-      } else {
-        setText(label, '');
-      }
-    }
-
-    /* Grey the host metrics panel (NOT the feeds — those poll a separate
-       endpoint and may still be live) so its frozen numbers read as stale at
-       a glance. This is a STATIC opacity change reached through a one-shot
-       transition — no perpetual animation, no per-cycle work — so it stays
-       within the iPad 2 long-uptime contract (see motion.css). */
-    bodyClass('is-offline', off);
+    if (dot) { dot.className = 'status-dot status-dot--' + (ok ? 'on' : 'off'); }
   }
 
   /* --- Render de um ciclo -------------------------------------------------*/
@@ -202,7 +139,7 @@
 
     pushNetBuffer(data);
     /* Docker summary can change the double-row height; measure the canvas after. */
-    Widgets.renderDockerSummary(byId('section-docker-summary'), data.containers);
+    Widgets.updateDockerSummary(dockerRefs, data.containers);
     sizeCanvas(netRefs && netRefs.canvas);
     Widgets.updateNetCard(netRefs, data, netBuffer);
 
@@ -259,7 +196,7 @@
   }
 
   /* --- Brand como atalho de Full refresh ----------------------------------*/
-  /* O titulo "LabPad" no topo virou o gatilho do reload completo: um clique
+  /* O titulo "Homelab" no topo virou o gatilho do reload completo: um clique
      na area do brand recarrega tudo. Ignoramos cliques no botao de info do
      host info button embedded in the brand itself, to avoid conflicting with that action. */
   function wireBrandRefresh() {
@@ -290,8 +227,9 @@
   function closeContainersModal() { Modals.close('containers-modal'); }
 
   function wireContainersModal() {
-    /* O card Docker (#section-docker-summary) persiste — renderDockerSummary
-       so troca os filhos via innerHTML, entao o onclick sobrevive. */
+    /* O card Docker (#section-docker-summary) persiste — updateDockerSummary
+       so reescreve texto nos nos ja existentes (nunca troca o card em si),
+       entao o onclick sobrevive. */
     var dockerCard = byId('section-docker-summary');
     if (dockerCard) { dockerCard.onclick = openContainersModal; }
 
