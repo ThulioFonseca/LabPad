@@ -215,39 +215,57 @@ Widgets.updateNetCard = function (refs, data, buffer) {
 
 
 /* --- Docker Summary (double-row) ------------------------------------------*/
+/* This card is ALWAYS visible and refreshed every metrics cycle (5s). Rebuilding
+   its DOM via innerHTML each cycle churns GC on the iPad 2 (512 MB, iOS 9.3.5) —
+   the same class of long-uptime leak that crashed the tab via the hidden modals
+   (commit f56345d). So the structure is built once (initDockerSummary) and only
+   text nodes are rewritten in place afterwards (updateDockerSummary): zero node
+   allocation in steady state. Follows the initNetCard()/updateNetCard() pattern. */
 
-Widgets.renderDockerSummary = function (cardEl, payload) {
-  if (!cardEl) { return; }
+Widgets.initDockerSummary = function (cardEl) {
+  if (!cardEl) { return null; }
   cardEl.innerHTML = '';
 
   cardEl.appendChild(Widgets._cardHead('docker', 'Docker'));
 
-  if (!payload) {
-    var skelCount = el('div', 'docker-count');
-    skelCount.appendChild(Widgets._skel('skeleton-pill'));
-    cardEl.appendChild(skelCount);
-    var skelTop = el('div', 'docker-top');
-    for (var s = 0; s < 3; s++) {
-      var skelRow = el('div', 'docker-top-item');
-      skelRow.appendChild(Widgets._skel('skeleton-line'));
-      skelTop.appendChild(skelRow);
-    }
-    cardEl.appendChild(skelTop);
-    return;
+  /* Count line — skeleton until the first payload replaces its text. */
+  var count = el('div', 'docker-count');
+  count.appendChild(Widgets._skel('skeleton-pill'));
+  cardEl.appendChild(count);
+
+  /* Three fixed top-container slots, reused every cycle. The whole block is
+     hidden when there is nothing to show (keeps the border-top/padding from
+     the .docker-top rule off-screen, matching the old empty-state layout). */
+  var topDiv = el('div', 'docker-top');
+  var items = [];
+  for (var i = 0; i < 3; i++) {
+    var item = el('div', 'docker-top-item');
+    var name = el('span', 'docker-top-name');
+    name.appendChild(Widgets._skel('skeleton-line'));
+    var cpu = el('span', 'docker-top-cpu');
+    item.appendChild(name);
+    item.appendChild(cpu);
+    topDiv.appendChild(item);
+    items.push({ root: item, name: name, cpu: cpu });
   }
+  cardEl.appendChild(topDiv);
+
+  return { count: count, top: topDiv, items: items };
+};
+
+Widgets.updateDockerSummary = function (refs, payload) {
+  if (!refs || !payload) { return; }   /* keep skeleton until first data */
 
   var list = (payload && payload.list) ? payload.list : [];
-  var running = 0;
-  for (var i = 0; i < list.length; i++) {
+  var running = 0, i;
+  for (i = 0; i < list.length; i++) {
     if (list[i].status === 'running') { running = running + 1; }
   }
-
-  cardEl.appendChild(el('div', 'docker-count',
-    running + ' / ' + list.length + ' active'));
+  setText(refs.count, running + ' / ' + list.length + ' active');
 
   var active = [];
-  for (var j = 0; j < list.length; j++) {
-    if (list[j].status === 'running') { active.push(list[j]); }
+  for (i = 0; i < list.length; i++) {
+    if (list[i].status === 'running') { active.push(list[i]); }
   }
   active.sort(function (a, b) {
     var sa = (a.cpu_percent || 0) + (a.mem_percent || 0);
@@ -255,19 +273,21 @@ Widgets.renderDockerSummary = function (cardEl, payload) {
     return sb - sa;
   });
 
-  var top = active.slice(0, 3);
-  if (top.length) {
-    var topDiv = el('div', 'docker-top');
-    for (var k = 0; k < top.length; k++) {
-      var c = top[k];
-      var item = el('div', 'docker-top-item');
-      item.appendChild(el('span', 'docker-top-name', c.name || '?'));
-      var cpuStr = (typeof c.cpu_percent === 'number')
-        ? (fmtNumber(c.cpu_percent) + '% cpu') : DASH;
-      item.appendChild(el('span', 'docker-top-cpu', cpuStr));
-      topDiv.appendChild(item);
+  /* Hide the whole block when no container is active, else fill the slots. */
+  var wantTop = active.length ? '' : 'none';
+  if (refs.top.style.display !== wantTop) { refs.top.style.display = wantTop; }
+
+  for (i = 0; i < refs.items.length; i++) {
+    var slot = refs.items[i];
+    var c = active[i];
+    if (c) {
+      setText(slot.name, c.name || '?');
+      setText(slot.cpu, (typeof c.cpu_percent === 'number')
+        ? (fmtNumber(c.cpu_percent) + '% cpu') : DASH);
+      if (slot.root.style.display !== '') { slot.root.style.display = ''; }
+    } else if (slot.root.style.display !== 'none') {
+      slot.root.style.display = 'none';
     }
-    cardEl.appendChild(topDiv);
   }
 };
 
