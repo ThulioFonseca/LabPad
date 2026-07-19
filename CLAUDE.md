@@ -161,3 +161,10 @@ or bitmap churn per cycle exhausts the iPad's memory and kills the tab after hou
 - [ ] Timers aligned to human-perceptible boundaries where possible
 - [ ] Nested interactive elements stop propagation / check the click target
 - [ ] Existing "why" comments preserved
+
+> The static, high-confidence items above (ES5-only JS, no `fetch`, no CSS
+> variables / `backdrop-filter` / Grid, no un-approved perpetual animations) are
+> enforced automatically by `tests/test_frontend_contract.py`, which runs in CI.
+> A rare, genuinely iPad-safe perpetual animation can be grandfathered by adding
+> its file — with a reason — to that test's `_INFINITE_ANIMATION_ALLOWLIST`. The
+> remaining items still need a human eye.
