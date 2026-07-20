@@ -332,9 +332,21 @@ Widgets.renderSystemInfo = function (node, hostData, containersData) {
     ['Load (1\xb75\xb715m)', loadStr]
   ]));
 
-  node.appendChild(group('Memory', [
-    ['Total', fmtBytes(hostData.mem_total)]
-  ]));
+  /* Memory: complete picture (used / total + %) plus swap when the host has
+     any — swap pressure is a key homelab signal that used to be invisible here.
+     Swap rows are omitted on swapless hosts (swap_total 0) to avoid noise. */
+  var memRows = [];
+  var memPct = (typeof hostData.mem_percent === 'number')
+    ? '  \xb7  ' + hostData.mem_percent + '%' : '';
+  memRows.push(['Used',  fmtBytes(hostData.mem_used) + memPct]);
+  memRows.push(['Total', fmtBytes(hostData.mem_total)]);
+  if (hostData.swap_total) {
+    var swapPct = (typeof hostData.swap_percent === 'number')
+      ? '  \xb7  ' + hostData.swap_percent + '%' : '';
+    memRows.push(['Swap used',  fmtBytes(hostData.swap_used) + swapPct]);
+    memRows.push(['Swap total', fmtBytes(hostData.swap_total)]);
+  }
+  node.appendChild(group('Memory', memRows));
 
   var diskRows = [];
   var disks = hostData.disk || [];

@@ -197,9 +197,20 @@ def _net_rates():
     return recv_rate, sent_rate
 
 
+def _swap():
+    """Swap usage. Best-effort: a host with no swap reports total 0 (percent 0),
+    and any platform quirk degrades to zeros rather than breaking /api/metrics."""
+    try:
+        sw = psutil.swap_memory()
+        return round(sw.percent, 1), sw.used, sw.total
+    except Exception:
+        return 0.0, 0, 0
+
+
 def collect():
     cpu = psutil.cpu_percent(interval=None)
     mem = psutil.virtual_memory()
+    swap_percent, swap_used, swap_total = _swap()
     recv_rate, sent_rate = _net_rates()
 
     load = [None, None, None]
@@ -230,6 +241,9 @@ def collect():
         "mem_percent": round(mem.percent, 1),
         "mem_used": mem.used,
         "mem_total": mem.total,
+        "swap_percent": swap_percent,
+        "swap_used": swap_used,
+        "swap_total": swap_total,
         "disk": disks,
         "disk_agg_percent": agg_percent,
         "disk_agg_used": agg_used,

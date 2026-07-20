@@ -12,6 +12,7 @@ def test_collect_retorna_campos_obrigatorios():
     data = host.collect()
     campos = ("hostname", "os", "cpu_percent", "cpu_count",
               "mem_percent", "mem_used", "mem_total",
+              "swap_percent", "swap_used", "swap_total",
               "disk", "net_rx", "net_tx", "load", "uptime", "info")
     for c in campos:
         assert c in data, "campo '%s' ausente" % c
@@ -27,6 +28,16 @@ def test_mem_total_positivo():
     from collectors import host
     data = host.collect()
     assert data["mem_total"] > 0
+
+
+def test_swap_campos_validos():
+    from collectors import host
+    data = host.collect()
+    # Swap is best-effort: a host with no swap reports zeros, never negatives,
+    # and percent stays within range — it must never break /api/metrics.
+    assert 0.0 <= data["swap_percent"] <= 100.0
+    assert data["swap_used"] >= 0
+    assert data["swap_total"] >= 0
 
 
 def test_uptime_positivo():
