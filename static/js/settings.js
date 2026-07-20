@@ -24,7 +24,8 @@
   ];
   var MODES = [
     { id: 'dark',  name: 'Dark' },
-    { id: 'light', name: 'Light' }
+    { id: 'light', name: 'Light' },
+    { id: 'auto',  name: 'Auto (day / night)' }
   ];
   var HEIGHT_PRESETS = [
     { id: 'compact', name: 'Compact' },
@@ -63,6 +64,9 @@
   /* === Defaults frontend ================================================== */
   var FE_DEFAULTS = {
     theme: 'minimal', mode: 'dark',
+    /* Local hours (0-23) bounding the "day" window used when mode === 'auto':
+       Light appearance from dayStart until nightStart, Dark otherwise. */
+    dayStart: 7, nightStart: 19,
     cardHeight: 'normal', newsCardHeight: 'normal',
     newsViewStyle: 'list',
     sparks: { cpu: true, mem: true, disk: false, temp: true, net: true },
@@ -108,17 +112,80 @@
     } catch (e) {}
   }
 
+  /* === Appearance (dark / light / auto) ================================= */
+  /* fe.mode may be 'dark', 'light', or 'auto'. The CSS and the accent tables
+     only understand 'dark'/'light', so everything goes through effectiveMode()
+     which resolves 'auto' against the local clock. */
+  function clampHour(v, dflt) {
+    v = parseInt(v, 10);
+    if (isNaN(v) || v < 0 || v > 23) { return dflt; }
+    return v;
+  }
+  function isDaytime(d) {
+    var h = d.getHours();
+    var day = clampHour(fe.dayStart, FE_DEFAULTS.dayStart);
+    var night = clampHour(fe.nightStart, FE_DEFAULTS.nightStart);
+    if (day === night) { return true; }               /* degenerate: always day */
+    if (day < night) { return h >= day && h < night; }
+    return h >= day || h < night;                      /* window wraps midnight */
+  }
+  function effectiveMode() {
+    if (fe.mode !== 'auto') { return fe.mode; }
+    return isDaytime(new Date()) ? 'light' : 'dark';
+  }
+
+  var lastEffectiveMode = null;
+
   /* === DOM application =================================================== */
   function applyHtmlClasses() {
+    var m = effectiveMode();
+    lastEffectiveMode = m;
     document.documentElement.className =
-      'theme-' + fe.theme + ' mode-' + fe.mode +
+      'theme-' + fe.theme + ' mode-' + m +
       ' cards-' + fe.cardHeight + ' news-' + fe.newsCardHeight +
       ' news-style-' + (fe.newsViewStyle || 'list');
     if (typeof LEVEL_COLOR !== 'undefined') {
-      var acc = (ACCENTS[fe.theme] || ACCENTS.minimal)[fe.mode];
+      var acc = (ACCENTS[fe.theme] || ACCENTS.minimal)[m];
       LEVEL_COLOR.ok = acc;
-      LEVEL_COLOR.none = FAINT[fe.mode];
+      LEVEL_COLOR.none = FAINT[m];
     }
+  }
+
+  /* Auto day/night: re-evaluate the effective appearance only at each
+     day<->night boundary. Like tickClock(), this self-reschedules to the
+     *next boundary* rather than polling — at most two wakeups a day, so the
+     iPad 2 CPU keeps idling (the long-uptime rule). No-op unless mode==='auto'. */
+  var autoModeTimer = null;
+
+  function scheduleAutoMode() {
+    if (autoModeTimer) { clearTimeout(autoModeTimer); autoModeTimer = null; }
+    if (fe.mode !== 'auto') { return; }
+    var now = new Date();
+    var cur = isDaytime(now);
+    /* Boundaries land on whole hours, so probe successive hour marks until the
+       daytime state flips (cap at 24h to stay finite when day===night). */
+    var probe = new Date(now.getTime());
+    probe.setMinutes(0, 0, 0);
+    var guard = 0, ms;
+    while (true) {
+      probe.setTime(probe.getTime() + 3600000);
+      guard = guard + 1;
+      if (isDaytime(probe) !== cur || guard >= 24) {
+        ms = probe.getTime() - now.getTime();
+        break;
+      }
+    }
+    if (ms < 1000) { ms = 1000; }
+    autoModeTimer = setTimeout(onAutoBoundary, ms);
+  }
+
+  function onAutoBoundary() {
+    /* Only touch the DOM when the resolved appearance actually changed. */
+    if (fe.mode === 'auto' && effectiveMode() !== lastEffectiveMode) {
+      applyHtmlClasses();
+      notify();   /* let listeners resync (sparkline accent picks up next poll) */
+    }
+    scheduleAutoMode();
   }
   function notify() {
     for (var i = 0; i < listeners.length; i++) {
@@ -223,7 +290,14 @@
     s.appendChild(formRow('Theme',
       selectInput('theme', THEMES, fe.theme)));
     s.appendChild(formRow('Appearance',
-      selectInput('mode', MODES, fe.mode)));
+      selectInput('mode', MODES, fe.mode),
+      'Auto follows the clock: Light by day, Dark at night.'));
+    s.appendChild(formRow('Day starts (0-23h)',
+      numberInput('dayStart', fe.dayStart, 0, 23),
+      'Used when Appearance is Auto.'));
+    s.appendChild(formRow('Night starts (0-23h)',
+      numberInput('nightStart', fe.nightStart, 0, 23),
+      'Used when Appearance is Auto.'));
     return s;
   }
   function buildCardsSection() {
@@ -293,6 +367,7 @@
       fe = clone(FE_DEFAULTS);
       saveFE();
       applyHtmlClasses();
+      scheduleAutoMode();
       buildModalBody();   /* re-render inputs */
       notify();
       toast('Defaults reset (frontend only).');
@@ -319,6 +394,12 @@
     if (theme) { feNext.theme = theme.value; }
     if (mode)  { feNext.mode  = mode.value; }
     if (ch)    { feNext.cardHeight = ch.value; }
+
+    var ds = body.querySelector('input[name="dayStart"]');
+    var ns = body.querySelector('input[name="nightStart"]');
+    if (ds) { feNext.dayStart = clampHour(ds.value, FE_DEFAULTS.dayStart); }
+    if (ns) { feNext.nightStart = clampHour(ns.value, FE_DEFAULTS.nightStart); }
+
     if (nh)    { feNext.newsCardHeight = nh.value; }
     if (nv)    { feNext.newsViewStyle = nv.value; }
 
@@ -362,6 +443,7 @@
     fe = picked.fe;
     saveFE();
     applyHtmlClasses();
+    scheduleAutoMode();
     notify();
 
     var xhr = new XMLHttpRequest();
@@ -428,6 +510,7 @@
   function init() {
     loadFE();
     applyHtmlClasses();
+    scheduleAutoMode();
 
     /* Fetch settings from backend (city, URLs, limits). If it fails, continue
        with defaults — the panel still works for frontend-only config. */
