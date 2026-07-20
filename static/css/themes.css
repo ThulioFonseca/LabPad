@@ -651,3 +651,24 @@
 .theme-glass.mode-light .news-carousel-slide--no-image { background-color: rgba(255, 255, 255, 0.62); }
 .theme-glass.mode-dark  .news-carousel-dot.is-active   { background-color: #b39cff; }
 .theme-glass.mode-light .news-carousel-dot.is-active   { background-color: #7c3aed; }
+
+/* --- Carousel headline sits on the photo, not on the panel ----------------
+   A slide WITH an image draws its text over the strong dark gradient painted
+   by .news-carousel-slide::before (cards.css) — so that text is light in
+   EVERY theme, light modes included. It is deliberately NOT themed.
+
+   cards.css already says white, but `.theme-X.mode-Y .news-title` above is
+   more specific (0,3,0 vs 0,2,0) and loads later, so it used to win and
+   repaint the headline near-black on a near-black gradient — unreadable in
+   all five light themes. The extra `.news-carousel-text` here lifts these to
+   0,4,0 so they win on specificity alone, not on being last in the file.
+
+   The :not() keeps the image-less slide out: it has no gradient, so it must
+   keep following the theme (white-on-white otherwise).
+   Enforced by tests/test_theme_contrast.py. */
+.news-carousel-slide:not(.news-carousel-slide--no-image) .news-carousel-text .news-title {
+  color: #ffffff;
+}
+.news-carousel-slide:not(.news-carousel-slide--no-image) .news-carousel-text .news-age {
+  color: rgba(255, 255, 255, 0.88);
+}
