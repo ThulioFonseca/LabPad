@@ -435,7 +435,7 @@
     /* Pre-render with what we already have from RSS (image appears instantly). */
     if (item.image) {
       var img = el('img', 'article-hero-img');
-      img.src = item.image; img.alt = '';
+      img.src = proxiedImage(item.image, 640); img.alt = '';
       bodyEl.appendChild(img);
     }
     if (item.title) {
@@ -460,7 +460,7 @@
       var image = item.image || data.image;
       if (image) {
         var img2 = el('img', 'article-hero-img');
-        img2.src = image; img2.alt = '';
+        img2.src = proxiedImage(image, 640); img2.alt = '';
         bodyEl.appendChild(img2);
       }
       bodyEl.appendChild(el('h1', 'article-title', data.title || item.title || ''));

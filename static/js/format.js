@@ -84,6 +84,22 @@ function setBarFill(node, pct) {
   node.style.transform = s;
 }
 
+/* Route a remote feed image through the backend downscaler.
+
+   Safari 9 decodes an image at its SOURCE resolution — the CSS box it is drawn
+   in does not bound the memory. A press photo of 7086x4724 behind a 52px
+   thumbnail costs ~127 MB, and a ten-item feed reached ~200 MB, which is fatal
+   on the iPad 2's 512 MB (the tab was killed within seconds). /api/image
+   re-encodes to `width`, so the cost becomes proportional to the box.
+
+   ALWAYS use this for feed/article images. Never assign a publisher URL
+   straight to .src or .backgroundImage — enforced by tests/test_frontend_contract.py. */
+function proxiedImage(url, width) {
+  if (!url) { return ''; }
+  return (CONFIG.apiBase || '') + '/api/image?w=' + width
+       + '&url=' + encodeURIComponent(url);
+}
+
 /* Build a safe CSS url("...") value from an untrusted string (e.g. an image
    URL from an RSS feed). Escapes the quote and backslash that would otherwise
    break out of the quoted string, and drops newlines. */

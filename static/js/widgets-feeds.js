@@ -114,7 +114,8 @@ Widgets._renderNewsCarousel = function (container, items) {
        dashboard.js (substring match on ' news-item ') still opens the reader. */
     var slide = el('div', 'news-carousel-slide news-item');
     if (item.image) {
-      slide.style.backgroundImage = cssUrl(item.image);
+      /* Slide is 240px tall and at most the panel's width; 640 covers it. */
+      slide.style.backgroundImage = cssUrl(proxiedImage(item.image, 640));
     } else {
       slide.className += ' news-carousel-slide--no-image';
     }
@@ -230,7 +231,8 @@ Widgets._newsItem = function (item) {
   }
   var row = el('div', 'news-item news-item--media');
   var thumb = el('div', 'news-thumb');
-  thumb.style.backgroundImage = cssUrl(item.image);
+  /* .news-thumb is 52x52 in cards.css; 104 covers a 2x display. */
+  thumb.style.backgroundImage = cssUrl(proxiedImage(item.image, 104));
   row.appendChild(thumb);
   var text = el('div', 'news-text');
   text.appendChild(el('div', 'news-title', item.title || ''));

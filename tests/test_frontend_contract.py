@@ -254,5 +254,37 @@ def test_infinite_allowlist_entries_still_exist():
     )
 
 
+_IMAGE_ASSIGN_RE = re.compile(r'(?:\.backgroundImage|\.src)\s*=')
+
+
+def test_remote_images_go_through_the_downscaling_proxy():
+    """No feed image may be handed to the browser at its source resolution.
+
+    Safari 9 decodes a CSS background (and an <img>) at the SOURCE resolution,
+    so the display box does not bound the memory. A measured news feed carried
+    ten press photos totalling ~200 MB once decoded — one of them 7086x4724
+    (127 MB on its own) behind a 52x52 thumbnail — which exhausted the iPad 2's
+    512 MB and got the tab killed within seconds.
+
+    Every image assignment must therefore route through ``proxiedImage()``,
+    which points at /api/image and re-encodes to the drawn size.
+    """
+    violations = []
+    for path in _list(_JS_DIR, ".js"):
+        rel = os.path.basename(path)
+        raw_lines = _read(path).splitlines()
+        clean_lines = _sanitize_js("\n".join(raw_lines)).splitlines()
+        for idx, line in enumerate(clean_lines):
+            if _IMAGE_ASSIGN_RE.search(line) and "proxiedImage(" not in line:
+                violations.append(
+                    "%s:%d  ->  %s" % (rel, idx + 1, raw_lines[idx].strip()[:100])
+                )
+    assert not violations, (
+        "Image assigned without the downscaling proxy — this is the crash that "
+        "killed Safari on the iPad 2 in seconds. Wrap the URL in "
+        "proxiedImage(url, width):\n  " + "\n  ".join(violations)
+    )
+
+
 if __name__ == "__main__":  # allow `python tests/test_frontend_contract.py`
     raise SystemExit(pytest.main([__file__, "-v"]))

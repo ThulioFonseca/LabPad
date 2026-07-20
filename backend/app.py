@@ -16,7 +16,8 @@ import config
 import net_guard
 import notifications
 import settings
-from collectors import article, calendar_feed, containers, host, news, sensors, weather
+from collectors import (article, calendar_feed, containers, host, image_proxy,
+                        news, sensors, weather)
 
 STATIC_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
@@ -213,6 +214,30 @@ def article_route():
     response = jsonify(data)
     response.headers["Cache-Control"] = "no-store"
     return response, status
+
+
+@app.route("/api/image")
+def image_route():
+    """Serve a feed image downscaled to the box it is actually drawn in.
+
+    Safari 9 on the iPad 2 decodes a CSS background at the SOURCE resolution,
+    so a 7000px-wide press photo behind a 52px thumbnail costs ~127 MB of RAM.
+    Ten of them killed the tab within seconds. Never point the frontend at a
+    publisher's original image.
+    """
+    url = (request.args.get("url") or "").strip()
+    width = request.args.get("w", default=104, type=int)
+
+    result = image_proxy.get(url, width)
+    if "error" in result:
+        return jsonify({"error": result["error"]}), result.get("status", 502)
+
+    response = app.response_class(result["data"],
+                                  mimetype=result["content_type"])
+    # The proxied bytes are derived from an immutable source URL, so the iPad
+    # may keep them: every avoided refetch is a decode it does not redo.
+    response.headers["Cache-Control"] = "public, max-age=86400"
+    return response
 
 
 _CONTAINER_ID_RE = re.compile(r'^[a-zA-Z0-9_.\-]{1,64}$')
