@@ -25,6 +25,44 @@ main {
   text-transform: none;
 }
 
+/* --- Host summary line -----------------------------------------------------*/
+/* Always-visible identity strip above the host cards. It deliberately carries
+   NO explicit colour: values inherit each theme's body text and labels are
+   dimmed with `opacity`, so it renders correctly across all 5 themes x light/dark
+   without a single per-theme rule (same theme-agnostic trick as .crow--down). */
+.host-summary {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  -webkit-align-items: baseline;
+  align-items: baseline;
+  margin: 0 2px 12px;
+  font-size: 12px;
+  letter-spacing: 0.02em;
+}
+.host-sum-seg {
+  margin-right: 16px;
+}
+.host-sum-seg:last-child {
+  margin-right: 0;
+}
+.host-sum-label {
+  margin-right: 5px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+}
+.host-sum-val {
+  opacity: 0.85;
+}
+/* First segment is the hostname — give it a touch more presence. */
+.host-summary .host-sum-seg:first-child .host-sum-val {
+  font-weight: 600;
+  opacity: 1;
+}
+
 /* --- Grade de cards --------------------------------------------------------*/
 /* margens negativas dao espacamento uniforme sem depender de flex `gap`. */
 .card-grid,

@@ -97,6 +97,11 @@
 
   <main>
     <section class="panel">
+      <!-- At-a-glance host identity: hostname, uptime, load and core count.
+           Built once and updated in place every cycle by widgets-host.js (never
+           rebuilt), so it stays within the iPad 2 long-uptime contract the same
+           way the Docker summary card does (commit f56345d). -->
+      <div class="host-summary" id="section-host-summary"></div>
       <div class="card-grid" id="section-host"></div>
       <div class="double-row" id="section-wide">
         <div class="card" id="section-network"></div>

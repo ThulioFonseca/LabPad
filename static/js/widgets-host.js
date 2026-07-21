@@ -292,6 +292,56 @@ Widgets.updateDockerSummary = function (refs, payload) {
 };
 
 
+/* --- Host summary line (identity + uptime + load, always visible) ---------*/
+/* Hostname, uptime, load and core count already flow in the metrics payload but
+   only surfaced inside the System (i) modal — invisible on the board itself.
+   This strip puts them back on the always-on display (as the README's host line
+   promises). Like the Docker summary it is refreshed every 5s, so it is built
+   ONCE here and afterwards only its text nodes are rewritten in place
+   (updateHostSummary): zero node allocation in steady state, matching the iPad 2
+   long-uptime rule that crashed the tab when hidden bodies were rebuilt each
+   cycle (commit f56345d). Follows the initDockerSummary/updateDockerSummary pattern. */
+
+Widgets.initHostSummary = function (host) {
+  if (!host) { return null; }
+  host.innerHTML = '';
+
+  /* One "label value" segment; an empty label yields a value-only segment. */
+  function seg(labelText) {
+    var root = el('span', 'host-sum-seg');
+    if (labelText) { root.appendChild(el('span', 'host-sum-label', labelText)); }
+    var val = el('span', 'host-sum-val', DASH);
+    root.appendChild(val);
+    host.appendChild(root);
+    return val;
+  }
+
+  /* First segment is the hostname (emphasised via CSS :first-child). */
+  return {
+    name:  seg(''),
+    up:    seg('up'),
+    load:  seg('load'),
+    cores: seg('')
+  };
+};
+
+Widgets.updateHostSummary = function (refs, hostData) {
+  if (!refs || !hostData) { return; }   /* keep the DASH placeholders until data */
+
+  setText(refs.name, hostData.hostname || DASH);
+  setText(refs.up, fmtDuration(hostData.uptime));
+
+  var load = hostData.load;
+  setText(refs.load, (load && load.length
+                      && load[0] !== null && load[0] !== undefined)
+    ? String(load[0]) : DASH);
+
+  setText(refs.cores, (typeof hostData.cpu_count === 'number')
+    ? (hostData.cpu_count + (hostData.cpu_count === 1 ? ' core' : ' cores'))
+    : DASH);
+};
+
+
 /* --- System modal: hardware/software info grouped -------------------------*/
 
 Widgets.renderSystemInfo = function (node, hostData, containersData) {

@@ -27,6 +27,10 @@
      card is always visible; rebuilding its DOM every 5s churned GC). */
   var dockerRefs = null;
 
+  /* Host summary strip refs — same always-visible/in-place discipline as the
+     Docker summary: built once, only text nodes rewritten each cycle. */
+  var hostSummaryRefs = null;
+
   /* Weather */
   var weatherRefs = null;
   var lastWeather = null;
@@ -75,6 +79,8 @@
     sizeCanvas(netRefs && netRefs.canvas);
 
     dockerRefs = Widgets.initDockerSummary(byId('section-docker-summary'));
+
+    hostSummaryRefs = Widgets.initHostSummary(byId('section-host-summary'));
 
     weatherRefs = Widgets.initWeather(byId('section-weather'));
   }
@@ -196,6 +202,9 @@
   function render(data) {
     var i, widget;
     lastData = data;
+
+    /* Always-visible host identity strip (in place, no allocation). */
+    Widgets.updateHostSummary(hostSummaryRefs, data.host);
 
     /* Always-visible surfaces: gauges, network + docker summary cards. */
     for (i = 0; i < CONFIG.widgets.length; i++) {
