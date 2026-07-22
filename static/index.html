@@ -27,12 +27,16 @@
         'theme-' + t + ' mode-' + m + ' cards-' + ch + ' news-' + nh;
     })();
   </script>
-  <!-- Typography (Option 3 from "High-Performance Hybrid" guide — NYT/Medium
-       model): Montserrat for cards (scannable sans) + Merriweather for reader
-       mode content (serif designed for screens). CSS fallbacks cover iPad offline. -->
+  <!-- Typography: only the two families the CSS actually applies are requested —
+       Inter for the calendar/news feed lists (cards.css) and Merriweather for
+       reader-mode article content (modals.css). Cards and gauges render in the
+       native -apple-system stack, so no extra family is loaded for them. This
+       <link> is render-blocking, so every family listed here delays first paint
+       over the LAN on the iPad 2 — keep it to what is used. CSS fallbacks cover
+       the iPad when Google Fonts cannot load. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Montserrat:wght@400;600&family=Merriweather:wght@400;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Merriweather:wght@400;700&display=swap">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/topbar.css">
   <link rel="stylesheet" href="css/cards.css">
