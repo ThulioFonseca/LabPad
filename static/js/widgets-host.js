@@ -233,6 +233,14 @@ Widgets.initDockerSummary = function (cardEl) {
   count.appendChild(Widgets._skel('skeleton-pill'));
   cardEl.appendChild(count);
 
+  /* Failure line — built once, hidden until a container actually fails. On the
+     always-on wall display a crash/crash-loop/unhealthy container is otherwise
+     invisible on this card (it only lists the top-3 RUNNING by CPU). Shown in
+     the crit colour and updated in place; zero DOM churn while all is well. */
+  var failed = el('div', 'docker-failed');
+  failed.style.display = 'none';
+  cardEl.appendChild(failed);
+
   /* Three fixed top-container slots, reused every cycle. The whole block is
      hidden when there is nothing to show (keeps the border-top/padding from
      the .docker-top rule off-screen, matching the old empty-state layout). */
@@ -250,18 +258,39 @@ Widgets.initDockerSummary = function (cardEl) {
   }
   cardEl.appendChild(topDiv);
 
-  return { count: count, top: topDiv, items: items };
+  return { count: count, failed: failed, top: topDiv, items: items };
 };
 
 Widgets.updateDockerSummary = function (refs, payload) {
   if (!refs || !payload) { return; }   /* keep skeleton until first data */
 
   var list = (payload && payload.list) ? payload.list : [];
-  var running = 0, i;
+  var running = 0, failedCount = 0, firstFailed = null, i;
   for (i = 0; i < list.length; i++) {
     if (list[i].status === 'running') { running = running + 1; }
+    if (list[i].failed) {
+      failedCount = failedCount + 1;
+      if (!firstFailed) { firstFailed = list[i]; }
+    }
   }
   setText(refs.count, running + ' / ' + list.length + ' active');
+
+  /* Glanceable failure line: only appears when something is actually broken
+     (crash / crash-loop / unhealthy), so a healthy board stays clean. One
+     failure names the container; several just show the tally. Toggled and
+     rewritten in place — no per-cycle DOM allocation. */
+  if (refs.failed) {
+    if (failedCount > 0) {
+      var msg = (failedCount === 1 && firstFailed)
+        ? (firstFailed.name || '?') + ' failed'
+        : failedCount + ' containers failed';
+      setText(refs.failed, msg);
+      if (refs.failed.style.display !== '') { refs.failed.style.display = ''; }
+    } else if (refs.failed.style.display !== 'none') {
+      setText(refs.failed, '');
+      refs.failed.style.display = 'none';
+    }
+  }
 
   var active = [];
   for (i = 0; i < list.length; i++) {

@@ -8,8 +8,61 @@ import docker
 
 _ANSI_RE = re.compile(r'\x1b\[[0-9;]*[A-Za-z]')
 
+# Docker embeds the last exit code in the human status string it returns on the
+# container LIST endpoint (e.g. "Exited (137) 5 minutes ago", "Restarting (1) 3
+# seconds ago"). Parsing it here means we never pay for an extra per-container
+# inspect() call just to learn whether a stopped container crashed.
+_EXIT_RE = re.compile(r'(?:Exited|Restarting|Dead)\s*\((\d+)\)')
+
 _client = None
 _runtime_cache = {}
+
+
+def _exit_code_from_status(status_msg):
+    """Exit code Docker embeds in the human status string, or None if absent.
+
+    'Exited (137) 5 minutes ago' -> 137,  'Up 2 hours' -> None.
+    """
+    if not status_msg:
+        return None
+    m = _EXIT_RE.search(status_msg)
+    return int(m.group(1)) if m else None
+
+
+def _health_from_status(status_msg):
+    """Healthcheck verdict Docker embeds in the status string, or None.
+
+    'Up 2 hours (healthy)' -> 'healthy',  'Up 5s (health: starting)' -> 'starting'.
+    Only present when the image defines a HEALTHCHECK.
+    """
+    if not status_msg:
+        return None
+    s = status_msg.lower()
+    if '(unhealthy)' in s:
+        return 'unhealthy'
+    if 'health: starting' in s:
+        return 'starting'
+    if '(healthy)' in s:
+        return 'healthy'
+    return None
+
+
+def _is_failed(status, exit_code, health):
+    """True when a container is in a genuine failure state — NOT merely stopped.
+
+    A homelab operator wants the wall display to shout about crashes, crash
+    loops, and failing healthchecks; it must stay quiet about containers that
+    were stopped on purpose. So a clean exit (code 0), 'created', and 'paused'
+    are deliberately NOT failures; 'dead'/'restarting', a non-zero exit, and an
+    'unhealthy' healthcheck are.
+    """
+    if health == 'unhealthy':
+        return True
+    if status in ('dead', 'restarting'):
+        return True
+    if status == 'exited' and exit_code not in (None, 0):
+        return True
+    return False
 
 
 def _client_get():
@@ -87,12 +140,26 @@ def _one(container):
         "mem_percent": None,
         "net_rx": None,
         "net_tx": None,
+        "exit_code": None,
+        "health": None,
+        "failed": False,
     }
     try:
         tags = container.image.tags
         item["image"] = tags[0] if tags else container.image.short_id
     except Exception:
         pass
+
+    # Read the exit code / healthcheck verdict from the list payload's human
+    # status string (no extra inspect call). Guarded: on any parse hiccup the
+    # container is treated as NOT failed, so the display never cries wolf.
+    try:
+        status_msg = container.attrs.get("Status", "") or ""
+    except Exception:
+        status_msg = ""
+    item["exit_code"] = _exit_code_from_status(status_msg)
+    item["health"] = _health_from_status(status_msg)
+    item["failed"] = _is_failed(container.status, item["exit_code"], item["health"])
 
     if container.status == "running":
         try:
