@@ -145,6 +145,7 @@ body {
 
 /* --- Docker Summary ------------------------------------------------------- */
 .docker-count { color: #f2f4f8; }
+.docker-failed { color: #f85149; }   /* crit red — light-mode override in themes.css */
 .docker-top { border-top-color: #2a2f3a; }
 .docker-top-name { color: #cbd0d9; }
 .docker-top-cpu  { color: #949bab; }

@@ -538,6 +538,15 @@ main {
   font-weight: 600;
   margin-top: 10px;
 }
+/* Failure line: hidden by default (display toggled from JS), shown in the crit
+   colour only when a container has actually failed. Colours live in
+   theme.css / themes.css alongside the other crit tokens. */
+.docker-failed {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-top: 6px;
+}
 .docker-top {
   margin-top: 12px;
   border-top: 1px solid transparent;

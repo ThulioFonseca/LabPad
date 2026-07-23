@@ -27,15 +27,21 @@ Widgets.renderContainers = function (container, payload) {
 
 Widgets._containerRow = function (c) {
   var running = (c.status === 'running');
+  var failed = !!c.failed;
   var level = 'ok';
-  if (running) {
+  if (failed) {
+    /* A real failure (crash / crash-loop / unhealthy) always reads as crit —
+       even a running-but-unhealthy container, which the CPU/RAM heuristic
+       below would otherwise leave green. */
+    level = 'crit';
+  } else if (running) {
     var cpuVal = typeof c.cpu_percent === 'number' ? c.cpu_percent : 0;
     var memVal = typeof c.mem_percent === 'number' ? c.mem_percent : 0;
     if (cpuVal >= 95 || memVal >= 95) { level = 'crit'; }
     else if (cpuVal >= 80 || memVal >= 80) { level = 'warn'; }
   }
   var rowCls = 'crow crow--' + (running ? 'up' : 'down');
-  if (running && level !== 'ok') { rowCls += ' crow--' + level; }
+  if (level !== 'ok') { rowCls += ' crow--' + level; }
   var row = el('div', rowCls);
 
   row.appendChild(el('span', 'cdot'));
@@ -60,11 +66,27 @@ Widgets._containerRow = function (c) {
   mini.appendChild(miniFill);
   row.appendChild(mini);
 
-  row.appendChild(el('span', 'cstatus', running ? 'up' : (c.status || 'down')));
+  row.appendChild(el('span', 'cstatus', Widgets._containerStatusLabel(c, running, failed)));
 
   row.setAttribute('data-id', c.id || '');
   row.setAttribute('data-name', c.name || '');
   return row;
+};
+
+/* Short status word shown at the right of a container row. Failures name the
+   cause (exit code / unhealthy / crash-loop) so the modal explains itself
+   without opening the logs. */
+Widgets._containerStatusLabel = function (c, running, failed) {
+  if (failed) {
+    if (c.health === 'unhealthy')  { return 'unhealthy'; }
+    if (c.status === 'restarting') { return 'restarting'; }
+    if (c.status === 'dead')       { return 'dead'; }
+    if (c.status === 'exited' && typeof c.exit_code === 'number') {
+      return 'exited (' + c.exit_code + ')';
+    }
+    return c.status || 'failed';
+  }
+  return running ? 'up' : (c.status || 'down');
 };
 
 Widgets._cstat = function (label, value) {

@@ -534,7 +534,8 @@
 .mode-light .crow--warn .cstatus { color: #9a6700; }
 .mode-light .card--crit .num,
 .mode-light .crow--crit .cname,
-.mode-light .crow--crit .cstatus { color: #cf222e; }
+.mode-light .crow--crit .cstatus,
+.mode-light .docker-failed { color: #cf222e; }
 .mode-light .crow.crow--warn { border-color: #9a6700; }
 .mode-light .crow.crow--crit { border-color: #cf222e; }
 .mode-light .cal-event.cal-event--soon {
