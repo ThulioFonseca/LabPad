@@ -100,7 +100,11 @@ Widgets._createGauge = function (widget) {
     canvas = el('canvas', 'spark skeleton-block');
     root.appendChild(canvas);
   }
-  return { root: root, num: num, fill: fill, sub: sub, canvas: canvas };
+  /* `level` mirrors the class currently on `root` ('card card--none' above), so
+     _updateGauge can skip rewriting className when the ok/warn/crit state has
+     not actually changed (see the guard there). */
+  return { root: root, num: num, fill: fill, sub: sub, canvas: canvas,
+           level: 'none' };
 };
 
 Widgets._updateGauge = function (refs, widget, data, buffer) {
@@ -110,7 +114,15 @@ Widgets._updateGauge = function (refs, widget, data, buffer) {
   var max = widget.max || 100;
 
   setText(refs.num, hasValue ? fmtNumber(value) : DASH);
-  refs.root.className = 'card card--' + level;
+  /* Only rewrite the card's className when the level actually changes. The gauge
+     refreshes every 5s forever; on a healthy host `level` stays 'ok' for hours,
+     so reassigning the identical className each cycle just dirties the card
+     subtree for a needless style recalc — the same per-cycle waste the offline
+     dot guards against (setOnline in dashboard.js). See CLAUDE.md long-uptime rules. */
+  if (refs.level !== level) {
+    refs.root.className = 'card card--' + level;
+    refs.level = level;
+  }
 
   if (hasValue && refs.fill.className.indexOf('skeleton-block') >= 0) {
     refs.fill.className = 'bar-fill';
@@ -128,7 +140,12 @@ Widgets._updateGauge = function (refs, widget, data, buffer) {
                       ' / ' + fmtBytes(getPath(data, widget.sub.total)));
   }
 
-  if (refs.canvas && buffer) {
+  /* Skip the canvas redraw while the sparkline is hidden. When the user turns
+     sparklines off in Settings the canvas is display:none (applySparkVisibility),
+     yet without this guard drawSparkline still runs a clearRect + up-to-60-point
+     fill+stroke on it every 5s forever — pure GPU/CPU waste on the 512 MB iPad 2.
+     The buffer keeps filling regardless, so re-enabling repaints within one cycle. */
+  if (refs.canvas && buffer && refs.canvas.style.display !== 'none') {
     drawSparkline(refs.canvas, buffer, LEVEL_COLOR[level] || LEVEL_COLOR.ok);
   }
 };
@@ -208,7 +225,10 @@ Widgets.updateNetCard = function (refs, data, buffer) {
   if (refs.canvas && refs.canvas.className.indexOf('skeleton-block') >= 0) {
     refs.canvas.className = 'spark spark--fill';
   }
-  if (refs.canvas && buffer) {
+  /* Same guard as the gauges: don't redraw the network sparkline while it is
+     hidden (display:none from applySparkVisibility) — it would otherwise burn a
+     canvas repaint every 5s forever on the iPad 2 for no visible result. */
+  if (refs.canvas && buffer && refs.canvas.style.display !== 'none') {
     drawSparkline(refs.canvas, buffer, LEVEL_COLOR.ok);
   }
 };

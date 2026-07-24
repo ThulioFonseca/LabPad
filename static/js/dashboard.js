@@ -601,17 +601,32 @@
     weatherTimer = setTimeout(weatherStep, WEATHER_SHOW_MS);
   }
 
-  /* Show/hide sparklines according to Settings.spark(id). */
+  /* Show/hide sparklines according to Settings.spark(id). The render loop now
+     skips drawing hidden canvases (widgets-host.js), so when one is toggled back
+     ON we repaint it here from the retained buffer instead of leaving a stale
+     frame until the next poll. This runs only on init and on Settings changes —
+     never per metrics cycle — so the redraw cost is negligible. */
   function applySparkVisibility() {
     if (!window.Settings) { return; }
     var id;
     for (id in refs) {
       if (refs.hasOwnProperty(id) && refs[id] && refs[id].canvas) {
-        refs[id].canvas.style.display = Settings.spark(id) ? '' : 'none';
+        var show = Settings.spark(id);
+        refs[id].canvas.style.display = show ? '' : 'none';
+        if (show && buffers[id]
+            && refs[id].canvas.className.indexOf('skeleton-block') < 0) {
+          drawSparkline(refs[id].canvas, buffers[id],
+                        LEVEL_COLOR[refs[id].level] || LEVEL_COLOR.ok);
+        }
       }
     }
     if (netRefs && netRefs.canvas) {
-      netRefs.canvas.style.display = Settings.spark('net') ? '' : 'none';
+      var showNet = Settings.spark('net');
+      netRefs.canvas.style.display = showNet ? '' : 'none';
+      if (showNet && netBuffer.length
+          && netRefs.canvas.className.indexOf('skeleton-block') < 0) {
+        drawSparkline(netRefs.canvas, netBuffer, LEVEL_COLOR.ok);
+      }
     }
   }
 
