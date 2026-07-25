@@ -677,6 +677,17 @@
   }
 
   /* --- Metrics polling loop ----------------------------------------------*/
+  /* Handle of the pending poll timer, kept so it can be cancelled when the tab
+     goes hidden (wireVisibilityPause). null = nothing scheduled. */
+  var pollTimer = null;
+  /* True while the 5s loop is parked because the tab is hidden. The wall display
+     is visible almost all the time, but when Safari backgrounds the tab (or the
+     user switches away during setup) nobody is watching — so polling, parsing
+     and rendering (gauges + up-to-4 sparkline canvas draws) every 5s is pure
+     waste on the 512 MB iPad 2, the exact per-cycle work the long-uptime rules
+     exist to cut. tickClock already idles the same way on document.hidden. */
+  var pollParked = false;
+
   function poll() {
     var url = (CONFIG.apiBase || '') + '/api/metrics?_=' + (new Date()).getTime();
     getJSON(url, function (data) {
@@ -690,7 +701,34 @@
   }
 
   function schedule() {
-    setTimeout(poll, CONFIG.refreshMs);
+    /* Don't queue the next poll while the tab is hidden — park instead. The
+       visibilitychange handler fires poll() the moment we're visible again, so
+       the display refreshes instantly on return rather than showing up to 5s of
+       stale numbers. */
+    if (document.hidden) { pollParked = true; return; }
+    if (pollTimer) { clearTimeout(pollTimer); }
+    pollTimer = setTimeout(poll, CONFIG.refreshMs);
+  }
+
+  /* Park the metrics loop while the tab is hidden; resume immediately when it
+     comes back into view. Mirrors tickClock's existing document.hidden handling
+     and the "let the iPad CPU idle" rule (CLAUDE.md). Safari 9 / iOS 9.3.5
+     support the unprefixed Page Visibility API (already used by tickClock). */
+  function wireVisibilityPause() {
+    if (!document.addEventListener) { return; }
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) {
+        /* Going hidden: cancel any pending poll and mark the loop parked so the
+           handler below knows to restart it. An in-flight request still
+           completes; its schedule() sees document.hidden and parks too. */
+        if (pollTimer) { clearTimeout(pollTimer); pollTimer = null; }
+        pollParked = true;
+      } else if (pollParked) {
+        /* Back in view: refresh now instead of waiting out the interval. */
+        pollParked = false;
+        poll();
+      }
+    }, false);
   }
 
   /* --- Feeds polling loop (calendar + news + weather) --------------------*/
@@ -798,6 +836,7 @@
   /* --- Initialization -----------------------------------------------------*/
   buildWidgets();
   wireBrandRefresh();
+  wireVisibilityPause();
   if (window.Notifications) { Notifications.start(); }
   wireContainersModal();
   wireDiskModal();
