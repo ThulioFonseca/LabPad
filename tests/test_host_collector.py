@@ -62,3 +62,43 @@ def test_info_campos():
     for c in ("kernel", "arch", "cpu_model", "cpu_count_physical",
               "python_version", "interfaces"):
         assert c in info, "info.%s ausente" % c
+
+
+def test_disk_max_campos_presentes():
+    from collectors import host
+    data = host.collect()
+    assert "disk_max_percent" in data
+    assert "disk_max_label" in data
+    # Fullest-partition percent, when known, is a valid 0..100 reading.
+    if data["disk_max_percent"] is not None:
+        assert 0.0 <= data["disk_max_percent"] <= 100.0
+
+
+def test_disk_worst_picks_fullest_partition():
+    from collectors import host
+    disks = [
+        {"label": "/", "percent": 96.0, "used": 19, "total": 20},
+        {"label": "/data", "percent": 12.0, "used": 120, "total": 1000},
+    ]
+    worst = host._disk_worst(disks)
+    assert worst is not None
+    assert worst["label"] == "/"
+    assert worst["percent"] == 96.0
+
+
+def test_disk_worst_ignores_unknown_percent():
+    from collectors import host
+    disks = [
+        {"label": "/mnt/x", "percent": None, "used": None, "total": None},
+        {"label": "/", "percent": 40.0, "used": 4, "total": 10},
+    ]
+    worst = host._disk_worst(disks)
+    assert worst is not None
+    assert worst["label"] == "/"
+
+
+def test_disk_worst_empty_is_none():
+    from collectors import host
+    assert host._disk_worst([]) is None
+    assert host._disk_worst(
+        [{"label": "/", "percent": None, "used": None, "total": None}]) is None

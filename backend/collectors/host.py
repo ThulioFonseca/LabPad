@@ -175,6 +175,26 @@ def _disks():
     return out
 
 
+def _disk_worst(disks):
+    """Return the single fullest partition (highest percent), or None.
+
+    The aggregate percentage below averages every mount together, so a single
+    partition filling to capacity — a classic homelab failure, e.g. a full "/"
+    that stops services — stays invisible behind a big, mostly-empty data disk.
+    Tracking the worst mount lets the Disk card colour by the real risk instead
+    of the flattering all-mounts average. Partitions with an unknown percent are
+    ignored.
+    """
+    worst = None
+    for d in disks:
+        pct = d.get('percent')
+        if pct is None:
+            continue
+        if worst is None or pct > worst['percent']:
+            worst = d
+    return worst
+
+
 def _net_rates():
     """Network rate (bytes/s) calculated from the delta since the previous read."""
     iface = config.NETWORK_IFACE
@@ -212,6 +232,9 @@ def collect():
     agg_used = sum(d['used'] for d in disks if d['used'] is not None)
     agg_total = sum(d['total'] for d in disks if d['total'] is not None)
     agg_percent = round(agg_used / agg_total * 100.0, 1) if agg_total else None
+    # Fullest single partition — so the Disk card can flag a full mount that the
+    # aggregate above averages away (see _disk_worst).
+    worst = _disk_worst(disks)
 
     static = _static()
     info = {
@@ -234,6 +257,8 @@ def collect():
         "disk_agg_percent": agg_percent,
         "disk_agg_used": agg_used,
         "disk_agg_total": agg_total,
+        "disk_max_percent": worst['percent'] if worst else None,
+        "disk_max_label": worst['label'] if worst else None,
         "net_rx": recv_rate,
         "net_tx": sent_rate,
         "load": load,

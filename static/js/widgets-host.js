@@ -110,7 +110,12 @@ Widgets._createGauge = function (widget) {
 Widgets._updateGauge = function (refs, widget, data, buffer) {
   var value = getPath(data, widget.path);
   var hasValue = (typeof value === 'number' && isFinite(value));
-  var level = levelFor(widget, value);
+  /* The colour/level can be driven by a DIFFERENT metric than the one shown
+     (widget.levelPath). The Disk card uses this so its amber/red state tracks
+     the FULLEST single partition, not the flattering all-mounts average that
+     hides a full "/" — see config.js. Falls back to the displayed value. */
+  var levelValue = widget.levelPath ? getPath(data, widget.levelPath) : value;
+  var level = levelFor(widget, levelValue);
   var max = widget.max || 100;
 
   setText(refs.num, hasValue ? fmtNumber(value) : DASH);
@@ -136,8 +141,18 @@ Widgets._updateGauge = function (refs, widget, data, buffer) {
   setBarFill(refs.fill, pct);
 
   if (widget.sub) {
-    setText(refs.sub, fmtBytes(getPath(data, widget.sub.used)) +
-                      ' / ' + fmtBytes(getPath(data, widget.sub.total)));
+    /* When an alternate level metric (widget.levelPath) is elevated, name the
+       culprit in the sub line — e.g. "/ 96%" — so a red card is self-explanatory
+       on the wall display; revert to the usual used/total once healthy. */
+    if (widget.levelLabelPath && (level === 'warn' || level === 'crit') &&
+        typeof levelValue === 'number' && isFinite(levelValue)) {
+      var lbl = getPath(data, widget.levelLabelPath);
+      setText(refs.sub,
+        (lbl ? lbl + ' ' : '') + fmtNumber(levelValue) + (widget.unit || ''));
+    } else {
+      setText(refs.sub, fmtBytes(getPath(data, widget.sub.used)) +
+                        ' / ' + fmtBytes(getPath(data, widget.sub.total)));
+    }
   }
 
   /* Skip the canvas redraw while the sparkline is hidden. When the user turns
