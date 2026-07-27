@@ -40,6 +40,12 @@ var CONFIG = {
    *   warn     from this value the card turns yellow
    *   crit     from this value the card turns red
    *   sub      {used:'...', total:'...'} extra line "used / total"
+   *   levelPath   optional: drive the warn/crit COLOUR from this path instead of
+   *               `path` (e.g. Disk shows the aggregate % but colours by the
+   *               fullest single partition, so a full "/" is not hidden by a big
+   *               empty data disk). Falls back to `path` when omitted.
+   *   levelLabelPath  optional: when levelPath is warn/crit, replace the sub line
+   *               with "<label> <levelValue><unit>" naming the culprit mount.
    *
    * Specific to 'info':
    *   fmt      'text' | 'duration' (seconds -> "6d 4h") | 'load' (array)
@@ -55,6 +61,7 @@ var CONFIG = {
 
     { id: 'disk', title: 'Disk', kind: 'gauge', section: 'host',
       path: 'host.disk_agg_percent', unit: '%', warn: 75, crit: 90, spark: false,
+      levelPath: 'host.disk_max_percent', levelLabelPath: 'host.disk_max_label',
       sub: { used: 'host.disk_agg_used', total: 'host.disk_agg_total' } },
 
     { id: 'temp', title: 'CPU Temp', kind: 'gauge', section: 'host',
