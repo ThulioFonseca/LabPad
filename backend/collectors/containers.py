@@ -65,6 +65,28 @@ def _is_failed(status, exit_code, health):
     return False
 
 
+def _sort_key(item):
+    """Ordering for the container list shown in the modal.
+
+    Genuine failures come first, so a crashed / crash-looping / unhealthy
+    container floats to the TOP of the list instead of being buried
+    alphabetically at the bottom (a 'dead' or 'exited (137)' container is not
+    running, so the old 'running-first, then name' order pushed exactly the
+    thing the operator needs to see out of sight — often below the fold on the
+    wall display). After failures come the running containers, then everything
+    else; each group stays alphabetical by name.
+
+    This mirrors the summary card's failure-first philosophy (see _is_failed):
+    the operator taps the Docker card through to this list precisely to
+    investigate, so what is broken must be the first thing they land on.
+    """
+    return (
+        not item.get("failed"),            # False (failed) sorts before True
+        item.get("status") != "running",   # then running before stopped
+        (item.get("name") or "").lower(),  # then alphabetical within each group
+    )
+
+
 def _client_get():
     global _client
     if _client is None:
@@ -189,8 +211,9 @@ def collect():
     with ThreadPoolExecutor(max_workers=workers) as pool:
         items = list(pool.map(_one, containers))
 
-    # Active containers first, then alphabetical order.
-    items.sort(key=lambda c: (c["status"] != "running", c["name"].lower()))
+    # Failures first (so a crash / unhealthy container is at the top of the
+    # modal), then running, then stopped — each group alphabetical. See _sort_key.
+    items.sort(key=_sort_key)
     return {"list": items, "runtime": _runtime()}
 
 
