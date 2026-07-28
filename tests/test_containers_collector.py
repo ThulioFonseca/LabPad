@@ -70,3 +70,55 @@ def test_crash_loop_and_dead_are_failed():
 def test_unhealthy_running_is_failed():
     # A container can be up yet failing its healthcheck — still a failure.
     assert containers._is_failed("running", None, "unhealthy") is True
+
+
+# --- list ordering -----------------------------------------------------------
+# The modal list must put genuine failures on top so the operator lands on what
+# is broken, not on an alphabetical list with the crash buried at the bottom.
+
+def _names_after_sort(items):
+    return [c["name"] for c in sorted(items, key=containers._sort_key)]
+
+
+def test_failed_containers_sort_to_the_top():
+    # 'zzz-crashed' is exited/failed and would land LAST under a plain
+    # alphabetical or running-first order; it must come first instead.
+    items = [
+        {"name": "alpha", "status": "running", "failed": False},
+        {"name": "zzz-crashed", "status": "exited", "failed": True},
+        {"name": "beta", "status": "running", "failed": False},
+    ]
+    assert _names_after_sort(items) == ["zzz-crashed", "alpha", "beta"]
+
+
+def test_unhealthy_running_sorts_above_healthy_running():
+    # A running-but-unhealthy container is still a failure and must outrank
+    # healthy running containers even though both are 'running'.
+    items = [
+        {"name": "aaa-ok", "status": "running", "failed": False},
+        {"name": "web", "status": "running", "failed": True},
+    ]
+    assert _names_after_sort(items) == ["web", "aaa-ok"]
+
+
+def test_running_sorts_above_stopped_when_neither_failed():
+    # Cleanly-stopped containers (failed=False) stay below the running ones.
+    items = [
+        {"name": "stopped-job", "status": "exited", "failed": False},
+        {"name": "live", "status": "running", "failed": False},
+    ]
+    assert _names_after_sort(items) == ["live", "stopped-job"]
+
+
+def test_ordering_is_alphabetical_within_each_group():
+    items = [
+        {"name": "Delta", "status": "running", "failed": True},
+        {"name": "charlie", "status": "running", "failed": True},
+        {"name": "Bravo", "status": "running", "failed": False},
+        {"name": "alpha", "status": "running", "failed": False},
+        {"name": "Echo", "status": "exited", "failed": False},
+    ]
+    # failures (case-insensitive) then running-ok then stopped-ok.
+    assert _names_after_sort(items) == [
+        "charlie", "Delta", "alpha", "Bravo", "Echo",
+    ]
