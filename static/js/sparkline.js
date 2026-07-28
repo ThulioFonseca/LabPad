@@ -17,37 +17,47 @@ function drawSparkline(canvas, values, color) {
   ctx.clearRect(0, 0, w, h);
   if (!values || values.length < 2) { return; }
 
-  /* mantem apenas valores numericos validos */
-  var nums = [];
-  var i;
+  /* Um unico passo: conta as amostras validas e acha a faixa vertical SEM
+     alocar um array intermediario. drawSparkline roda para cada sparkline
+     visivel a cada ciclo de metricas (5s), para sempre — alocar um array
+     novo (e, antes, duas closures px/py) a cada chamada acumulava lixo de GC
+     no iPad 2 (512 MB) ao longo de dias ligado, exatamente a classe de leak
+     por-ciclo que o CLAUDE.md combate. Mantido sem alocacao: mesma saida,
+     zero churn de heap por ciclo. Valores nao-numericos sao ignorados
+     (a serie comprime, como antes). */
+  var count = 0;
+  var min = Infinity, max = -Infinity;
+  var i, v;
   for (i = 0; i < values.length; i++) {
-    if (typeof values[i] === 'number' && isFinite(values[i])) {
-      nums.push(values[i]);
+    v = values[i];
+    if (typeof v === 'number' && isFinite(v)) {
+      if (v < min) { min = v; }
+      if (v > max) { max = v; }
+      count = count + 1;
     }
   }
-  if (nums.length < 2) { return; }
+  if (count < 2) { return; }
 
-  /* faixa vertical */
-  var min = nums[0];
-  var max = nums[0];
-  for (i = 1; i < nums.length; i++) {
-    if (nums[i] < min) { min = nums[i]; }
-    if (nums[i] > max) { max = nums[i]; }
-  }
   var range = max - min;
   if (range <= 0) { range = 1; min = min - 0.5; }
 
   var pad = 2;
-  var stepX = (w - pad * 2) / (nums.length - 1);
-
-  function px(idx) { return pad + stepX * idx; }
-  function py(val) { return h - pad - ((val - min) / range) * (h - pad * 2); }
+  var stepX = (w - pad * 2) / (count - 1);
+  var innerH = h - pad * 2;
+  var j, x, y;
 
   /* preenchimento sutil sob a linha */
+  j = 0;
   ctx.beginPath();
-  ctx.moveTo(px(0), h);
-  for (i = 0; i < nums.length; i++) { ctx.lineTo(px(i), py(nums[i])); }
-  ctx.lineTo(px(nums.length - 1), h);
+  ctx.moveTo(pad, h);
+  for (i = 0; i < values.length; i++) {
+    v = values[i];
+    if (typeof v === 'number' && isFinite(v)) {
+      ctx.lineTo(pad + stepX * j, h - pad - ((v - min) / range) * innerH);
+      j = j + 1;
+    }
+  }
+  ctx.lineTo(pad + stepX * (count - 1), h);
   ctx.closePath();
   ctx.globalAlpha = 0.13;
   ctx.fillStyle = color;
@@ -55,9 +65,17 @@ function drawSparkline(canvas, values, color) {
   ctx.globalAlpha = 1;
 
   /* a linha */
+  j = 0;
   ctx.beginPath();
-  ctx.moveTo(px(0), py(nums[0]));
-  for (i = 1; i < nums.length; i++) { ctx.lineTo(px(i), py(nums[i])); }
+  for (i = 0; i < values.length; i++) {
+    v = values[i];
+    if (typeof v === 'number' && isFinite(v)) {
+      x = pad + stepX * j;
+      y = h - pad - ((v - min) / range) * innerH;
+      if (j === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
+      j = j + 1;
+    }
+  }
   ctx.lineWidth = 1.5;
   ctx.lineJoin = 'round';
   ctx.strokeStyle = color;
