@@ -249,6 +249,64 @@ Widgets.updateNetCard = function (refs, data, buffer) {
 };
 
 
+/* --- Disk I/O card (double-row) -------------------------------------------*/
+/* Read/write throughput for the host's block devices, built as a twin of the
+   Network card: same rate-row markup and the same .rate--down / .rate--up
+   classes, so it inherits every theme's accent colours (theme.css / themes.css)
+   with ZERO per-theme rules — the theme-agnostic trick the project favours.
+   Read reuses the "down" accent (data coming IN off the disk), write the "up"
+   accent (data going OUT to the disk), mirroring rx=down / tx=up on Network.
+
+   Like initNetCard/updateNetCard it is built ONCE and only its text nodes are
+   rewritten each cycle (zero DOM allocation in steady state) — the always-on
+   long-uptime rule from commit f56345d. */
+
+Widgets.initDiskIoCard = function (cardEl) {
+  if (!cardEl) { return null; }
+
+  cardEl.appendChild(Widgets._cardHead('disk', 'Disk I/O'));
+
+  var row = el('div', 'rate-row');
+
+  var read = el('span', 'rate rate--down');
+  read.appendChild(el('span', 'rate-arrow', '↓'));
+  var rd = el('span', 'rate-val');
+  rd.appendChild(Widgets._skel('skeleton-num'));
+  read.appendChild(rd);
+
+  var write = el('span', 'rate rate--up');
+  write.appendChild(el('span', 'rate-arrow', '↑'));
+  var wr = el('span', 'rate-val');
+  wr.appendChild(Widgets._skel('skeleton-num'));
+  write.appendChild(wr);
+
+  row.appendChild(read);
+  row.appendChild(write);
+  cardEl.appendChild(row);
+
+  var canvas = el('canvas', 'spark spark--fill skeleton-block');
+  cardEl.appendChild(canvas);
+
+  return { rd: rd, wr: wr, canvas: canvas };
+};
+
+Widgets.updateDiskIoCard = function (refs, data, buffer) {
+  if (!refs) { return; }
+  setText(refs.rd, fmtRate(getPath(data, 'host.disk_read')));
+  setText(refs.wr, fmtRate(getPath(data, 'host.disk_write')));
+  if (refs.canvas && refs.canvas.className.indexOf('skeleton-block') >= 0) {
+    refs.canvas.className = 'spark spark--fill';
+  }
+  /* Same guard as the gauges and the Network card: skip the canvas redraw while
+     the sparkline is hidden (display:none from applySparkVisibility) — otherwise
+     it would burn a repaint every 5s forever on the iPad 2 for no visible result.
+     The buffer keeps filling regardless, so re-enabling repaints within a cycle. */
+  if (refs.canvas && buffer && refs.canvas.style.display !== 'none') {
+    drawSparkline(refs.canvas, buffer, LEVEL_COLOR.ok);
+  }
+};
+
+
 /* --- Docker Summary (double-row) ------------------------------------------*/
 /* This card is ALWAYS visible and refreshed every metrics cycle (5s). Rebuilding
    its DOM via innerHTML each cycle churns GC on the iPad 2 (512 MB, iOS 9.3.5) —

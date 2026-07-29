@@ -503,7 +503,9 @@ main {
   letter-spacing: 0.03em;
 }
 
-/* --- Linha larga: Rede + Docker Summary (dobro da largura normal) --------- */
+/* --- Linha larga: Rede + Docker Summary + Disk I/O (dobro da largura normal).
+   Com tres cards, `flex-wrap` quebra graciosamente (2 + 1) em telas mais
+   estreitas como o iPad 2 em retrato; em paisagem os tres dividem a linha. --- */
 .double-row {
   display: -webkit-flex;
   display: flex;
@@ -518,8 +520,10 @@ main {
   margin: 7px;
 }
 
-/* Card de rede: vira coluna flex e o grafico cresce p/ preencher a altura. */
-#section-network {
+/* Cards de taxa (rede + disco): viram coluna flex e o grafico cresce p/
+   preencher a altura restante do card. */
+#section-network,
+#section-diskio {
   display: -webkit-flex;
   display: flex;
   -webkit-flex-direction: column;

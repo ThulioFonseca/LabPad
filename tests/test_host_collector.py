@@ -48,6 +48,30 @@ def test_net_rates_nao_negativas():
     assert data["net_tx"] >= 0
 
 
+def test_diskio_campos_presentes():
+    from collectors import host
+    data = host.collect()
+    assert "disk_read" in data
+    assert "disk_write" in data
+
+
+def test_diskio_rates_nao_negativas():
+    from collectors import host
+    data = host.collect()
+    assert data["disk_read"] >= 0
+    assert data["disk_write"] >= 0
+
+
+def test_diskio_rates_zero_quando_indisponivel(monkeypatch):
+    # Kernels/containers without block-I/O stats make psutil return None; the
+    # collector must degrade to 0.0 instead of raising and breaking /api/metrics.
+    from collectors import host
+    monkeypatch.setattr(host.psutil, "disk_io_counters", lambda: None)
+    read_rate, write_rate = host._diskio_rates()
+    assert read_rate == 0.0
+    assert write_rate == 0.0
+
+
 def test_load_lista_de_tres():
     from collectors import host
     data = host.collect()

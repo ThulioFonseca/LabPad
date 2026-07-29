@@ -23,6 +23,11 @@
   var netRefs = null;
   var netBuffer = [];
 
+  /* Disk I/O card — same build-once / update-in-place contract as the Network
+     card; its buffer feeds a fill sparkline of total read+write throughput. */
+  var diskioRefs = null;
+  var diskioBuffer = [];
+
   /* Docker summary card refs — built once, updated in place each cycle (the
      card is always visible; rebuilding its DOM every 5s churned GC). */
   var dockerRefs = null;
@@ -74,6 +79,9 @@
     netRefs = Widgets.initNetCard(byId('section-network'));
     sizeCanvas(netRefs && netRefs.canvas);
 
+    diskioRefs = Widgets.initDiskIoCard(byId('section-diskio'));
+    sizeCanvas(diskioRefs && diskioRefs.canvas);
+
     dockerRefs = Widgets.initDockerSummary(byId('section-docker-summary'));
 
     weatherRefs = Widgets.initWeather(byId('section-weather'));
@@ -96,6 +104,7 @@
       if (refs.hasOwnProperty(id)) { sizeCanvas(refs[id].canvas); }
     }
     if (netRefs) { sizeCanvas(netRefs.canvas); }
+    if (diskioRefs) { sizeCanvas(diskioRefs.canvas); }
   }
 
   /* --- Buffers dos sparklines ---------------------------------------------*/
@@ -115,6 +124,13 @@
     var tx = (data.host && typeof data.host.net_tx === 'number') ? data.host.net_tx : 0;
     netBuffer.push(rx + tx);
     while (netBuffer.length > CONFIG.sparkSamples) { netBuffer.shift(); }
+  }
+
+  function pushDiskioBuffer(data) {
+    var rd = (data.host && typeof data.host.disk_read === 'number') ? data.host.disk_read : 0;
+    var wr = (data.host && typeof data.host.disk_write === 'number') ? data.host.disk_write : 0;
+    diskioBuffer.push(rd + wr);
+    while (diskioBuffer.length > CONFIG.sparkSamples) { diskioBuffer.shift(); }
   }
 
   /* --- Estado de conexao --------------------------------------------------*/
@@ -207,10 +223,13 @@
     }
 
     pushNetBuffer(data);
+    pushDiskioBuffer(data);
     /* Docker summary can change the double-row height; measure the canvas after. */
     Widgets.updateDockerSummary(dockerRefs, data.containers);
     sizeCanvas(netRefs && netRefs.canvas);
     Widgets.updateNetCard(netRefs, data, netBuffer);
+    sizeCanvas(diskioRefs && diskioRefs.canvas);
+    Widgets.updateDiskIoCard(diskioRefs, data, diskioBuffer);
 
     /* Modal bodies (system / containers / disk) are hidden 99% of the time.
        Rebuilding their DOM every 5s just to throw it away is the biggest source
@@ -626,6 +645,14 @@
       if (showNet && netBuffer.length
           && netRefs.canvas.className.indexOf('skeleton-block') < 0) {
         drawSparkline(netRefs.canvas, netBuffer, LEVEL_COLOR.ok);
+      }
+    }
+    if (diskioRefs && diskioRefs.canvas) {
+      var showDiskio = Settings.spark('diskio');
+      diskioRefs.canvas.style.display = showDiskio ? '' : 'none';
+      if (showDiskio && diskioBuffer.length
+          && diskioRefs.canvas.className.indexOf('skeleton-block') < 0) {
+        drawSparkline(diskioRefs.canvas, diskioBuffer, LEVEL_COLOR.ok);
       }
     }
   }

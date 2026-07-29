@@ -28,6 +28,12 @@ _SKIP_MOUNTS = (
 _net_prev = {"time": None, "recv": 0, "sent": 0}
 _net_lock = threading.Lock()
 
+# Same pattern for disk I/O throughput (aggregate across all physical disks):
+# rates are a delta between two consecutive reads, so we keep the previous
+# cumulative counters here.
+_diskio_prev = {"time": None, "read": 0, "write": 0}
+_diskio_lock = threading.Lock()
+
 # Initialise the CPU counter; the first call with interval=None returns 0.0
 # (no previous reference) — discard it here so the first real read
 # already returns a meaningful percentage.
@@ -217,10 +223,43 @@ def _net_rates():
     return recv_rate, sent_rate
 
 
+def _diskio_rates():
+    """Disk read/write throughput (bytes/s) from the delta since the last read.
+
+    Mirrors _net_rates(): psutil.disk_io_counters() exposes monotonic cumulative
+    byte counters, so a rate needs two samples. Aggregates every physical disk
+    (the default perdisk=False) — the always-on card shows total host I/O,
+    matching how the Network card sums the interface.
+
+    Some kernels/containers expose no block-I/O stats at all: psutil then returns
+    None (or raises). We degrade gracefully to 0.0 in that case, exactly like the
+    other collectors, so the metrics payload never breaks.
+    """
+    try:
+        counters = psutil.disk_io_counters()
+    except Exception:
+        counters = None
+    if counters is None:
+        return 0.0, 0.0
+    now = time.time()
+    read_rate = write_rate = 0.0
+    with _diskio_lock:
+        if _diskio_prev["time"] is not None:
+            dt = now - _diskio_prev["time"]
+            if dt > 0:
+                read_rate = max(counters.read_bytes - _diskio_prev["read"], 0) / dt
+                write_rate = max(counters.write_bytes - _diskio_prev["write"], 0) / dt
+        _diskio_prev["time"] = now
+        _diskio_prev["read"] = counters.read_bytes
+        _diskio_prev["write"] = counters.write_bytes
+    return read_rate, write_rate
+
+
 def collect():
     cpu = psutil.cpu_percent(interval=None)
     mem = psutil.virtual_memory()
     recv_rate, sent_rate = _net_rates()
+    disk_read_rate, disk_write_rate = _diskio_rates()
 
     load = [None, None, None]
     try:
@@ -261,6 +300,8 @@ def collect():
         "disk_max_label": worst['label'] if worst else None,
         "net_rx": recv_rate,
         "net_tx": sent_rate,
+        "disk_read": disk_read_rate,
+        "disk_write": disk_write_rate,
         "load": load,
         "uptime": max(time.time() - psutil.boot_time(), 0),
         "info": info,
