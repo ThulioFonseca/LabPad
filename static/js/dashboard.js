@@ -41,6 +41,10 @@
 
   /* Calendar */
   var lastCalendar = null;
+  /* Urgency signature (active/soon per event) of the calendar as last painted.
+     The 60s calendarTick only rebuilds the list when this changes — see
+     calendarTick and Widgets.calendarUrgencySignature. */
+  var lastCalUrgencySig = null;
 
   /* News (cached so Settings.onChange can re-render when view style flips). */
   var lastNews = null;
@@ -668,10 +672,23 @@
     }
   }
 
-  /* --- Calendar tick: re-renders to update urgency colours ---------------*/
+  /* --- Calendar tick: refresh urgency colours once a minute --------------*/
+  /* renderCalendar() clears and rebuilds the whole list DOM (innerHTML = '' +
+     every day header and event row). This tick exists ONLY to keep each event's
+     active/soon colour current as time passes; the labels/times themselves are
+     baked by the backend and only change when new feed data arrives (every 10
+     min, handled in pollFeeds). Rebuilding the list every 60s regardless is the
+     same per-cycle DOM churn + reflow that has crashed the iPad 2 over long
+     uptime (CLAUDE.md crash history). So only rebuild on the minutes when an
+     event actually crossed an active/soon boundary — most ticks are a cheap
+     signature compare that touches no DOM. */
   function calendarTick() {
     if (lastCalendar) {
-      Widgets.renderCalendar(byId('section-calendar'), lastCalendar);
+      var sig = Widgets.calendarUrgencySignature(lastCalendar);
+      if (sig !== lastCalUrgencySig) {
+        lastCalUrgencySig = sig;
+        Widgets.renderCalendar(byId('section-calendar'), lastCalendar);
+      }
     }
     setTimeout(calendarTick, 60000);
   }
@@ -706,6 +723,9 @@
         lastCalendar = data.calendar;
         lastNews = data.news;
         Widgets.renderCalendar(byId('section-calendar'), data.calendar);
+        /* Baseline for the 60s tick's re-render guard, matching what we just
+           painted — so the next tick doesn't rebuild the identical list. */
+        lastCalUrgencySig = Widgets.calendarUrgencySignature(data.calendar);
         Widgets.renderNews(byId('section-news'), data.news);
         feedsLoaded = true;
 
