@@ -36,14 +36,28 @@ Widgets.renderCalendar = function (container, payload) {
   }
 };
 
+/* Time-dependent urgency of a single event: 'active' (happening now), 'soon'
+   (starts within 15 min) or '' (neither). This is the ONLY part of a rendered
+   calendar row that changes between the 10-min feed refreshes — day labels and
+   times are baked by the backend into the payload. Kept as its own function so
+   the per-minute re-render guard (calendarUrgencySignature) can never drift from
+   what _calEvent actually paints. `now` is a Unix timestamp in seconds. */
+Widgets._calEventState = function (ev, now) {
+  if (ev.start_epoch && ev.end_epoch && now >= ev.start_epoch && now < ev.end_epoch) {
+    return 'active';
+  }
+  if (ev.start_epoch && ev.start_epoch > now && (ev.start_epoch - now) <= 900) {
+    return 'soon';
+  }
+  return '';
+};
+
 Widgets._calEvent = function (ev) {
   var now = Math.floor(Date.now() / 1000);
   var cls = 'cal-event';
-  if (ev.start_epoch && ev.end_epoch && now >= ev.start_epoch && now < ev.end_epoch) {
-    cls += ' cal-event--active';
-  } else if (ev.start_epoch && ev.start_epoch > now && (ev.start_epoch - now) <= 900) {
-    cls += ' cal-event--soon';
-  }
+  var state = Widgets._calEventState(ev, now);
+  if (state === 'active') { cls += ' cal-event--active'; }
+  else if (state === 'soon') { cls += ' cal-event--soon'; }
   var row = el('div', cls);
   row.appendChild(el('span', 'cal-time', ev.time_label || ''));
   var body = el('div', 'cal-body');
@@ -51,6 +65,27 @@ Widgets._calEvent = function (ev) {
   if (ev.location) { body.appendChild(el('div', 'cal-loc', ev.location)); }
   row.appendChild(body);
   return row;
+};
+
+/* Compact signature of every event's active/soon state at the current moment.
+   calendarTick() (dashboard.js) compares it minute-to-minute and only rebuilds
+   the calendar DOM when it actually changed — most minutes nothing crosses an
+   active/soon boundary, so the wall display skips a needless full-list rebuild
+   + reflow every 60s for 24/7 (see the crash history in CLAUDE.md: per-cycle DOM
+   churn is what kills the iPad 2 over long uptime). Returns '' when there is
+   nothing to colour (unconfigured / error / no events). */
+Widgets.calendarUrgencySignature = function (payload) {
+  if (!payload || !payload.configured || payload.error || !payload.events) {
+    return '';
+  }
+  var now = Math.floor(Date.now() / 1000);
+  var events = payload.events;
+  var parts = [];
+  for (var i = 0; i < events.length; i++) {
+    var s = Widgets._calEventState(events[i], now);
+    parts.push(s === 'active' ? 'a' : (s === 'soon' ? 's' : '.'));
+  }
+  return parts.join('');
 };
 
 
