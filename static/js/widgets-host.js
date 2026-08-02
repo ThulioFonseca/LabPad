@@ -10,7 +10,7 @@
  * ===========================================================================*/
 
 /* Maps gauge widget id to the icon key in ICONS. */
-var GAUGE_ICONS = { cpu: 'cpu', mem: 'mem', temp: 'temp', disk: 'disk' };
+var GAUGE_ICONS = { cpu: 'cpu', mem: 'mem', temp: 'temp', disk: 'disk', load: 'load' };
 
 /* Level (ok/warn/crit) of a value according to widget thresholds. */
 function levelFor(widget, value) {
@@ -116,7 +116,17 @@ Widgets._updateGauge = function (refs, widget, data, buffer) {
      hides a full "/" — see config.js. Falls back to the displayed value. */
   var levelValue = widget.levelPath ? getPath(data, widget.levelPath) : value;
   var level = levelFor(widget, levelValue);
+  /* The full-bar value can also come from a live metric (widget.maxPath). The
+     Load card uses this so its bar fills relative to the current core count
+     instead of a hard-coded max — a full bar means load == cores. Falls back to
+     the static `max` (default 100) when the path is missing or non-positive. */
   var max = widget.max || 100;
+  if (widget.maxPath) {
+    var maxValue = getPath(data, widget.maxPath);
+    if (typeof maxValue === 'number' && isFinite(maxValue) && maxValue > 0) {
+      max = maxValue;
+    }
+  }
 
   setText(refs.num, hasValue ? fmtNumber(value) : DASH);
   /* Only rewrite the card's className when the level actually changes. The gauge

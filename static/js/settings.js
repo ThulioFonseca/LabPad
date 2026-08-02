@@ -41,6 +41,7 @@
     { id: 'mem',  name: 'Memory' },
     { id: 'disk', name: 'Disk' },
     { id: 'temp', name: 'CPU Temp' },
+    { id: 'load', name: 'Load' },
     { id: 'net',  name: 'Network' }
   ];
   var WEATHER_SLIDES = [
@@ -69,7 +70,7 @@
     dayStart: 7, nightStart: 19,
     cardHeight: 'normal', newsCardHeight: 'normal',
     newsViewStyle: 'list',
-    sparks: { cpu: true, mem: true, disk: false, temp: true, net: true },
+    sparks: { cpu: true, mem: true, disk: false, temp: true, load: true, net: true },
     weatherSlides: ['current', 'forecast', 'moon']
   };
 

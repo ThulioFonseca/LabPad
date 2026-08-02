@@ -12,7 +12,8 @@ def test_collect_retorna_campos_obrigatorios():
     data = host.collect()
     campos = ("hostname", "os", "cpu_percent", "cpu_count",
               "mem_percent", "mem_used", "mem_total",
-              "disk", "net_rx", "net_tx", "load", "uptime", "info")
+              "disk", "net_rx", "net_tx", "load", "load1", "load_per_core",
+              "uptime", "info")
     for c in campos:
         assert c in data, "campo '%s' ausente" % c
 
@@ -53,6 +54,29 @@ def test_load_lista_de_tres():
     data = host.collect()
     assert isinstance(data["load"], list)
     assert len(data["load"]) == 3
+
+
+def test_load1_matches_first_average():
+    from collectors import host
+    data = host.collect()
+    # load1 is the scalar 1-min figure the Load gauge displays; it must equal
+    # the first entry of the load triple (both None when getloadavg is absent).
+    assert "load1" in data
+    assert data["load1"] == data["load"][0]
+
+
+def test_load_per_core_is_normalised():
+    from collectors import host
+    data = host.collect()
+    assert "load_per_core" in data
+    lpc = data["load_per_core"]
+    load1 = data["load1"]
+    if load1 is None:
+        assert lpc is None
+    else:
+        cores = data["cpu_count"] or 1
+        assert lpc == pytest.approx(round(load1 / cores, 2))
+        assert lpc >= 0.0
 
 
 def test_info_campos():

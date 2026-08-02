@@ -46,6 +46,11 @@ var CONFIG = {
    *               empty data disk). Falls back to `path` when omitted.
    *   levelLabelPath  optional: when levelPath is warn/crit, replace the sub line
    *               with "<label> <levelValue><unit>" naming the culprit mount.
+   *   maxPath     optional: read the full-bar value from this path instead of the
+   *               static `max` (e.g. Load shows the raw 1-min average but scales
+   *               the bar by the live core count, so a full bar means "as many
+   *               runnable tasks as cores"). Falls back to `max` when omitted or
+   *               non-positive.
    *
    * Specific to 'info':
    *   fmt      'text' | 'duration' (seconds -> "6d 4h") | 'load' (array)
@@ -66,7 +71,16 @@ var CONFIG = {
 
     { id: 'temp', title: 'CPU Temp', kind: 'gauge', section: 'host',
       path: 'sensors.cpu_temp', unit: '°', max: 90, warn: 70, crit: 85,
-      spark: true }
+      spark: true },
+
+    /* Load shows the raw 1-min average (the number sysadmins expect), but the
+       bar scales by core count (maxPath) and the colour tracks per-core
+       saturation (levelPath): warn once there is ~1 runnable task per core,
+       crit at ~2x. So the same card reads right on a 2-core box and a 32-core
+       one without a hard-coded max. */
+    { id: 'load', title: 'Load', kind: 'gauge', section: 'host',
+      path: 'host.load1', unit: '', warn: 1, crit: 2,
+      maxPath: 'host.cpu_count', levelPath: 'host.load_per_core', spark: true }
 
   ]
 };

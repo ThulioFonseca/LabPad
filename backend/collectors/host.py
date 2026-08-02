@@ -228,6 +228,16 @@ def collect():
     except (AttributeError, OSError):
         pass
 
+    static = _static()
+    # Load average, normalised per logical core. Raw load is meaningless without
+    # the core count (load 4 is idle on 8 cores, overloaded on 2), so the Load
+    # gauge shows the raw 1-min figure but colours/scales by saturation:
+    #   load_per_core < 1  -> headroom, ~1 -> saturated, > 1 -> oversubscribed.
+    # Kept None when getloadavg() is unavailable so the gauge reads "—".
+    load1 = load[0]
+    cores = static["cpu_count"] or 1
+    load_per_core = round(load1 / cores, 2) if load1 is not None else None
+
     disks = _disks()
     agg_used = sum(d['used'] for d in disks if d['used'] is not None)
     agg_total = sum(d['total'] for d in disks if d['total'] is not None)
@@ -236,7 +246,6 @@ def collect():
     # aggregate above averages away (see _disk_worst).
     worst = _disk_worst(disks)
 
-    static = _static()
     info = {
         "kernel": static["kernel"],
         "arch": static["arch"],
@@ -262,6 +271,8 @@ def collect():
         "net_rx": recv_rate,
         "net_tx": sent_rate,
         "load": load,
+        "load1": load1,
+        "load_per_core": load_per_core,
         "uptime": max(time.time() - psutil.boot_time(), 0),
         "info": info,
     }
