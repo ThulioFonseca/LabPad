@@ -43,6 +43,16 @@ Widgets.renderCalendar = function (container, payload) {
    the per-minute re-render guard (calendarUrgencySignature) can never drift from
    what _calEvent actually paints. `now` is a Unix timestamp in seconds. */
 Widgets._calEventState = function (ev, now) {
+  /* All-day events carry NO time-urgency. They are not point-in-time meetings:
+     an Outlook all-day entry spans midnight→midnight, so treating it as 'active'
+     ("happening now") would paint it in the alarm-red the whole day, and near
+     midnight its start is <15 min away so it would flash amber 'soon' for the
+     next day's entry too. On the glanceable wall display red/amber must stay
+     reserved for real timed meetings that actually need attention — otherwise a
+     recurring all-day item (birthday, PTO, on-call) makes a healthy board look
+     alarming and dilutes the cue. The "All day" time label + the day grouping
+     already place these events, so plain styling is correct. */
+  if (ev.all_day) { return ''; }
   if (ev.start_epoch && ev.end_epoch && now >= ev.start_epoch && now < ev.end_epoch) {
     return 'active';
   }
