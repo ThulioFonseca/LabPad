@@ -51,10 +51,19 @@
 
   function byId(id) { return document.getElementById(id); }
 
-  /* Envia erro para o backend (aparece em docker logs como JS-ERROR). */
+  /* Envia erro para o backend (aparece em docker logs como JS-ERROR).
+     Roteado pelo reporter compartilhado (errors.js): render() e pollFeeds()
+     rodam em loop, entao um erro que se repete a cada ciclo seria reportado
+     eternamente — o dedupe/rate-limit/cap de LabPad.reportError transforma isso
+     em UM report em vez de milhares (ver CLAUDE.md, estabilidade sob uptime
+     longo). Fallback direto so p/ o caso (improvavel) de errors.js nao carregar. */
   function reportError(context, err) {
+    var msg = (err && err.message) ? err.message : String(err);
+    if (window.LabPad && window.LabPad.reportError) {
+      window.LabPad.reportError(msg, 'dashboard.js', 0, context);
+      return;
+    }
     try {
-      var msg = (err && err.message) ? err.message : String(err);
       var xhr = new XMLHttpRequest();
       xhr.open('POST', '/api/client-error', true);
       xhr.setRequestHeader('Content-Type', 'application/json');
