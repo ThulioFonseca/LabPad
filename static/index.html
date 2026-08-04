@@ -213,18 +213,13 @@
     </div>
   </div>
 
-  <script>
-    /* Capture unhandled JS errors and send to backend (appears in docker logs). */
-    window.onerror = function (message, source, lineno) {
-      try {
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/api/client-error', true);
-        xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send(JSON.stringify({ message: message, source: source, lineno: lineno }));
-      } catch (e2) { /* Nothing we can do */ }
-      return false; /* Don't suppress error — continue propagating */
-    };
-  </script>
+  <!-- Loaded FIRST so window.onerror is armed before the other scripts run.
+       Captures unhandled JS errors and POSTs them to /api/client-error (they
+       surface in docker logs — the only debug window on a kiosk iPad), but
+       dedupes, rate-limits and caps the reports so a bug in a repeating path
+       can't flood the backend or churn memory over the display's long uptime.
+       See the file header and CLAUDE.md. -->
+  <script src="js/errors.js"></script>
   <script src="config.js"></script>
   <script src="js/xhr.js"></script>
   <script src="js/format.js"></script>
