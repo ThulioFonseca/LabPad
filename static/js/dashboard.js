@@ -220,9 +220,16 @@
     }
 
     pushNetBuffer(data);
-    /* Docker summary can change the double-row height; measure the canvas after. */
-    Widgets.updateDockerSummary(dockerRefs, data.containers);
-    sizeCanvas(netRefs && netRefs.canvas);
+    /* The network card's sparkline is a fill-canvas (.spark--fill) with no fixed
+       height: it stretches to the shared double-row height, which only moves when
+       the Docker summary's row shape changes (a container starts/stops, or a
+       failure line appears). Re-measuring the canvas every cycle reads its
+       client size and so forces a synchronous layout on the always-on display
+       forever — the exact per-cycle reflow CLAUDE.md tells us to guard. So only
+       re-measure when updateDockerSummary reports the shape actually changed;
+       viewport resizes are handled separately by resizeAllCanvases (onresize). */
+    var dockerShapeChanged = Widgets.updateDockerSummary(dockerRefs, data.containers);
+    if (dockerShapeChanged) { sizeCanvas(netRefs && netRefs.canvas); }
     Widgets.updateNetCard(netRefs, data, netBuffer);
 
     /* Modal bodies (system / containers / disk) are hidden 99% of the time.
@@ -837,6 +844,13 @@
   applySparkVisibility();
   if (window.Settings && Settings.onChange) {
     Settings.onChange(function () {
+      /* An appearance change (e.g. card density) can resize the network card and
+         with it the fill-sparkline canvas. render() now re-measures that canvas
+         only when the Docker card's shape changes, so re-measure it here too —
+         Settings applies the new <html> classes before notifying, so the layout
+         is already settled — before applySparkVisibility() redraws it, else the
+         sparkline would render at a stale resolution until the next shape change. */
+      sizeCanvas(netRefs && netRefs.canvas);
       applySparkVisibility();
       /* Re-render news section so list <-> carousel toggle takes effect
          immediately (without waiting for the 10-min feeds cycle). */

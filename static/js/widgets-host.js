@@ -293,11 +293,24 @@ Widgets.initDockerSummary = function (cardEl) {
   }
   cardEl.appendChild(topDiv);
 
-  return { count: count, failed: failed, top: topDiv, items: items };
+  /* `shapeSig` is the signature of what actually occupies vertical space in this
+     card (failure line + how many top rows are visible). The network card shares
+     the double-row height with this one, so its fill-sparkline canvas only needs
+     re-measuring when this signature changes — updateDockerSummary reports that
+     via its return value (see render() in dashboard.js). Starts null so the first
+     real payload always counts as a change. */
+  return { count: count, failed: failed, top: topDiv, items: items,
+           shapeSig: null };
 };
 
+/* Returns true when the card's vertical SHAPE changed this cycle (a failure line
+   appeared/disappeared or the number of visible top rows changed) — i.e. when
+   the shared double-row height may have moved. Returns false when only text
+   changed (same number of rows), so the caller can skip the per-cycle canvas
+   re-measure that would otherwise force a synchronous layout forever on the
+   always-on display. */
 Widgets.updateDockerSummary = function (refs, payload) {
-  if (!refs || !payload) { return; }   /* keep skeleton until first data */
+  if (!refs || !payload) { return false; }   /* keep skeleton until first data */
 
   var list = (payload && payload.list) ? payload.list : [];
   var running = 0, failedCount = 0, firstFailed = null, i;
@@ -341,6 +354,7 @@ Widgets.updateDockerSummary = function (refs, payload) {
   var wantTop = active.length ? '' : 'none';
   if (refs.top.style.display !== wantTop) { refs.top.style.display = wantTop; }
 
+  var visibleTop = 0;
   for (i = 0; i < refs.items.length; i++) {
     var slot = refs.items[i];
     var c = active[i];
@@ -349,10 +363,23 @@ Widgets.updateDockerSummary = function (refs, payload) {
       setText(slot.cpu, (typeof c.cpu_percent === 'number')
         ? (fmtNumber(c.cpu_percent) + '% cpu') : DASH);
       if (slot.root.style.display !== '') { slot.root.style.display = ''; }
+      visibleTop = visibleTop + 1;
     } else if (slot.root.style.display !== 'none') {
       slot.root.style.display = 'none';
     }
   }
+
+  /* Signature of the card's vertical footprint: whether the failure line is
+     shown (and its text, since a long container name can wrap it to a 2nd line)
+     plus how many top rows are visible. Everything else the update rewrites is
+     text inside fixed-height rows and does not move the card's height. The
+     caller re-measures the network fill-canvas only when this changes — see the
+     comment at the call site in render(). */
+  var failedShown = !!(refs.failed && failedCount > 0);
+  var sig = (failedShown ? msg : '') + '\x01' + visibleTop;
+  var changed = (sig !== refs.shapeSig);
+  refs.shapeSig = sig;
+  return changed;
 };
 
 
