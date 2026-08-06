@@ -15,19 +15,55 @@
   var unread = [];       /* last server response */
   var pollTimer = null;
 
+  /* Bell repaint guards. refresh() polls every 30s FOREVER, so paintBell() runs
+     ~2,880x/day for the display's whole uptime. `bellDrawn` renders the (static)
+     bell SVG once; `lastBadgeCount` skips every DOM write on the polls where the
+     unread count did not move — which, on a healthy homelab, is almost all of
+     them. `badgeEl` is the reused badge node. See paintBell for the why. */
+  var bellDrawn = false;
+  var lastBadgeCount = -1;
+  var badgeEl = null;
+
   /* --- Bell + badge -------------------------------------------------------*/
   function paintBell() {
     var btn = document.getElementById('notif-btn');
-    if (btn) {
+    var count = unread.length;
+
+    /* Draw the immutable bell icon exactly once. The pre-guard version did
+       `btn.innerHTML = ICONS.bell` on EVERY poll — reparsing the multi-node bell
+       SVG and reallocating the badge span every 30s even though the count almost
+       never changes. Over the wall display's weeks-long uptime that sustained
+       per-cycle allocation is exactly the GC churn the iPad 2 (512 MB) can't
+       afford, guarded the same way for the Docker card (#11), gauges (#19) and
+       the calendar (#26). Now the icon is set once and only the badge is touched,
+       and only when the count actually changes. */
+    if (btn && !bellDrawn) {
       btn.innerHTML = ICONS.bell;
-      if (unread.length > 0) {
-        btn.appendChild(el('span', 'notif-badge',
-            unread.length > 99 ? '99+' : String(unread.length)));
+      badgeEl = null;
+      bellDrawn = true;
+    }
+
+    if (count === lastBadgeCount) { return; }   /* nothing to repaint this poll */
+    lastBadgeCount = count;
+
+    if (btn) {
+      if (count > 0) {
+        var txt = count > 99 ? '99+' : String(count);
+        if (badgeEl) {
+          setText(badgeEl, txt);
+        } else {
+          badgeEl = el('span', 'notif-badge', txt);
+          btn.appendChild(badgeEl);
+        }
+      } else if (badgeEl) {
+        btn.removeChild(badgeEl);
+        badgeEl = null;
       }
     }
+
     /* "Clear all" only makes sense when there is something to clear. */
     var clearBtn = document.getElementById('notif-clear-all');
-    if (clearBtn) { clearBtn.style.display = unread.length > 0 ? '' : 'none'; }
+    if (clearBtn) { clearBtn.style.display = count > 0 ? '' : 'none'; }
   }
 
   /* --- Sidebar ------------------------------------------------------------*/
