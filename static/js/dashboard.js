@@ -726,6 +726,42 @@
     setTimeout(poll, CONFIG.refreshMs);
   }
 
+  /* --- Feed staleness badge (calendar / news) ----------------------------
+     The backend serves the last GOOD calendar/news payload indefinitely while
+     the source is down (app.py scheduler + /api/feeds), so without a cue the
+     always-on wall display shows days-old events/headlines as if they were
+     live. /api/feeds now reports per-feed staleness (meta.stale); here we append
+     a small "stale" badge to the panel title only while that feed is serving
+     cached data because its source is failing, and remove it the moment the feed
+     recovers. This runs on the 10-min feeds cycle, never per metrics cycle, so
+     it adds no long-uptime cost (CLAUDE.md). */
+  function fmtStaleAge(sec) {
+    if (typeof sec !== 'number' || !isFinite(sec) || sec < 0) { return ''; }
+    var mins = Math.floor(sec / 60);
+    if (mins < 60) { return mins + 'm'; }
+    var hrs = Math.floor(mins / 60);
+    if (hrs < 24) { return hrs + 'h'; }
+    return Math.floor(hrs / 24) + 'd';
+  }
+
+  function applyFeedStale(titleId, info) {
+    var title = byId(titleId);
+    if (!title) { return; }
+    var badges = title.getElementsByClassName('panel-stale');
+    var badge = badges.length ? badges[0] : null;
+    if (!info || !info.stale) {
+      if (badge) { title.removeChild(badge); }
+      return;
+    }
+    var age = info.age_s ? fmtStaleAge(info.age_s) : '';
+    var label = age ? ('stale \xb7 ' + age) : 'stale';
+    if (!badge) {
+      badge = el('span', 'panel-stale');
+      title.appendChild(badge);
+    }
+    setText(badge, label);
+  }
+
   /* --- Feeds polling loop (calendar + news + weather) --------------------*/
   function pollFeeds() {
     /* Cancel pending timer — allows immediate refetch (onBackendSave) without
@@ -744,6 +780,12 @@
         lastCalUrgencySig = Widgets.calendarUrgencySignature(data.calendar);
         Widgets.renderNews(byId('section-news'), data.news);
         feedsLoaded = true;
+
+        /* Flag calendar/news whose source is down but is still showing cached
+           data, so stale content is legible at a glance (see applyFeedStale). */
+        var staleInfo = (data.meta && data.meta.stale) ? data.meta.stale : {};
+        applyFeedStale('title-calendar', staleInfo.calendar);
+        applyFeedStale('title-news', staleInfo.news);
 
         if (data.weather && data.weather.configured) {
           try {

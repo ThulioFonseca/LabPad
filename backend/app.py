@@ -58,6 +58,10 @@ _FEED_JOBS = {
 _feeds_next_run = {k: 0.0 for k in _FEED_JOBS}
 _feeds_failures = {k: 0   for k in _FEED_JOBS}
 _feeds_last     = {k: None for k in _FEED_JOBS}
+# Epoch of the last SUCCESSFUL collection per feed — so /api/feeds can report how
+# old the cached (last-good) data is when the source is currently failing. None
+# until the first success.
+_last_good_time = {k: None for k in _FEED_JOBS}
 
 # Signal the scheduler to wake immediately (e.g., on settings change).
 _scheduler_wakeup = threading.Event()
@@ -120,6 +124,7 @@ def _scheduler_loop():
                 _feeds_last[key] = data
                 if "error" not in data:
                     _last_good_feeds[key] = data
+                    _last_good_time[key] = time.time()
                     _feeds_failures[key] = 0
                     delay = config.FEEDS_CACHE_TTL
                     # Recovery after at least one failure → notify.
@@ -183,16 +188,33 @@ def feeds():
     # result; if never successful, serve the last raw result (with "error") —
     # so the frontend can distinguish cold-fail from stale.
     with _feeds_lock:
+        now = time.time()
         result = {}
+        # Per-feed staleness so the frontend can flag a panel that is showing
+        # CACHED (last-good) data because its source is currently failing — on an
+        # always-on wall display, days-old calendar/news would otherwise read as
+        # live. `stale` is True only when we serve real last-good data AND the
+        # most recent collection attempt failed (failures reset to 0 on success);
+        # a cold, never-successful feed is NOT "stale" — the frontend already
+        # shows it as "Could not read...". `age_s` is how old that cached data is.
+        stale = {}
         for key in _FEED_JOBS:
             good = _last_good_feeds.get(key)
-            if good is not None:
+            serving_cached = good is not None
+            if serving_cached:
                 result[key] = good
             elif _feeds_last.get(key) is not None:
                 result[key] = _feeds_last[key]
             else:
                 result[key] = dict(_FEED_JOBS[key][1])
-        result["meta"] = {"time": time.time()}
+            failing = _feeds_failures[key] > 0
+            lg_time = _last_good_time.get(key)
+            stale[key] = {
+                "stale": bool(failing and serving_cached),
+                "failures": _feeds_failures[key],
+                "age_s": (now - lg_time) if lg_time is not None else None,
+            }
+        result["meta"] = {"time": now, "stale": stale}
 
     response = jsonify(result)
     response.headers["Cache-Control"] = "no-store"

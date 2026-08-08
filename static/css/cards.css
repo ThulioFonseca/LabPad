@@ -25,6 +25,26 @@ main {
   text-transform: none;
 }
 
+/* Glanceable "stale" badge appended to a feed panel title (Calendar / News) by
+   dashboard.js while the backend is serving cached data because that source is
+   currently failing (meta.stale from /api/feeds). It tells a wall observer that
+   frozen content is old, not live — and disappears the moment the feed recovers.
+   Amber (the `warn` colour), never red: stale-but-cached data is a soft warning,
+   not an outage. No animation and no per-cycle cost, so it stays within the
+   iPad 2 long-uptime contract (CLAUDE.md). The explicit colour survives the
+   per-theme .panel-title overrides in themes.css. */
+.panel-stale {
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: #d29922;
+  background-color: rgba(210, 153, 34, 0.14);
+}
+
 /* --- Grade de cards --------------------------------------------------------*/
 /* margens negativas dao espacamento uniforme sem depender de flex `gap`. */
 .card-grid,
