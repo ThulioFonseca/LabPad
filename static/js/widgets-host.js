@@ -461,6 +461,51 @@ Widgets.renderSystemInfo = function (node, hostData, containersData) {
 };
 
 
+/* --- Top processes (System modal, on-demand) ------------------------------*/
+/* Rendered into its OWN container (#system-procs), NOT #system-modal-body: the
+   latter is rewritten every 5s while the modal is open (renderSystemInfo), which
+   would wipe an async /api/processes result. This is fetched once on open (see
+   fetchProcesses in dashboard.js), so there is zero per-cycle cost on the iPad 2.
+   Reuses the .sys-group/.sys-row styling — no new CSS. */
+Widgets.renderProcesses = function (node, data) {
+  if (!node) { return; }
+  node.innerHTML = '';
+  data = data || {};
+
+  function procGroup(title, rows, kind) {
+    var g = el('div', 'sys-group');
+    g.appendChild(el('div', 'sys-group-title', title));
+    if (!rows || !rows.length) {
+      var er = el('div', 'sys-row');
+      er.appendChild(el('div', 'sys-key', DASH));
+      er.appendChild(el('div', 'sys-val', ''));
+      g.appendChild(er);
+      return g;
+    }
+    for (var i = 0; i < rows.length; i++) {
+      var r = rows[i];
+      var row = el('div', 'sys-row');
+      row.appendChild(el('div', 'sys-key', r.name || '?'));
+      var detail;
+      if (kind === 'cpu') {
+        /* Lead with the sorted-by metric (CPU), memory as context. */
+        detail = fmtNumber(r.cpu_percent) + '%  \xb7  ' + fmtBytes(r.mem_bytes);
+      } else {
+        detail = fmtBytes(r.mem_bytes)
+          + ((typeof r.mem_percent === 'number' && isFinite(r.mem_percent))
+              ? ('  \xb7  ' + fmtNumber(r.mem_percent) + '%') : '');
+      }
+      row.appendChild(el('div', 'sys-val', detail));
+      g.appendChild(row);
+    }
+    return g;
+  }
+
+  node.appendChild(procGroup('Top processes \xb7 CPU', data.by_cpu, 'cpu'));
+  node.appendChild(procGroup('Top processes \xb7 memory', data.by_mem, 'mem'));
+};
+
+
 /* --- Disk partitions modal ------------------------------------------------*/
 
 Widgets.renderDiskModal = function (container, disks) {

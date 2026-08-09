@@ -17,7 +17,7 @@ import net_guard
 import notifications
 import settings
 from collectors import (article, calendar_feed, containers, host, image_proxy,
-                        news, sensors, weather)
+                        news, processes, sensors, weather)
 
 STATIC_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static"
@@ -251,6 +251,22 @@ def container_logs(container_id):
     tail = request.args.get("tail", default=200, type=int)
     tail = max(10, min(tail, 1000))
     data = containers.get_logs(container_id, tail=tail)
+    response = jsonify(data)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/api/processes")
+def processes_route():
+    """Top host processes by CPU and memory.
+
+    On-demand only (the System modal fetches this when opened) — NOT part of the
+    5s metrics loop: measuring per-process CPU needs a short sampling window, so
+    it must never run on the always-on polling path. See collectors/processes.py.
+    """
+    limit = request.args.get("limit", default=5, type=int)
+    limit = max(1, min(limit, 15))
+    data = processes.collect(limit=limit)
     response = jsonify(data)
     response.headers["Cache-Control"] = "no-store"
     return response

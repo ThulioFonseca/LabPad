@@ -352,8 +352,43 @@
   }
 
   /* --- Modal "Sistema" (botao (i) no titulo do painel Host) --------------*/
-  function openSystemModal() { renderSystemBody(); Modals.open('system-modal'); }
+  function openSystemModal() {
+    renderSystemBody();
+    fetchProcesses();
+    Modals.open('system-modal');
+  }
   function closeSystemModal() { Modals.close('system-modal'); }
+
+  /* Fetch the top-processes snapshot when the System modal opens. On-demand
+     only — the endpoint samples per-process CPU for ~0.3s, so it must never run
+     on the 5s metrics loop. Renders into #system-procs (a sibling of
+     #system-modal-body), which render() never rebuilds, so the async result
+     survives the 5s info re-render while the modal stays open. */
+  function procMessage(label) {
+    var node = byId('system-procs');
+    if (!node) { return; }
+    node.innerHTML = '';
+    var g = el('div', 'sys-group');
+    g.appendChild(el('div', 'sys-group-title', 'Top processes'));
+    var row = el('div', 'sys-row');
+    row.appendChild(el('div', 'sys-key', label));
+    row.appendChild(el('div', 'sys-val', ''));
+    g.appendChild(row);
+    node.appendChild(g);
+  }
+
+  function fetchProcesses() {
+    if (!byId('system-procs')) { return; }
+    procMessage('Sampling…');   /* ~0.3s server-side sample */
+    var url = (CONFIG.apiBase || '') + '/api/processes?_=' + (new Date()).getTime();
+    getJSON(url, function (data) {
+      if (!Modals.isOpen('system-modal')) { return; }
+      Widgets.renderProcesses(byId('system-procs'), data);
+    }, function () {
+      if (!Modals.isOpen('system-modal')) { return; }
+      procMessage('Processes unavailable');
+    });
+  }
 
   function wireSystemModal() {
     var btn = byId('host-info-btn');
