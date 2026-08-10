@@ -286,5 +286,40 @@ def test_remote_images_go_through_the_downscaling_proxy():
     )
 
 
+def test_getjson_settles_its_callback_exactly_once():
+    """A single failed request must invoke the getJSON callback only once.
+
+    Safari 9 dispatches BOTH the readystatechange to DONE (readyState 4,
+    status 0) AND the dedicated ``ontimeout`` / ``onerror`` event when a request
+    times out or fails at the network layer — so a naive wrapper fires its
+    callback twice per failure. dashboard.js's ``poll()`` and ``pollFeeds()``
+    reschedule themselves from their error handler, so a double error there
+    spawns a SECOND parallel polling loop that never goes away: every later
+    failure doubles the request rate and leaks timers until Safari kills the tab
+    over the display's long uptime — the same per-loop growth CLAUDE.md guards
+    against. ``getJSON`` must therefore collapse each request to a single
+    onOk/onErr via a settle-once guard, and must not read status 0 as an HTTP
+    response (that is the duplicate path).
+    """
+    src = _sanitize_js(_read(os.path.join(_JS_DIR, "xhr.js")))
+    missing = []
+    if not re.search(r"\bsettled\b", src):
+        missing.append("a `settled` guard flag")
+    if not re.search(r"if\s*\(\s*settled\s*\)", src):
+        missing.append("an `if (settled) return` short-circuit before the callback")
+    if not re.search(r"\bfail\s*\(", src):
+        missing.append("a guarded fail() helper for the error handlers")
+    if not (re.search(r"\bontimeout\s*=", src) and re.search(r"\bonerror\s*=", src)):
+        missing.append("dedicated ontimeout/onerror handlers")
+    if not re.search(r"\bstatus\s*===?\s*0\b", src):
+        missing.append("a `status === 0` skip so timeout/network errors don't "
+                       "double-fire through readystatechange")
+    assert not missing, (
+        "getJSON lost its single-settle protection — a timeout or network error "
+        "will fire the callback twice and can spawn duplicate polling loops on "
+        "the iPad 2. Missing:\n  " + "\n  ".join(missing)
+    )
+
+
 if __name__ == "__main__":  # allow `python tests/test_frontend_contract.py`
     raise SystemExit(pytest.main([__file__, "-v"]))
