@@ -179,7 +179,16 @@ Ubuntu Host ── Docker
 | `/api/feeds` | GET | Calendar, news, and weather (10 min cadence) |
 | `/api/settings` | GET / PUT | Read or update server-side settings |
 | `/api/notifications` | GET | Notification queue |
-| `/api/health` | GET | Health check for container orchestration |
+| `/api/health` | GET | Liveness **and** per-collector status for external monitors |
+
+`/api/health` returns `{ ok, status, time, uptime_s, feeds }`. `ok` stays `true`
+whenever the process answers; `status` is `"degraded"` when a *configured*
+collector (calendar / news / weather) is failing or weather is running on its
+met.no fallback, and `"ok"` otherwise. Each `feeds` entry reports
+`configured`, `ok`, `consecutive_failures`, `last_success`, `last_error`, and
+`next_run_in_s`, so a monitor like Uptime Kuma or Healthchecks can alert on a
+silently-failing integration — one that otherwise only shows up as a
+notification on the panel itself.
 
 ---
 

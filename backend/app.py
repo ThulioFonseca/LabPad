@@ -53,11 +53,17 @@ _FEED_JOBS = {
     "weather":  (weather.collect,       {"configured": False}),
 }
 
-# State per feed: epoch of next run, consecutive failure count, and last raw
-# result (even if errored, for diagnostics via /api/feeds).
-_feeds_next_run = {k: 0.0 for k in _FEED_JOBS}
-_feeds_failures = {k: 0   for k in _FEED_JOBS}
-_feeds_last     = {k: None for k in _FEED_JOBS}
+# State per feed: epoch of next run, consecutive failure count, last raw
+# result (even if errored, for diagnostics via /api/feeds), and the epoch of the
+# last SUCCESSFUL collection (surfaced by /api/health so external monitors can
+# tell "server up" from "collector silently failing").
+_feeds_next_run     = {k: 0.0 for k in _FEED_JOBS}
+_feeds_failures     = {k: 0   for k in _FEED_JOBS}
+_feeds_last         = {k: None for k in _FEED_JOBS}
+_feeds_last_success = {k: None for k in _FEED_JOBS}
+
+# Process start epoch — reported as uptime by /api/health.
+_START_TIME = time.time()
 
 # Signal the scheduler to wake immediately (e.g., on settings change).
 _scheduler_wakeup = threading.Event()
@@ -121,6 +127,7 @@ def _scheduler_loop():
                 if "error" not in data:
                     _last_good_feeds[key] = data
                     _feeds_failures[key] = 0
+                    _feeds_last_success[key] = time.time()
                     delay = config.FEEDS_CACHE_TTL
                     # Recovery after at least one failure → notify.
                     if prev_failures > 0:
@@ -297,9 +304,83 @@ def client_error():
     return jsonify({"ok": True})
 
 
+# A feed is only expected to collect when its source is configured. An empty
+# city/URL is a deliberate "off", not a failure — so an unconfigured feed never
+# counts against the degraded state below.
+_FEED_CONFIG_KEYS = {
+    "calendar": ("calendar", "url"),
+    "news":     ("news", "url"),
+    "weather":  ("weather", "city"),
+}
+
+
+def _build_health():
+    """Machine-readable status for external uptime monitors.
+
+    `/api/health` used to return only {ok, time} — enough to prove the process
+    answers, but blind to the thing that actually breaks on a homelab box: a
+    collector (calendar / news / weather) that keeps failing while the server
+    stays up. Those failures surface as an on-screen notification on the iPad,
+    which is useless as an alerting channel — the panel is a display, not a
+    monitor. Exposing per-collector health here lets a real monitor (Uptime
+    Kuma, Healthchecks, a cron curl) alert on a silently-dead integration.
+
+    `ok` stays True whenever the process is answering (backward-compatible with
+    any check that greps for `"ok":true`); `status` is "degraded" when a
+    CONFIGURED collector is failing or weather is running on its met.no
+    fallback, so monitors can alert on the soft state without false-positiving
+    on a feed the operator never turned on.
+    """
+    # Read the configured flags first (settings has its own lock) to avoid
+    # holding _feeds_lock across another lock.
+    configured = {}
+    for key, (section, field) in _FEED_CONFIG_KEYS.items():
+        configured[key] = bool(settings.get(section, field, ""))
+
+    now = time.time()
+    feeds = {}
+    degraded = False
+    with _feeds_lock:
+        for key in _FEED_JOBS:
+            is_cfg = configured.get(key, False)
+            failures = _feeds_failures.get(key, 0)
+            last_raw = _feeds_last.get(key)
+            last_error = last_raw.get("error") if isinstance(last_raw, dict) else None
+            good = _last_good_feeds.get(key)
+            src = good.get("_source") if isinstance(good, dict) else None
+            # An unconfigured feed is "off", never failing.
+            feed_ok = (not is_cfg) or (failures == 0)
+            next_run = _feeds_next_run.get(key, 0.0)
+            entry = {
+                "configured": is_cfg,
+                "ok": feed_ok,
+                "consecutive_failures": failures,
+                "last_success": _feeds_last_success.get(key),
+                "last_error": last_error if (is_cfg and failures > 0) else None,
+                "next_run_in_s": round(max(0.0, next_run - now), 1),
+            }
+            if key == "weather" and is_cfg and src == "met.no":
+                # Weather answers, but from the fallback source — soft-degraded.
+                entry["degraded_source"] = "met.no"
+                degraded = True
+            if is_cfg and failures > 0:
+                degraded = True
+            feeds[key] = entry
+
+    return {
+        "ok": True,
+        "status": "degraded" if degraded else "ok",
+        "time": now,
+        "uptime_s": round(now - _START_TIME, 1),
+        "feeds": feeds,
+    }
+
+
 @app.route("/api/health")
 def health():
-    return jsonify({"ok": True, "time": time.time()})
+    response = jsonify(_build_health())
+    response.headers["Cache-Control"] = "no-store"
+    return response
 
 
 def _validate_settings(body):
@@ -381,6 +462,7 @@ def _invalidate_settings_caches(prev, new):
         for key in affected:
             _last_good_feeds.pop(key, None)
             _feeds_last[key] = None
+            _feeds_last_success[key] = None
             _feeds_failures[key] = 0
             _feeds_next_run[key] = 0.0
     # Wake scheduler to collect now, without waiting for next tick.
