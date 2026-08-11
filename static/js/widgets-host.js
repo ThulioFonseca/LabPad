@@ -385,7 +385,7 @@ Widgets.updateDockerSummary = function (refs, payload) {
 
 /* --- System modal: hardware/software info grouped -------------------------*/
 
-Widgets.renderSystemInfo = function (node, hostData, containersData) {
+Widgets.renderSystemInfo = function (node, hostData, containersData, sensorsData) {
   if (!node) { return; }
   node.innerHTML = '';
   hostData = hostData || {};
@@ -452,6 +452,29 @@ Widgets.renderSystemInfo = function (node, hostData, containersData) {
   }
   if (!netRows.length) { netRows.push(['(no interfaces)', '']); }
   node.appendChild(group('Network', netRows));
+
+  /* Temperatures — every reading the host exposes (per-core CPU, NVMe/SSD,
+     GPU, chipset, WiFi...). The Temp gauge on the board only shows the single
+     representative CPU value (sensors.cpu_temp); the backend already collects
+     the FULL list in sensors.all — until now it was thrown away on the client.
+     A homelab cares about drive/GPU thermals, so surface them here. This modal
+     body is rendered only while open (see render() in dashboard.js), so the
+     extra rows cost nothing on the always-on iPad 2 while it stays closed. */
+  var tempRows = [];
+  var readings = (sensorsData && sensorsData.all) || [];
+  for (var t = 0; t < readings.length; t++) {
+    var s = readings[t];
+    /* entry.label falls back to the chip name in the collector, so only prefix
+       the chip when it adds information (e.g. "nvme  ·  Composite", but plain
+       "acpitz" when the label is just the chip). */
+    var name = (s.label && s.label !== s.chip)
+      ? s.chip + '  \xb7  ' + s.label : (s.label || s.chip || '?');
+    var val = (s.current !== null && s.current !== undefined)
+      ? s.current + '\xb0C' : DASH;
+    tempRows.push([name, val]);
+  }
+  if (!tempRows.length) { tempRows.push(['(no sensors)', '']); }
+  node.appendChild(group('Temperatures', tempRows));
 
   node.appendChild(group('Runtime', [
     ['Docker',  runtime.docker_version],

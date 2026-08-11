@@ -23,7 +23,8 @@ def collect():
     if not temps:
         return out
 
-    # Full list of readings (useful for future widgets).
+    # Full list of readings — surfaced in the System modal's "Temperatures"
+    # group (see renderSystemInfo in static/js/widgets-host.js).
     flat = []
     for chip, entries in temps.items():
         for entry in entries:

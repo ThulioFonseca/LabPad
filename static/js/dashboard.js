@@ -250,7 +250,8 @@
   function renderSystemBody() {
     if (!lastData) { return; }
     Widgets.renderSystemInfo(byId('system-modal-body'),
-                             lastData.host || {}, lastData.containers);
+                             lastData.host || {}, lastData.containers,
+                             lastData.sensors);
   }
   function renderContainersBody() {
     if (!lastData) { return; }
