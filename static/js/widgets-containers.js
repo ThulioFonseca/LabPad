@@ -66,7 +66,19 @@ Widgets._containerRow = function (c) {
   mini.appendChild(miniFill);
   row.appendChild(mini);
 
-  row.appendChild(el('span', 'cstatus', Widgets._containerStatusLabel(c, running, failed)));
+  /* Status word with, for a healthy running container, the running-uptime
+     stacked beneath it. Docker resets that uptime on every restart, so a
+     container that silently came back (OOM-killed then auto-restarted,
+     redeployed by watchtower...) reads as "up" over "2 minutes" here — the one
+     glanceable cue that something bounced, which the plain "up" label could
+     never show. Failures already spell out their cause in the status word, so
+     the uptime line is skipped for them to keep the alarm state unambiguous. */
+  var end = el('div', 'cend');
+  end.appendChild(el('span', 'cstatus', Widgets._containerStatusLabel(c, running, failed)));
+  if (running && !failed && c.uptime) {
+    end.appendChild(el('span', 'cuptime', c.uptime));
+  }
+  row.appendChild(end);
 
   row.setAttribute('data-id', c.id || '');
   row.setAttribute('data-name', c.name || '');
