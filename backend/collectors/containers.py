@@ -14,6 +14,17 @@ _ANSI_RE = re.compile(r'\x1b\[[0-9;]*[A-Za-z]')
 # inspect() call just to learn whether a stopped container crashed.
 _EXIT_RE = re.compile(r'(?:Exited|Restarting|Dead)\s*\((\d+)\)')
 
+# A running container's status string is "Up <duration>[ (<health/paused>)]"
+# (e.g. "Up 2 hours", "Up About an hour (healthy)", "Up 5 minutes (unhealthy)").
+# The <duration> is the running-since that `docker ps` shows, and Docker RESETS
+# it on every restart — so it is the one zero-cost signal (no inspect call) that
+# reveals a container which came back up moments ago. `Created` in the list
+# payload can't do this: it stays fixed across restarts.
+_UP_RE = re.compile(r'^Up\s+(.+?)\s*$')
+_UP_ANNOTATION_RE = re.compile(
+    r'\s*\((?:healthy|unhealthy|health: starting|Paused)\)\s*$',
+    re.IGNORECASE)
+
 _client = None
 _runtime_cache = {}
 
@@ -45,6 +56,25 @@ def _health_from_status(status_msg):
     if '(healthy)' in s:
         return 'healthy'
     return None
+
+
+def _uptime_from_status(status_msg):
+    """Human running-uptime Docker embeds in the status string, or None.
+
+    'Up 2 hours' -> '2 hours',  'Up 5 minutes (unhealthy)' -> '5 minutes',
+    'Up About an hour' -> 'About an hour',  'Exited (0) 1 minute ago' -> None.
+
+    Kept as Docker's own wording (the phrasing operators already read in
+    `docker ps`) rather than reformatted — the LIST endpoint only exposes this
+    coarse form, and matching `docker ps` keeps the wall display familiar.
+    """
+    if not status_msg:
+        return None
+    m = _UP_RE.match(status_msg)
+    if not m:
+        return None
+    uptime = _UP_ANNOTATION_RE.sub('', m.group(1)).strip()
+    return uptime or None
 
 
 def _is_failed(status, exit_code, health):
@@ -164,6 +194,7 @@ def _one(container):
         "net_tx": None,
         "exit_code": None,
         "health": None,
+        "uptime": None,
         "failed": False,
     }
     try:
@@ -181,6 +212,7 @@ def _one(container):
         status_msg = ""
     item["exit_code"] = _exit_code_from_status(status_msg)
     item["health"] = _health_from_status(status_msg)
+    item["uptime"] = _uptime_from_status(status_msg)
     item["failed"] = _is_failed(container.status, item["exit_code"], item["health"])
 
     if container.status == "running":

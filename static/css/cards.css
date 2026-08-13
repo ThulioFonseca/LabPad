@@ -227,13 +227,30 @@ main {
   -webkit-transition: -webkit-transform 0.45s ease;
   transition: transform 0.45s ease;
 }
-.cstatus {
+/* Right-hand column: the status word with the running-uptime stacked under it
+   (see _containerRow). Column layout mirrors .cmain and .cstat so the tail of
+   the row reads as one right-aligned block. */
+.cend {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+  -webkit-align-items: flex-end;
+  align-items: flex-end;
   -webkit-flex: 0 0 auto;
   flex: 0 0 auto;
   margin-left: 22px;
+}
+.cstatus {
   font-size: 11px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+.cuptime {
+  margin-top: 3px;
+  font-size: 11px;
+  font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  white-space: nowrap;
 }
 
 .empty {
@@ -493,7 +510,7 @@ main {
   .cmini { display: none; }
   .crow  { padding: 9px 12px; }
   .cdot  { margin-right: 10px; }
-  .cstat, .cstatus { margin-left: 12px; }
+  .cstat, .cend { margin-left: 12px; }
 }
 
 /* --- Meta-line abaixo do titulo Host -------------------------------------- */

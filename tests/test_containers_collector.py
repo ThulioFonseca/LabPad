@@ -43,6 +43,32 @@ def test_health_from_status(status_msg, expected):
     assert containers._health_from_status(status_msg) == expected
 
 
+# --- running-uptime parsing --------------------------------------------------
+# The running-since Docker shows in `docker ps` ("Up 2 hours") is parsed out of
+# the same LIST-endpoint status string, with no extra inspect call. Docker
+# resets it on restart, so it is the cue that a container silently bounced.
+
+@pytest.mark.parametrize("status_msg, expected", [
+    ("Up 2 hours", "2 hours"),
+    ("Up 5 minutes (unhealthy)", "5 minutes"),
+    ("Up 2 hours (healthy)", "2 hours"),
+    ("Up 10 seconds (health: starting)", "10 seconds"),
+    ("Up About an hour", "About an hour"),
+    ("Up About a minute", "About a minute"),
+    ("Up Less than a second", "Less than a second"),
+    ("Up 3 days", "3 days"),
+    ("Up 2 hours (Paused)", "2 hours"),
+    # Not a running container -> no uptime (its status word names the state).
+    ("Exited (137) 5 minutes ago", None),
+    ("Restarting (1) 3 seconds ago", None),
+    ("Created", None),
+    ("", None),
+    (None, None),
+])
+def test_uptime_from_status(status_msg, expected):
+    assert containers._uptime_from_status(status_msg) == expected
+
+
 # --- failure decision --------------------------------------------------------
 
 def test_running_healthy_is_not_failed():
