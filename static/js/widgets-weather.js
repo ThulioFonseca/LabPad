@@ -55,7 +55,8 @@ Widgets.renderWeatherSlide = function (panel, payload, slideId) {
   if (id === 'current') {
     var cur = payload.current || {};
     var icon0 = el('span', 'weather-icon');
-    icon0.innerHTML = _wmoIcon(cur.code || 0);
+    /* Current conditions: swap to a moon after dark (backend reports is_day). */
+    icon0.innerHTML = _wmoIcon(cur.code || 0, cur.is_day);
     panel.appendChild(icon0);
     panel.appendChild(el('span', 'weather-val',
       (cur.temp != null ? cur.temp + '\xb0C' : DASH)));
@@ -160,7 +161,8 @@ Widgets._wxHero = function (p) {
   var today = (p.daily && p.daily[0]) || {};
 
   var iconWrap = el('div', 'wx-hero-icon');
-  iconWrap.innerHTML = _wmoIcon(cur.code || 0);
+  /* Current conditions: swap to a moon after dark (backend reports is_day). */
+  iconWrap.innerHTML = _wmoIcon(cur.code || 0, cur.is_day);
   s.appendChild(iconWrap);
 
   var info = el('div', 'wx-hero-info');
