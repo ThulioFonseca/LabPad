@@ -29,7 +29,18 @@ var WEATHER_ICONS = {
   rain:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="9" rx="4.5" fill="#78909c"/><line x1="7" y1="16" x2="5" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="16" x2="10" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/><line x1="17" y1="16" x2="15" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/></svg>',
   snow:    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="9" rx="4.5" fill="#90a4ae"/><text x="5" y="23" font-size="11" fill="#b3e5fc">* * *</text></svg>',
   shower:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="6" r="3" fill="#f5c542"/><rect x="5" y="8" width="14" height="7" rx="3.5" fill="#78909c"/><line x1="9" y1="18" x2="8" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/><line x1="14" y1="18" x2="13" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/></svg>',
-  storm:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="10" rx="5" fill="#546e7a"/><polyline points="13,13 10,19 14,19 11,24" stroke="#fdd835" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>'
+  storm:   '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="10" rx="5" fill="#546e7a"/><polyline points="13,13 10,19 14,19 11,24" stroke="#fdd835" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>',
+
+  /* Night variants — used by _wmoIcon(code, isDay) only for the CURRENT-conditions
+     icon (topbar carousel + modal hero), where the backend reports is_day. The
+     dashboard is an always-on wall display, so a clear/partly/showery sky would
+     otherwise glow a full daytime sun all night long. Only the three groups that
+     draw a sun need a night form; cloud/fog/rain/snow/storm read the same after
+     dark. Crescent is a single filled path (no "bite" circle), so it renders
+     correctly over any card background without depending on the theme colour. */
+  clearNight:  '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#f5c542"/><circle cx="6.5" cy="6" r="0.9" fill="#90a4ae"/><circle cx="9.5" cy="3.5" r="0.6" fill="#90a4ae"/></svg>',
+  partlyNight: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><g transform="translate(3 1) scale(0.42)"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#f5c542"/></g><rect x="6" y="13" width="13" height="7" rx="3.5" fill="#b0bec5"/><rect x="4" y="15" width="10" height="5" rx="2.5" fill="#cfd8dc"/></svg>',
+  showerNight: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"><g transform="translate(2.5 0.5) scale(0.4)"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="#f5c542"/></g><rect x="5" y="8" width="14" height="7" rx="3.5" fill="#78909c"/><line x1="9" y1="18" x2="8" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/><line x1="14" y1="18" x2="13" y2="22" stroke="#42a5f5" stroke-width="2" stroke-linecap="round"/></svg>'
 };
 
 /* Moon icons by phase (0=new moon .. 7=waning crescent). */
@@ -60,15 +71,21 @@ var WMO_LABEL = {
 };
 function _wmoLabel(code) { return WMO_LABEL[code] || '—'; }
 
-function _wmoIcon(code) {
-  if (code === 0)  { return WEATHER_ICONS.clear; }
-  if (code <= 2)   { return WEATHER_ICONS.partly; }
+/* code   WMO weather code (Open-Meteo)
+   isDay  optional. Pass the backend's current.is_day only for CURRENT conditions;
+          when it is exactly false the sun-bearing groups swap to a moon. Any
+          other value (true, or omitted for the daily/hourly forecast, where a
+          whole day is summarised) keeps the daytime icon. */
+function _wmoIcon(code, isDay) {
+  var night = (isDay === false);
+  if (code === 0)  { return night ? WEATHER_ICONS.clearNight  : WEATHER_ICONS.clear; }
+  if (code <= 2)   { return night ? WEATHER_ICONS.partlyNight : WEATHER_ICONS.partly; }
   if (code === 3)  { return WEATHER_ICONS.cloudy; }
   if (code <= 48)  { return WEATHER_ICONS.fog; }
   if (code <= 57)  { return WEATHER_ICONS.drizzle; }
   if (code <= 65)  { return WEATHER_ICONS.rain; }
   if (code <= 77)  { return WEATHER_ICONS.snow; }
-  if (code <= 82)  { return WEATHER_ICONS.shower; }
+  if (code <= 82)  { return night ? WEATHER_ICONS.showerNight : WEATHER_ICONS.shower; }
   if (code <= 86)  { return WEATHER_ICONS.snow; }
   return WEATHER_ICONS.storm;
 }
