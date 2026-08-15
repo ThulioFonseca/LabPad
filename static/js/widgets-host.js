@@ -268,6 +268,18 @@ Widgets.initDockerSummary = function (cardEl) {
   count.appendChild(Widgets._skel('skeleton-pill'));
   cardEl.appendChild(count);
 
+  /* Aggregate resource line — how much host CPU/RAM every RUNNING container is
+     consuming together (docker-stats convention, matching the per-container
+     top-3 rows below). The count line answers "how many are up"; this answers
+     "how much of the box is Docker eating" — the other half of an at-a-glance
+     capacity read, without opening the modal. Built once and rewritten in place
+     (card-sub gives it the themed muted colour for free in every theme × mode,
+     so no per-theme CSS is needed). Hidden until there is at least one running
+     container, exactly like the top-3 block. */
+  var usage = el('div', 'docker-usage card-sub');
+  usage.style.display = 'none';
+  cardEl.appendChild(usage);
+
   /* Failure line — built once, hidden until a container actually fails. On the
      always-on wall display a crash/crash-loop/unhealthy container is otherwise
      invisible on this card (it only lists the top-3 RUNNING by CPU). Shown in
@@ -299,8 +311,8 @@ Widgets.initDockerSummary = function (cardEl) {
      re-measuring when this signature changes — updateDockerSummary reports that
      via its return value (see render() in dashboard.js). Starts null so the first
      real payload always counts as a change. */
-  return { count: count, failed: failed, top: topDiv, items: items,
-           shapeSig: null };
+  return { count: count, usage: usage, failed: failed, top: topDiv,
+           items: items, shapeSig: null };
 };
 
 /* Returns true when the card's vertical SHAPE changed this cycle (a failure line
@@ -341,14 +353,39 @@ Widgets.updateDockerSummary = function (refs, payload) {
   }
 
   var active = [];
+  var totalCpu = 0, totalMem = 0, memKnown = false;
   for (i = 0; i < list.length; i++) {
-    if (list[i].status === 'running') { active.push(list[i]); }
+    if (list[i].status === 'running') {
+      active.push(list[i]);
+      /* Sum only what the stats read actually returned — a running container
+         whose stats() call failed leaves cpu/mem null and simply doesn't count,
+         rather than dragging the total to a misleading zero. */
+      if (typeof list[i].cpu_percent === 'number') { totalCpu += list[i].cpu_percent; }
+      if (typeof list[i].mem_used === 'number') {
+        totalMem += list[i].mem_used;
+        memKnown = true;
+      }
+    }
   }
   active.sort(function (a, b) {
     var sa = (a.cpu_percent || 0) + (a.mem_percent || 0);
     var sb = (b.cpu_percent || 0) + (b.mem_percent || 0);
     return sb - sa;
   });
+
+  /* Aggregate CPU/RAM across the running set. Hidden (like the top block) when
+     nothing is running — its visibility flips exactly when refs.top's does, so
+     the top-row count already captured in shapeSig covers this line's effect on
+     the card height; no extra signature term is needed. */
+  if (refs.usage) {
+    if (active.length) {
+      setText(refs.usage, fmtNumber(totalCpu) + '% CPU  \xb7  '
+        + (memKnown ? fmtBytes(totalMem) : DASH) + ' RAM');
+      if (refs.usage.style.display !== '') { refs.usage.style.display = ''; }
+    } else if (refs.usage.style.display !== 'none') {
+      refs.usage.style.display = 'none';
+    }
+  }
 
   /* Hide the whole block when no container is active, else fill the slots. */
   var wantTop = active.length ? '' : 'none';
