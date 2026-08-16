@@ -416,12 +416,14 @@ Widgets.renderSystemInfo = function (node, hostData, containersData) {
   var loadStr = (hostData.load && hostData.load.length
                  && hostData.load[0] !== null)
     ? hostData.load.join('  \xb7  ') : DASH;
-  node.appendChild(group('CPU', [
+  var cpuGroup = group('CPU', [
     ['Model',            info.cpu_model],
     ['Physical cores',   info.cpu_count_physical],
     ['Logical cores',    hostData.cpu_count],
     ['Load (1\xb75\xb715m)', loadStr]
-  ]));
+  ]);
+  Widgets._appendCpuCores(cpuGroup, hostData.cpu_per_core);
+  node.appendChild(cpuGroup);
 
   node.appendChild(group('Memory', [
     ['Total', fmtBytes(hostData.mem_total)]
@@ -458,6 +460,39 @@ Widgets.renderSystemInfo = function (node, hostData, containersData) {
     ['Python',  info.python_version],
     ['Uptime',  fmtDuration(hostData.uptime)]
   ]));
+};
+
+
+/* Per-core CPU utilisation bars, appended inside the System modal's CPU group.
+   Rendered ONLY while that modal is open (see render() in dashboard.js) — never
+   per metrics cycle — so these extra rows never add to the always-on GC/reflow
+   budget the iPad 2 can't afford over long uptime. Each fill grows via
+   transform: scaleX() through setBarFill() (not width), and reuses the themed
+   .cmini / .cmini-fill mini-bar (defined for all 5 themes x light/dark in
+   themes.css) so no new colours are introduced. Absent/empty data renders
+   nothing — the CPU group simply shows its text rows, exactly as before. */
+Widgets._appendCpuCores = function (groupEl, cores) {
+  if (!groupEl || !cores || !cores.length) { return; }
+  var wrap = el('div', 'core-cpu');
+  wrap.appendChild(el('div', 'core-cpu-title', 'Per-core'));
+  for (var i = 0; i < cores.length; i++) {
+    var pct = cores[i];
+    var has = (typeof pct === 'number' && isFinite(pct));
+    /* Match the gauge thresholds (warn 75 / crit 90). The crow--warn/crit
+       classes reuse the existing themed .cmini-fill amber/red; a plain
+       .core-row keeps the default (ok) fill colour. */
+    var level = has ? (pct >= 90 ? 'crit' : (pct >= 75 ? 'warn' : 'ok')) : 'ok';
+    var row = el('div', 'core-row' + (level === 'ok' ? '' : ' crow--' + level));
+    row.appendChild(el('span', 'core-label', 'C' + i));
+    var mini = el('div', 'cmini');
+    var fill = el('div', 'cmini-fill');
+    setBarFill(fill, has ? pct : 0);
+    mini.appendChild(fill);
+    row.appendChild(mini);
+    row.appendChild(el('span', 'core-pct', has ? (fmtNumber(pct) + '%') : DASH));
+    wrap.appendChild(row);
+  }
+  groupEl.appendChild(wrap);
 };
 
 

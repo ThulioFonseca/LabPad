@@ -32,6 +32,13 @@ _net_lock = threading.Lock()
 # (no previous reference) — discard it here so the first real read
 # already returns a meaningful percentage.
 psutil.cpu_percent(interval=None)
+# Same priming for the per-core counter: psutil keeps a SEPARATE reference for
+# the percpu read, whose first call likewise returns 0.0 for every core. Discard
+# it once here so the first collect() already yields real per-core percentages.
+try:
+    psutil.cpu_percent(percpu=True, interval=None)
+except Exception:
+    pass
 
 
 def _read_os_name():
@@ -219,6 +226,14 @@ def _net_rates():
 
 def collect():
     cpu = psutil.cpu_percent(interval=None)
+    # Per-core utilisation, so the System modal can show whether load is pinned
+    # to a single runaway core or spread evenly across the box — the aggregate
+    # cpu_percent above cannot tell those two apart. Degrades to an empty list
+    # if psutil can't read it (kept out of the always-on cards; see widgets).
+    try:
+        per_core = [round(v, 1) for v in psutil.cpu_percent(percpu=True, interval=None)]
+    except Exception:
+        per_core = []
     mem = psutil.virtual_memory()
     recv_rate, sent_rate = _net_rates()
 
@@ -250,6 +265,7 @@ def collect():
         "os": static["os"],
         "cpu_percent": round(cpu, 1),
         "cpu_count": static["cpu_count"],
+        "cpu_per_core": per_core,
         "mem_percent": round(mem.percent, 1),
         "mem_used": mem.used,
         "mem_total": mem.total,

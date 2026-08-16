@@ -124,6 +124,48 @@
   font-size: 12.5px;
 }
 
+/* --- Per-core CPU bars inside the System modal's CPU group -------------- */
+.core-cpu { margin-top: 8px; }
+.core-cpu-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.4;
+  margin: 0 0 6px;
+}
+.core-row {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  padding: 3px 0;
+}
+.core-label {
+  -webkit-flex: 0 0 34px;
+  flex: 0 0 34px;
+  opacity: 0.6;
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 11px;
+}
+/* Reuse the themed .cmini mini-bar (background/fill colours come from theme.css
+   + themes.css), but let it stretch across the row instead of its fixed 84px
+   container width used in the containers list. */
+.core-row .cmini {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
+  width: auto;
+  margin-left: 0;
+}
+.core-pct {
+  -webkit-flex: 0 0 46px;
+  flex: 0 0 46px;
+  margin-left: 10px;
+  text-align: right;
+  font-family: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 11px;
+}
+
 /* --- Linha de container clicavel (abre modal de logs) ------------------- */
 .crow { cursor: pointer; }
 .crow:active { opacity: 0.85; }
