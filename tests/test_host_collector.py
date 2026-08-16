@@ -10,7 +10,7 @@ import pytest
 def test_collect_retorna_campos_obrigatorios():
     from collectors import host
     data = host.collect()
-    campos = ("hostname", "os", "cpu_percent", "cpu_count",
+    campos = ("hostname", "os", "cpu_percent", "cpu_count", "cpu_per_core",
               "mem_percent", "mem_used", "mem_total",
               "disk", "net_rx", "net_tx", "load", "uptime", "info")
     for c in campos:
@@ -21,6 +21,15 @@ def test_cpu_percent_no_intervalo():
     from collectors import host
     data = host.collect()
     assert 0.0 <= data["cpu_percent"] <= 100.0
+
+
+def test_cpu_per_core_lista_e_no_intervalo():
+    from collectors import host
+    data = host.collect()
+    assert isinstance(data["cpu_per_core"], list)
+    # Every reported core is a valid 0..100 percentage.
+    for v in data["cpu_per_core"]:
+        assert 0.0 <= v <= 100.0
 
 
 def test_mem_total_positivo():
