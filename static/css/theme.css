@@ -89,9 +89,16 @@ body {
    white on a saturated one in the light themes). Same pairing in themes.css. */
 .calm-head       { color: #6c7382; }
 .calm-cell       { color: #cbd0d9; }
+/* Dias do mes anterior/seguinte que completam a primeira e a ultima semana:
+   presentes para a grade nao ter buracos, apagados para nao competirem com o
+   mes corrente. Opacidade (estatica, como .crow--down) em vez de uma cor fixa:
+   assim eles desbotam sobre a cor que CADA tema ja da a .calm-cell, sem
+   precisar de uma regra por tema em themes.css. */
+.calm-num--muted { opacity: 0.4; }
 .calm-num--today { background-color: #5b93ff; color: #14161b; }
 .wxc-temp        { color: #f2f4f8; }
-.wxc-range       { color: #cbd0d9; }
+.wxc-range,
+.wxc-cond        { color: #cbd0d9; }
 .wxc-hum         { color: #949bab; }
 
 /* network rate card */
@@ -158,7 +165,8 @@ body {
 /* --- Docker Summary ------------------------------------------------------- */
 .docker-count { color: #f2f4f8; }
 .docker-failed { color: #f85149; }   /* crit red — light-mode override in themes.css */
-.docker-top { border-top-color: #2a2f3a; }
+.docker-top,
+.wxc-foot   { border-top-color: #2a2f3a; }
 .docker-top-name { color: #cbd0d9; }
 .docker-top-cpu  { color: #949bab; }
 

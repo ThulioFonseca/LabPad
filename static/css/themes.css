@@ -79,7 +79,8 @@
 .theme-minimal.mode-light .topbar-center,
 .theme-minimal.mode-light .cal-time,
 .theme-minimal.mode-light .calm-cell,
-.theme-minimal.mode-light .wxc-range { color: #5b6473; }
+.theme-minimal.mode-light .wxc-range,
+.theme-minimal.mode-light .wxc-cond { color: #5b6473; }
 .theme-minimal.mode-light .panel-title, .theme-minimal.mode-light .panel-meta,
 .theme-minimal.mode-light .card-sub, .theme-minimal.mode-light .unit,
 .theme-minimal.mode-light .info-label, .theme-minimal.mode-light .cimage,
@@ -98,7 +99,8 @@
 .theme-minimal.mode-light .bar, .theme-minimal.mode-light .cmini,
 .theme-minimal.mode-light .news-thumb { background-color: #e8ebf1; }
 .theme-minimal.mode-light .topbar { border-bottom-color: #e4e8ee; }
-.theme-minimal.mode-light .docker-top { border-top-color: #e4e8ee; }
+.theme-minimal.mode-light .docker-top,
+.theme-minimal.mode-light .wxc-foot { border-top-color: #e4e8ee; }
 .theme-minimal.mode-light .weather-sep { color: #e4e8ee; }
 
 
@@ -137,7 +139,8 @@
 .theme-neu.mode-dark .weather-day-temp, .theme-neu.mode-dark .topbar-center,
 .theme-neu.mode-dark .cal-time,
 .theme-neu.mode-dark .calm-cell,
-.theme-neu.mode-dark .wxc-range { color: #99a1b0; }
+.theme-neu.mode-dark .wxc-range,
+.theme-neu.mode-dark .wxc-cond { color: #99a1b0; }
 .theme-neu.mode-dark .panel-title, .theme-neu.mode-dark .panel-meta,
 .theme-neu.mode-dark .card-sub, .theme-neu.mode-dark .unit,
 .theme-neu.mode-dark .info-label, .theme-neu.mode-dark .cimage,
@@ -154,7 +157,8 @@
 .theme-neu.mode-dark .feed-day,
 .theme-neu.mode-dark .rate--down .rate-arrow { color: #949bfa; }
 .theme-neu.mode-dark .topbar { border-bottom-color: #1f232a; }
-.theme-neu.mode-dark .docker-top { border-top-color: #1f232a; }
+.theme-neu.mode-dark .docker-top,
+.theme-neu.mode-dark .wxc-foot { border-top-color: #1f232a; }
 .theme-neu.mode-dark .weather-sep { color: #1f232a; }
 
 
@@ -191,7 +195,8 @@
 .theme-neu.mode-light .weather-day-temp, .theme-neu.mode-light .topbar-center,
 .theme-neu.mode-light .cal-time,
 .theme-neu.mode-light .calm-cell,
-.theme-neu.mode-light .wxc-range { color: #6d7484; }
+.theme-neu.mode-light .wxc-range,
+.theme-neu.mode-light .wxc-cond { color: #6d7484; }
 .theme-neu.mode-light .panel-title, .theme-neu.mode-light .panel-meta,
 .theme-neu.mode-light .card-sub, .theme-neu.mode-light .unit,
 .theme-neu.mode-light .info-label, .theme-neu.mode-light .cimage,
@@ -208,7 +213,8 @@
 .theme-neu.mode-light .feed-day,
 .theme-neu.mode-light .rate--down .rate-arrow { color: #5b66d6; }
 .theme-neu.mode-light .topbar { border-bottom-color: #d3d8e2; }
-.theme-neu.mode-light .docker-top { border-top-color: #d3d8e2; }
+.theme-neu.mode-light .docker-top,
+.theme-neu.mode-light .wxc-foot { border-top-color: #d3d8e2; }
 .theme-neu.mode-light .weather-sep { color: #c6cbd8; }
 
 
@@ -271,7 +277,8 @@
 .theme-elevated.mode-dark .topbar-center,
 .theme-elevated.mode-dark .cal-time,
 .theme-elevated.mode-dark .calm-cell,
-.theme-elevated.mode-dark .wxc-range { color: #99a0ad; }
+.theme-elevated.mode-dark .wxc-range,
+.theme-elevated.mode-dark .wxc-cond { color: #99a0ad; }
 .theme-elevated.mode-dark .panel-title, .theme-elevated.mode-dark .panel-meta,
 .theme-elevated.mode-dark .card-sub, .theme-elevated.mode-dark .unit,
 .theme-elevated.mode-dark .info-label, .theme-elevated.mode-dark .cimage,
@@ -290,7 +297,8 @@
 .theme-elevated.mode-dark .bar, .theme-elevated.mode-dark .cmini,
 .theme-elevated.mode-dark .news-thumb { background-color: #272c35; }
 .theme-elevated.mode-dark .topbar { border-bottom-color: #1b1f27; }
-.theme-elevated.mode-dark .docker-top { border-top-color: #272c35; }
+.theme-elevated.mode-dark .docker-top,
+.theme-elevated.mode-dark .wxc-foot { border-top-color: #272c35; }
 .theme-elevated.mode-dark .weather-sep { color: #272c35; }
 
 
@@ -322,7 +330,8 @@
 .theme-elevated.mode-light .topbar-center,
 .theme-elevated.mode-light .cal-time,
 .theme-elevated.mode-light .calm-cell,
-.theme-elevated.mode-light .wxc-range { color: #5a616c; }
+.theme-elevated.mode-light .wxc-range,
+.theme-elevated.mode-light .wxc-cond { color: #5a616c; }
 .theme-elevated.mode-light .panel-title, .theme-elevated.mode-light .panel-meta,
 .theme-elevated.mode-light .card-sub, .theme-elevated.mode-light .unit,
 .theme-elevated.mode-light .info-label, .theme-elevated.mode-light .cimage,
@@ -341,7 +350,8 @@
 .theme-elevated.mode-light .bar, .theme-elevated.mode-light .cmini,
 .theme-elevated.mode-light .news-thumb { background-color: #e9ebee; }
 .theme-elevated.mode-light .topbar { border-bottom-color: #dde0e5; }
-.theme-elevated.mode-light .docker-top { border-top-color: #e9ebee; }
+.theme-elevated.mode-light .docker-top,
+.theme-elevated.mode-light .wxc-foot { border-top-color: #e9ebee; }
 .theme-elevated.mode-light .weather-sep { color: #dde0e5; }
 
 
@@ -379,7 +389,8 @@
 .theme-outline.mode-dark .topbar-center,
 .theme-outline.mode-dark .cal-time,
 .theme-outline.mode-dark .calm-cell,
-.theme-outline.mode-dark .wxc-range { color: #98a0a9; }
+.theme-outline.mode-dark .wxc-range,
+.theme-outline.mode-dark .wxc-cond { color: #98a0a9; }
 .theme-outline.mode-dark .panel-title, .theme-outline.mode-dark .panel-meta,
 .theme-outline.mode-dark .card-sub, .theme-outline.mode-dark .unit,
 .theme-outline.mode-dark .info-label, .theme-outline.mode-dark .cimage,
@@ -398,7 +409,8 @@
 .theme-outline.mode-dark .bar, .theme-outline.mode-dark .cmini,
 .theme-outline.mode-dark .news-thumb { background-color: #1f242b; }
 .theme-outline.mode-dark .topbar { border-bottom-color: #2f3a45; }
-.theme-outline.mode-dark .docker-top { border-top-color: #2f3a45; }
+.theme-outline.mode-dark .docker-top,
+.theme-outline.mode-dark .wxc-foot { border-top-color: #2f3a45; }
 .theme-outline.mode-dark .weather-sep { color: #2f3a45; }
 
 
@@ -435,7 +447,8 @@
 .theme-outline.mode-light .topbar-center,
 .theme-outline.mode-light .cal-time,
 .theme-outline.mode-light .calm-cell,
-.theme-outline.mode-light .wxc-range { color: #565d67; }
+.theme-outline.mode-light .wxc-range,
+.theme-outline.mode-light .wxc-cond { color: #565d67; }
 .theme-outline.mode-light .panel-title, .theme-outline.mode-light .panel-meta,
 .theme-outline.mode-light .card-sub, .theme-outline.mode-light .unit,
 .theme-outline.mode-light .info-label, .theme-outline.mode-light .cimage,
@@ -454,7 +467,8 @@
 .theme-outline.mode-light .bar, .theme-outline.mode-light .cmini,
 .theme-outline.mode-light .news-thumb { background-color: #eceef1; }
 .theme-outline.mode-light .topbar { border-bottom-color: #cdd4dc; }
-.theme-outline.mode-light .docker-top { border-top-color: #cdd4dc; }
+.theme-outline.mode-light .docker-top,
+.theme-outline.mode-light .wxc-foot { border-top-color: #cdd4dc; }
 .theme-outline.mode-light .weather-sep { color: #cdd4dc; }
 
 
@@ -485,7 +499,8 @@
 .theme-glass.mode-dark .weather-day-temp, .theme-glass.mode-dark .topbar-center,
 .theme-glass.mode-dark .cal-time,
 .theme-glass.mode-dark .calm-cell,
-.theme-glass.mode-dark .wxc-range { color: #b3b9c5; }
+.theme-glass.mode-dark .wxc-range,
+.theme-glass.mode-dark .wxc-cond { color: #b3b9c5; }
 .theme-glass.mode-dark .panel-title, .theme-glass.mode-dark .panel-meta,
 .theme-glass.mode-dark .card-sub, .theme-glass.mode-dark .unit,
 .theme-glass.mode-dark .info-label, .theme-glass.mode-dark .cimage,
@@ -504,7 +519,8 @@
 .theme-glass.mode-dark .bar, .theme-glass.mode-dark .cmini,
 .theme-glass.mode-dark .news-thumb { background-color: rgba(255, 255, 255, 0.10); }
 .theme-glass.mode-dark .topbar { border-bottom-color: rgba(255, 255, 255, 0.12); }
-.theme-glass.mode-dark .docker-top { border-top-color: rgba(255, 255, 255, 0.12); }
+.theme-glass.mode-dark .docker-top,
+.theme-glass.mode-dark .wxc-foot { border-top-color: rgba(255, 255, 255, 0.12); }
 .theme-glass.mode-dark .weather-sep { color: rgba(255, 255, 255, 0.20); }
 
 
@@ -535,7 +551,8 @@
 .theme-glass.mode-light .weather-day-temp, .theme-glass.mode-light .topbar-center,
 .theme-glass.mode-light .cal-time,
 .theme-glass.mode-light .calm-cell,
-.theme-glass.mode-light .wxc-range { color: #59616f; }
+.theme-glass.mode-light .wxc-range,
+.theme-glass.mode-light .wxc-cond { color: #59616f; }
 .theme-glass.mode-light .panel-title, .theme-glass.mode-light .panel-meta,
 .theme-glass.mode-light .card-sub, .theme-glass.mode-light .unit,
 .theme-glass.mode-light .info-label, .theme-glass.mode-light .cimage,
@@ -554,7 +571,8 @@
 .theme-glass.mode-light .bar, .theme-glass.mode-light .cmini,
 .theme-glass.mode-light .news-thumb { background-color: rgba(255, 255, 255, 0.55); }
 .theme-glass.mode-light .topbar { border-bottom-color: rgba(255, 255, 255, 0.85); }
-.theme-glass.mode-light .docker-top { border-top-color: rgba(255, 255, 255, 0.85); }
+.theme-glass.mode-light .docker-top,
+.theme-glass.mode-light .wxc-foot { border-top-color: rgba(255, 255, 255, 0.85); }
 .theme-glass.mode-light .weather-sep { color: rgba(30, 42, 66, 0.2); }
 
 

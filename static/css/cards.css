@@ -619,18 +619,31 @@ main {
 /* --- Card de clima (leitura a distancia) ---------------------------------- */
 /* O carrossel do topbar usa fontes pequenas; este card existe para ser lido de
    longe, entao a temperatura ganha corpo grande e o icone e escalado por CSS
-   (os SVGs de icons.js tem viewBox, entao escalam sem perder nitidez). */
+   (os SVGs de icons.js tem viewBox, entao escalam sem perder nitidez).
+   O card e uma coluna flex como #section-network: o bloco icone+temperatura
+   ocupa (e centraliza em) a altura livre, e maxima/minima + umidade ficam num
+   rodape separado por um filete, espelhando .docker-top do card do Docker. */
+#section-weather-card {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-direction: column;
+  flex-direction: column;
+}
 .wxc-main {
+  -webkit-flex: 1 1 auto;
+  flex: 1 1 auto;
   display: -webkit-flex;
   display: flex;
   -webkit-align-items: center;
   align-items: center;
-  margin-top: 8px;
+  -webkit-justify-content: center;
+  justify-content: center;
+  padding: 10px 0;
 }
 .wxc-icon {
   display: inline-block;
   line-height: 1;
-  margin-right: 12px;
+  margin-right: 14px;
 }
 .wxc-icon svg {
   display: block;
@@ -638,18 +651,48 @@ main {
   height: 52px;
 }
 .wxc-temp {
+  display: block;
   font-size: 42px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: -0.02em;
 }
-.wxc-range,
-.wxc-hum {
+/* Condicao (Clear / Light rain / ...) logo abaixo do numero: alinhada pela
+   esquerda do bloco, nao centralizada, p/ nao "dancar" quando o texto muda. */
+.wxc-cond {
+  display: block;
+  font-size: 13px;
+  line-height: 16px;
+  margin-top: 6px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wxc-foot {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-justify-content: space-between;
+  justify-content: space-between;
+  -webkit-align-items: center;
+  align-items: center;
+  border-top: 1px solid transparent;
+  padding-top: 10px;
   font-size: 15px;
-  line-height: 20px;
   letter-spacing: 0.02em;
 }
-.wxc-range { margin-top: 10px; }
+.wxc-hum {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.wxc-hum-icon {
+  display: inline-block;
+  line-height: 1;
+  margin-right: 5px;
+}
+.wxc-hum-icon svg { display: block; }
 
 /* --- Icone SVG inline nos card-title -------------------------------------- */
 .card-icon {
