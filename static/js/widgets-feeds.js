@@ -165,14 +165,23 @@ Widgets.updateCalendarMonth = function (refs, date) {
   var firstDow = new Date(y, m, 1).getDay();      /* 0 = Sunday */
   /* Day 0 of the NEXT month is the last day of this one. */
   var daysInMonth = new Date(y, m + 1, 0).getDate();
+  var daysInPrev = new Date(y, m, 0).getDate();
 
   for (var i = 0; i < 42; i++) {
     var num = refs.cells[i];
     var dayNum = i - firstDow + 1;
-    var inMonth = (dayNum >= 1 && dayNum <= daysInMonth);
-    setText(num, inMonth ? String(dayNum) : '');
-    num.className = (inMonth && dayNum === d) ? 'calm-num calm-num--today'
-                                              : 'calm-num';
+    if (dayNum < 1) {
+      /* Tail of the previous month, filling the first week. */
+      setText(num, String(daysInPrev + dayNum));
+      num.className = 'calm-num calm-num--muted';
+    } else if (dayNum > daysInMonth) {
+      /* Head of the next month, filling the last week(s). */
+      setText(num, String(dayNum - daysInMonth));
+      num.className = 'calm-num calm-num--muted';
+    } else {
+      setText(num, String(dayNum));
+      num.className = (dayNum === d) ? 'calm-num calm-num--today' : 'calm-num';
+    }
   }
 };
 

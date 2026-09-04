@@ -110,23 +110,39 @@ Widgets.initWeatherCard = function (cardEl) {
 
   cardEl.appendChild(Widgets._cardHead('weather', 'Weather'));
 
+  /* Icon + temperature centred in the card's free height, with the condition
+     under the number; the day's range and humidity sit in a footer separated
+     by a hairline, mirroring the Docker card's .docker-top. */
   var main = el('div', 'wxc-main');
   var icon = el('span', 'wxc-icon');
+  var now = el('span', 'wxc-now');
   var temp = el('span', 'wxc-temp');
   temp.appendChild(Widgets._skel('skeleton-num'));
+  var cond = el('span', 'wxc-cond');
+  now.appendChild(temp);
+  now.appendChild(cond);
   main.appendChild(icon);
-  main.appendChild(temp);
+  main.appendChild(now);
   cardEl.appendChild(main);
 
-  var range = el('div', 'wxc-range');
+  var foot = el('div', 'wxc-foot');
+  var range = el('span', 'wxc-range');
   range.appendChild(Widgets._skel('skeleton-line'));
-  cardEl.appendChild(range);
-
-  var hum = el('div', 'wxc-hum');
-  cardEl.appendChild(hum);
+  /* The droplet labels the humidity without a word, so the footer stays legible
+     at a glance from a distance (and doesn't need translating). */
+  var humWrap = el('span', 'wxc-hum');
+  var drop = el('span', 'wxc-hum-icon');
+  drop.innerHTML = ICONS.humidity;
+  var hum = el('span', 'wxc-hum-val');
+  humWrap.appendChild(drop);
+  humWrap.appendChild(hum);
+  foot.appendChild(range);
+  foot.appendChild(humWrap);
+  cardEl.appendChild(foot);
 
   /* lastCode starts null so the first payload always paints the icon. */
-  return { icon: icon, temp: temp, range: range, hum: hum, lastCode: null };
+  return { icon: icon, temp: temp, cond: cond, range: range, hum: hum,
+           lastCode: null };
 };
 
 Widgets.updateWeatherCard = function (refs, payload) {
@@ -140,8 +156,9 @@ Widgets.updateWeatherCard = function (refs, payload) {
       refs.lastCode = 'none';
     }
     setText(refs.temp, DASH);
+    setText(refs.cond, '');
     setText(refs.range, DASH);
-    setText(refs.hum, DASH);
+    setText(refs.hum, '');
     return;
   }
 
@@ -158,10 +175,10 @@ Widgets.updateWeatherCard = function (refs, payload) {
 
   setText(refs.temp, (cur.temp === null || cur.temp === undefined)
                        ? DASH : Math.round(cur.temp) + '\xb0');
-  setText(refs.range, _fmtTemp(today.high) + ' / ' + _fmtTemp(today.low)
-                      + '  ' + _wmoLabel(code));
+  setText(refs.cond, _wmoLabel(code));
+  setText(refs.range, _fmtTemp(today.high) + ' / ' + _fmtTemp(today.low));
   setText(refs.hum, (cur.humidity === null || cur.humidity === undefined)
-                      ? DASH : cur.humidity + '% humidity');
+                      ? DASH : cur.humidity + '%');
 };
 
 
