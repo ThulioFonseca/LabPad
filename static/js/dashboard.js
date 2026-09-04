@@ -27,6 +27,11 @@
      card is always visible; rebuilding its DOM every 5s churned GC). */
   var dockerRefs = null;
 
+  /* Second-row cards (month calendar + large-type weather): refs built once in
+     buildWidgets, updated in place afterwards. */
+  var calMonthRefs = null;
+  var weatherCardRefs = null;
+
   /* Weather */
   var weatherRefs = null;
   var lastWeather = null;
@@ -90,6 +95,15 @@
     dockerRefs = Widgets.initDockerSummary(byId('section-docker-summary'));
 
     weatherRefs = Widgets.initWeather(byId('section-weather'));
+
+    /* Second-row cards: month grid + large-type weather. Both are built once
+       here and only updated in place — the month grid from calendarTick (60s,
+       guarded by a day signature) and the weather card from pollFeeds (10 min).
+       Neither is touched by the 5s render(). */
+    calMonthRefs = Widgets.initCalendarMonth(byId('section-calendar-month'));
+    Widgets.updateCalendarMonth(calMonthRefs, new Date());
+
+    weatherCardRefs = Widgets.initWeatherCard(byId('section-weather-card'));
   }
 
   function sizeCanvas(canvas) {
@@ -699,6 +713,10 @@
      event actually crossed an active/soon boundary — most ticks are a cheap
      signature compare that touches no DOM. */
   function calendarTick() {
+    /* Month grid: cheap day-signature compare — only repaints when the date
+       actually rolls over (once a day), never on the other 1439 ticks. */
+    Widgets.updateCalendarMonth(calMonthRefs, new Date());
+
     if (lastCalendar) {
       var sig = Widgets.calendarUrgencySignature(lastCalendar);
       if (sig !== lastCalUrgencySig) {
@@ -757,22 +775,29 @@
             } else {
               renderWeatherCurrent();
             }
+            /* Second-row card: always shows the current values, independently
+               of where the topbar carousel happens to be in its rotation. */
+            Widgets.updateWeatherCard(weatherCardRefs, lastWeather);
             /* Update the detail modal if it is open. */
             if (window.Modals && Modals.isOpen('weather-modal')) {
               Widgets.renderWeatherDetail(byId('weather-modal-body'), lastWeather);
             }
           } catch (e) { reportError('weather-render', e); }
-        } else if (data.weather && weatherRefs && !data.weather.configured) {
-          /* Not configured OR error with no cached data: show a subtle pill
-             signalling that the backend is still trying. Disappears on its own
-             when the next response arrives with configured:true (firstTime=true,
+        } else if (data.weather && !data.weather.configured) {
+          /* Not configured OR error with no cached data. The second-row card
+             falls back to dashes; the topbar shows a subtle pill signalling
+             that the backend is still trying. Both disappear on their own when
+             the next response arrives with configured:true (firstTime=true,
              startWeatherRotation() overwrites the panel). */
-          weatherRefs.panel.innerHTML = '';
-          var pill = el('span', 'weather-val weather-retry');
-          pill.appendChild(document.createTextNode(
-              data.weather.error ? 'Weather unavailable, retrying…'
-                                 : 'Weather not configured'));
-          weatherRefs.panel.appendChild(pill);
+          Widgets.updateWeatherCard(weatherCardRefs, data.weather);
+          if (weatherRefs) {
+            weatherRefs.panel.innerHTML = '';
+            var pill = el('span', 'weather-val weather-retry');
+            pill.appendChild(document.createTextNode(
+                data.weather.error ? 'Weather unavailable, retrying…'
+                                   : 'Weather not configured'));
+            weatherRefs.panel.appendChild(pill);
+          }
         }
       } catch (e) { reportError('pollFeeds', e); }
       feedsTimer = setTimeout(pollFeeds, CONFIG.feedsRefreshMs);

@@ -503,7 +503,12 @@ main {
   letter-spacing: 0.03em;
 }
 
-/* --- Linha larga: Rede + Docker Summary (dobro da largura normal) --------- */
+/* --- Segunda linha: Rede + Docker + Calendario + Clima --------------------- */
+/* Os quatro cards tem a MESMA largura dos cards de gauge (flex-basis 220px):
+   rede e docker ja nao precisavam do dobro da largura, e os dois slots que
+   sobraram viraram o calendario mensal e o card de clima. Mantida como linha
+   propria (e nao dentro de .card-grid) porque estes cards compartilham a
+   altura entre si — o sparkline de rede (.spark--fill) cresce ate ela. */
 .double-row {
   display: -webkit-flex;
   display: flex;
@@ -512,9 +517,9 @@ main {
   margin: 10px -7px 0;
 }
 .double-row > .card {
-  -webkit-flex: 1 1 440px;
-  flex: 1 1 440px;
-  min-width: 300px;
+  -webkit-flex: 1 1 220px;
+  flex: 1 1 220px;
+  min-width: 200px;
   margin: 7px;
 }
 
@@ -566,6 +571,85 @@ main {
   white-space: nowrap;
   max-width: 60%;
 }
+
+/* --- Calendario mensal (card da segunda linha) ---------------------------- */
+/* Grade de 7 colunas SEM CSS Grid (Safari 9 nao tem): flex-wrap + celulas de
+   1/7 da largura. A largura vai tanto em flex-basis quanto em width porque o
+   Safari 9 arredonda basis percentual para baixo em alguns zooms — com as duas
+   declaracoes as sete celulas sempre fecham uma linha exata.
+   Alturas propositalmente compactas: esta linha divide a altura com as listas
+   de Calendar/News abaixo (ver sizeFeedLists em dashboard.js). */
+.calm-grid {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-flex-wrap: wrap;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.calm-cell {
+  -webkit-flex: 0 0 14.28%;
+  flex: 0 0 14.28%;
+  width: 14.28%;
+  text-align: center;
+  font-size: 12px;
+  line-height: 22px;
+  height: 22px;
+}
+.calm-head {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 18px;
+  height: 18px;
+}
+/* Numero do dia: inline-block de lado fixo para que o circulo de "hoje" fique
+   redondo independentemente de o numero ter um ou dois digitos. */
+.calm-num {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  border-radius: 50%;
+}
+.calm-num--today {
+  font-weight: 600;
+}
+
+/* --- Card de clima (leitura a distancia) ---------------------------------- */
+/* O carrossel do topbar usa fontes pequenas; este card existe para ser lido de
+   longe, entao a temperatura ganha corpo grande e o icone e escalado por CSS
+   (os SVGs de icons.js tem viewBox, entao escalam sem perder nitidez). */
+.wxc-main {
+  display: -webkit-flex;
+  display: flex;
+  -webkit-align-items: center;
+  align-items: center;
+  margin-top: 8px;
+}
+.wxc-icon {
+  display: inline-block;
+  line-height: 1;
+  margin-right: 12px;
+}
+.wxc-icon svg {
+  display: block;
+  width: 52px;
+  height: 52px;
+}
+.wxc-temp {
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.wxc-range,
+.wxc-hum {
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: 0.02em;
+}
+.wxc-range { margin-top: 10px; }
 
 /* --- Icone SVG inline nos card-title -------------------------------------- */
 .card-icon {

@@ -82,6 +82,18 @@ body {
 .card--warn .card-value .num { color: #e3b341; }
 .card--crit .card-value .num { color: #ff7b72; }
 
+/* month calendar + weather cards (second row).
+   `.calm-num--today` is the accent-filled circle on the current day; its text
+   takes the PAGE BACKGROUND colour, which reads high-contrast against every
+   accent in both modes (dark text on a bright accent in the dark themes, near
+   white on a saturated one in the light themes). Same pairing in themes.css. */
+.calm-head       { color: #6c7382; }
+.calm-cell       { color: #cbd0d9; }
+.calm-num--today { background-color: #5b93ff; color: #14161b; }
+.wxc-temp        { color: #f2f4f8; }
+.wxc-range       { color: #cbd0d9; }
+.wxc-hum         { color: #949bab; }
+
 /* network rate card */
 .rate-val               { color: #f2f4f8; }
 .rate--down .rate-arrow { color: #5b93ff; }
