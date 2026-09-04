@@ -99,6 +99,84 @@ Widgets.calendarUrgencySignature = function (payload) {
 };
 
 
+/* --- Month calendar card (second row) -------------------------------------*/
+/* Pure client-side date maths — no backend call: the month grid is the same on
+   every device and the .ics feed only covers the next few days anyway.
+   Follows the initDockerSummary()/updateDockerSummary() contract: the 42 cells
+   (6 weeks x 7 days, the worst case for any month) are allocated ONCE here and
+   afterwards only their text nodes / class names change. Nothing is ever
+   appended or removed at runtime, so the always-on display allocates no DOM
+   per tick (CLAUDE.md, long-uptime stability). */
+
+var CALM_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+var CALM_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
+                   'July', 'August', 'September', 'October', 'November',
+                   'December'];
+
+Widgets.initCalendarMonth = function (cardEl) {
+  if (!cardEl) { return null; }
+  cardEl.innerHTML = '';
+
+  /* _cardHead() bakes its title into a text node; the month name changes at
+     every month boundary, so it gets its own span we can setText() later. */
+  var head = Widgets._cardHead('calendar', '');
+  var monthEl = el('span', 'calm-month');
+  monthEl.appendChild(Widgets._skel('skeleton-line'));
+  head.firstChild.appendChild(monthEl);
+  cardEl.appendChild(head);
+
+  var grid = el('div', 'calm-grid');
+  var i;
+  for (i = 0; i < 7; i++) {
+    /* Two-letter abbreviations: seven cells of 1/7 leave no room for three. */
+    grid.appendChild(el('div', 'calm-cell calm-head',
+                        CALM_WEEKDAYS[i].substring(0, 2)));
+  }
+
+  var cells = [];
+  for (i = 0; i < 42; i++) {
+    var cell = el('div', 'calm-cell');
+    var num = el('span', 'calm-num', '');
+    cell.appendChild(num);
+    grid.appendChild(cell);
+    cells.push(num);
+  }
+  cardEl.appendChild(grid);
+
+  /* Signature of what is painted ('YYYY-M-D'). Starts null so the first call
+     always paints. */
+  return { month: monthEl, cells: cells, sig: null };
+};
+
+/* Repaints the grid only when the calendar DAY changed (the "today" circle is
+   the only thing that moves between two ticks of the same day). Called from
+   the 60s calendarTick in dashboard.js: on all but one tick a day it is a
+   single string compare that touches no DOM. */
+Widgets.updateCalendarMonth = function (refs, date) {
+  if (!refs) { return; }
+  var now = date || new Date();
+  var y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  var sig = y + '-' + m + '-' + d;
+  if (sig === refs.sig) { return; }
+  refs.sig = sig;
+
+  setText(refs.month, CALM_MONTHS[m] + ' ' + y);
+
+  var firstDow = new Date(y, m, 1).getDay();      /* 0 = Sunday */
+  /* Day 0 of the NEXT month is the last day of this one. */
+  var daysInMonth = new Date(y, m + 1, 0).getDate();
+
+  for (var i = 0; i < 42; i++) {
+    var num = refs.cells[i];
+    var dayNum = i - firstDow + 1;
+    var inMonth = (dayNum >= 1 && dayNum <= daysInMonth);
+    setText(num, inMonth ? String(dayNum) : '');
+    num.className = (inMonth && dayNum === d) ? 'calm-num calm-num--today'
+                                              : 'calm-num';
+  }
+};
+
+
 /* --- News (RSS) -----------------------------------------------------------*/
 
 Widgets._newsCarouselTimer = null;

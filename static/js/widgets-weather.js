@@ -98,6 +98,73 @@ Widgets.renderWeatherSlide = function (panel, payload, slideId) {
 };
 
 
+/* --- Weather card (second row) --------------------------------------------*/
+/* Same payload as the topbar carousel, but sized to be read from across the
+   room: the carousel's type is small and it only shows the current values for
+   10s out of every rotation, which is no good on a wall display.
+   Built once / updated in place, like initDockerSummary — see CLAUDE.md. */
+
+Widgets.initWeatherCard = function (cardEl) {
+  if (!cardEl) { return null; }
+  cardEl.innerHTML = '';
+
+  cardEl.appendChild(Widgets._cardHead('weather', 'Weather'));
+
+  var main = el('div', 'wxc-main');
+  var icon = el('span', 'wxc-icon');
+  var temp = el('span', 'wxc-temp');
+  temp.appendChild(Widgets._skel('skeleton-num'));
+  main.appendChild(icon);
+  main.appendChild(temp);
+  cardEl.appendChild(main);
+
+  var range = el('div', 'wxc-range');
+  range.appendChild(Widgets._skel('skeleton-line'));
+  cardEl.appendChild(range);
+
+  var hum = el('div', 'wxc-hum');
+  cardEl.appendChild(hum);
+
+  /* lastCode starts null so the first payload always paints the icon. */
+  return { icon: icon, temp: temp, range: range, hum: hum, lastCode: null };
+};
+
+Widgets.updateWeatherCard = function (refs, payload) {
+  if (!refs) { return; }
+
+  if (!payload || !payload.configured) {
+    /* Not configured, or an error with no cached data: show dashes rather than
+       stale numbers — a wrong temperature read from afar is worse than none. */
+    if (refs.lastCode !== 'none') {
+      refs.icon.innerHTML = '';
+      refs.lastCode = 'none';
+    }
+    setText(refs.temp, DASH);
+    setText(refs.range, DASH);
+    setText(refs.hum, DASH);
+    return;
+  }
+
+  var cur = payload.current || {};
+  var today = (payload.daily && payload.daily[0]) || {};
+
+  /* Rewriting the icon's innerHTML reparses the SVG and reallocates its nodes;
+     the WMO code only moves a few times a day, so only touch it on a change. */
+  var code = (cur.code === null || cur.code === undefined) ? 0 : cur.code;
+  if (code !== refs.lastCode) {
+    refs.icon.innerHTML = _wmoIcon(code);
+    refs.lastCode = code;
+  }
+
+  setText(refs.temp, (cur.temp === null || cur.temp === undefined)
+                       ? DASH : Math.round(cur.temp) + '\xb0');
+  setText(refs.range, _fmtTemp(today.high) + ' / ' + _fmtTemp(today.low)
+                      + '  ' + _wmoLabel(code));
+  setText(refs.hum, (cur.humidity === null || cur.humidity === undefined)
+                      ? DASH : cur.humidity + '% humidity');
+};
+
+
 /* === Detailed weather modal ===============================================*/
 
 var _SVGNS = 'http://www.w3.org/2000/svg';
