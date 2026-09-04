@@ -432,7 +432,7 @@
     });
   }
 
-  /* --- Weather detail modal (click on topbar carousel) ------------------*/
+  /* --- Weather detail modal (click on the weather CARD) ------------------*/
   function openWeatherModal() {
     if (!lastWeather) { return; }   /* no data yet */
     setText(byId('weather-modal-city'),
@@ -444,8 +444,11 @@
   function closeWeatherModal() { Modals.close('weather-modal'); }
 
   function wireWeatherModal() {
-    var center = byId('section-weather');
-    if (center) { center.style.cursor = 'pointer'; center.onclick = openWeatherModal; }
+    /* The card is the ONLY way in: the topbar carousel used to open the modal
+       too, which made a stray tap anywhere across the header (a wide, always
+       -present strip) pop a full-screen modal on the wall display. */
+    var card = byId('section-weather-card');
+    if (card) { card.style.cursor = 'pointer'; card.onclick = openWeatherModal; }
     var backdrop = byId('weather-modal');
     if (backdrop) { backdrop.onclick = closeWeatherModal; }
     var box = byId('weather-modal-box');
@@ -714,8 +717,13 @@
      signature compare that touches no DOM. */
   function calendarTick() {
     /* Month grid: cheap day-signature compare — only repaints when the date
-       actually rolls over (once a day), never on the other 1439 ticks. */
-    Widgets.updateCalendarMonth(calMonthRefs, new Date());
+       actually rolls over (once a day), never on the other 1439 ticks. A month
+       spanning a different number of weeks changes the card's height, and with
+       it the shared second-row height the network sparkline's fill-canvas is
+       measured against — so re-measure it on that (monthly) transition. */
+    if (Widgets.updateCalendarMonth(calMonthRefs, new Date())) {
+      sizeCanvas(netRefs && netRefs.canvas);
+    }
 
     if (lastCalendar) {
       var sig = Widgets.calendarUrgencySignature(lastCalendar);
