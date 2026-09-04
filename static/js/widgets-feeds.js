@@ -104,9 +104,10 @@ Widgets.calendarUrgencySignature = function (payload) {
    every device and the .ics feed only covers the next few days anyway.
    Follows the initDockerSummary()/updateDockerSummary() contract: the 42 cells
    (6 weeks x 7 days, the worst case for any month) are allocated ONCE here and
-   afterwards only their text nodes / class names change. Nothing is ever
-   appended or removed at runtime, so the always-on display allocates no DOM
-   per tick (CLAUDE.md, long-uptime stability). */
+   afterwards only their text nodes / class names change — a month spanning
+   fewer weeks hides the leftover cells instead of dropping them. Nothing is
+   ever appended or removed at runtime, so the always-on display allocates no
+   DOM per tick (CLAUDE.md, long-uptime stability). */
 
 var CALM_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 var CALM_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June',
@@ -139,25 +140,29 @@ Widgets.initCalendarMonth = function (cardEl) {
     var num = el('span', 'calm-num', '');
     cell.appendChild(num);
     grid.appendChild(cell);
-    cells.push(num);
+    cells.push(cell);
   }
   cardEl.appendChild(grid);
 
-  /* Signature of what is painted ('YYYY-M-D'). Starts null so the first call
-     always paints. */
-  return { month: monthEl, cells: cells, sig: null };
+  /* sig: signature of what is painted ('YYYY-M-D'); weeks: how many rows are
+     currently visible. Both start null so the first call always paints and
+     always reports a shape change. */
+  return { month: monthEl, cells: cells, sig: null, weeks: null };
 };
 
 /* Repaints the grid only when the calendar DAY changed (the "today" circle is
    the only thing that moves between two ticks of the same day). Called from
    the 60s calendarTick in dashboard.js: on all but one tick a day it is a
-   single string compare that touches no DOM. */
+   single string compare that touches no DOM.
+   Returns true when the number of visible weeks changed — i.e. when the card
+   (and so the whole second row) got taller or shorter and anything sized off
+   that height has to be re-measured. */
 Widgets.updateCalendarMonth = function (refs, date) {
-  if (!refs) { return; }
+  if (!refs) { return false; }
   var now = date || new Date();
   var y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
   var sig = y + '-' + m + '-' + d;
-  if (sig === refs.sig) { return; }
+  if (sig === refs.sig) { return false; }
   refs.sig = sig;
 
   setText(refs.month, CALM_MONTHS[m] + ' ' + y);
@@ -167,15 +172,31 @@ Widgets.updateCalendarMonth = function (refs, date) {
   var daysInMonth = new Date(y, m + 1, 0).getDate();
   var daysInPrev = new Date(y, m, 0).getDate();
 
+  /* Weeks the current month actually spans. The adjacent months only ever fill
+     a week the current month already occupies — a month starting on Sunday and
+     ending on a Saturday needs no filler at all, and no month ever gets a whole
+     extra week of the next one. 4 weeks (February starting on a Sunday in a
+     non-leap year) through 6; the unused cells are hidden. */
+  var weeks = Math.ceil((firstDow + daysInMonth) / 7);
+  var shown = weeks * 7;
+
   for (var i = 0; i < 42; i++) {
-    var num = refs.cells[i];
+    var cell = refs.cells[i];
+    if (i >= shown) {
+      /* display:none takes the cell out of the flex flow entirely, so the grid
+         ends after the last week the month touches. */
+      cell.style.display = 'none';
+      continue;
+    }
+    cell.style.display = '';
+    var num = cell.firstChild;
     var dayNum = i - firstDow + 1;
     if (dayNum < 1) {
       /* Tail of the previous month, filling the first week. */
       setText(num, String(daysInPrev + dayNum));
       num.className = 'calm-num calm-num--muted';
     } else if (dayNum > daysInMonth) {
-      /* Head of the next month, filling the last week(s). */
+      /* Head of the next month, filling the last week. */
       setText(num, String(dayNum - daysInMonth));
       num.className = 'calm-num calm-num--muted';
     } else {
@@ -183,6 +204,10 @@ Widgets.updateCalendarMonth = function (refs, date) {
       num.className = (dayNum === d) ? 'calm-num calm-num--today' : 'calm-num';
     }
   }
+
+  var grew = (weeks !== refs.weeks);
+  refs.weeks = weeks;
+  return grew;
 };
 
 
